@@ -92,7 +92,6 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:2.0.16" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-aspects:6.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.aspectj:aspectjweaver:1.9.22.1" level="project" />
-    <orderEntry type="library" name="Maven: com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre16" level="project" />
     <orderEntry type="library" name="Maven: org.projectlombok:lombok:1.18.36" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.springframework.boot:spring-boot-starter-test:3.4.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.springframework.boot:spring-boot-test:3.4.2" level="project" />
