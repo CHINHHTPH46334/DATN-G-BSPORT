@@ -27,12 +27,10 @@ public class Voucher {
     @Column(name = "ten_voucher", nullable = false, length = 255)
     private String tenVoucher;
 
-    @Column(name = "ngay_tao", nullable = false)
-    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_tao", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime ngayTao;
 
-    @Column(name = "ngay_het_han", nullable = false)
-    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_het_han", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime ngayHetHan;
 
     @Column(name = "gia_tri_giam", nullable = false, precision = 18, scale = 2)

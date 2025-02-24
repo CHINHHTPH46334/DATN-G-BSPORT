@@ -78,8 +78,9 @@ id_khuyen_mai int identity(1,1) primary key,
 ma_khuyen_mai varchar(50),
 ten_khuyen_mai nvarchar(200),
 mo_ta nvarchar(250),
-ngay_bat_dau date,
-ngay_het_han date,
+ngay_bat_dau datetime,
+ngay_het_han datetime,
+gia_tri_toi_da decimal(12,2),
 gia_tri_giam float,
 kieu_giam_gia nvarchar(50),
 trang_thai nvarchar(50)
@@ -177,8 +178,8 @@ create table voucher(
 id_voucher int identity(1,1) primary key,
 ma_voucher varchar(50),
 ten_voucher nvarchar(200),
-ngay_tao date,
-ngay_het_han date,
+ngay_tao datetime,
+ngay_het_han datetime,
 gia_tri_giam decimal(12,2),
 gia_tri_toi_thieu decimal(12,2),
 trang_thai nvarchar(50),
@@ -255,31 +256,16 @@ gia_tri_chenh_lech decimal
 -- 1. Bảng roles (10 dòng)
 -------------------------------------
 INSERT INTO roles (id_roles, ma_roles, ten_roles) VALUES
-(1, 'ROLE1', N'Quyền quản trị 1'),
-(2, 'ROLE2', N'Quyền quản trị 2'),
-(3, 'ROLE3', N'Quyền quản trị 3'),
-(4, 'ROLE4', N'Quyền quản trị 4'),
-(5, 'ROLE5', N'Quyền quản trị 5'),
-(6, 'ROLE6', N'Quyền quản trị 6'),
-(7, 'ROLE7', N'Quyền quản trị 7'),
-(8, 'ROLE8', N'Quyền quản trị 8'),
-(9, 'ROLE9', N'Quyền quản trị 9'),
-(10, 'ROLE10', N'Quyền quản trị 10');
+(1, N'QL', N'Quản lý'),
+(2, N'NV', N'Nhân viên');
 
 -------------------------------------
 -- 2. Bảng tai_khoan (10 dòng)
 -------------------------------------
 INSERT INTO tai_khoan (ma_tai_khoan, ten_dang_nhap, mat_khau) VALUES
-('TK001', 'user1', 'pass1'),
-('TK002', 'user2', 'pass2'),
-('TK003', 'user3', 'pass3'),
-('TK004', 'user4', 'pass4'),
-('TK005', 'user5', 'pass5'),
-('TK006', 'user6', 'pass6'),
-('TK007', 'user7', 'pass7'),
-('TK008', 'user8', 'pass8'),
-('TK009', 'user9', 'pass9'),
-('TK010', 'user10', 'pass10');
+(N'TK01', N'admin', N'admin123'),
+(N'TK02', N'nhanvien', N'nhanvien123'),
+(N'TK03', N'customer', N'customer123');
 
 -------------------------------------
 -- 3. Bảng lich_su_dang_nhap (10 dòng)
@@ -287,29 +273,25 @@ INSERT INTO tai_khoan (ma_tai_khoan, ten_dang_nhap, mat_khau) VALUES
 INSERT INTO lich_su_dang_nhap (id_tai_khoan, ngay_dang_nhap, ip_adress) VALUES
 (1, '2025-02-01', '192.168.1.1'),
 (2, '2025-02-02', '192.168.1.2'),
-(3, '2025-02-03', '192.168.1.3'),
-(4, '2025-02-04', '192.168.1.4'),
-(5, '2025-02-05', '192.168.1.5'),
-(6, '2025-02-06', '192.168.1.6'),
-(7, '2025-02-07', '192.168.1.7'),
-(8, '2025-02-08', '192.168.1.8'),
-(9, '2025-02-09', '192.168.1.9'),
-(10, '2025-02-10', '192.168.1.10');
+(3, '2025-02-03', '192.168.1.3');
 
 -------------------------------------
 -- 4. Bảng nhan_vien (10 dòng)
 -------------------------------------
 INSERT INTO nhan_vien (id_roles, id_tai_khoan, ma_nhan_vien, ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, trang_thai) VALUES
-(1, 1, 'NV001', N'Nguyễn Văn A', '1980-01-01', 'nv1@example.com', N'Hà Nội', 1, '0901000001', N'Hoạt động'),
-(2, 2, 'NV002', N'Trần Thị B', '1981-02-02', 'nv2@example.com', N'Hồ Chí Minh', 0, '0901000002', N'Hoạt động'),
-(3, 3, 'NV003', N'Lê Văn C', '1982-03-03', 'nv3@example.com', N'Đà Nẵng', 1, '0901000003', N'Hoạt động'),
-(4, 4, 'NV004', N'Phạm Thị D', '1983-04-04', 'nv4@example.com', N'Biên Hòa', 0, '0901000004', N'Hoạt động'),
-(5, 5, 'NV005', N'Hồ Văn E', '1984-05-05', 'nv5@example.com', N'Huế', 1, '0901000005', N'Hoạt động'),
-(6, 6, 'NV006', N'Đinh Thị F', '1985-06-06', 'nv6@example.com', N'Nha Trang', 0, '0901000006', N'Hoạt động'),
-(7, 7, 'NV007', N'Vũ Văn G', '1986-07-07', 'nv7@example.com', N'Vũng Tàu', 1, '0901000007', N'Hoạt động'),
-(8, 8, 'NV008', N'Phan Thị H', '1987-08-08', 'nv8@example.com', N'Bến Tre', 0, '0901000008', N'Hoạt động'),
-(9, 9, 'NV009', N'Bùi Văn I', '1988-09-09', 'nv9@example.com', N'Cần Thơ', 1, '0901000009', N'Hoạt động'),
-(10, 10, 'NV010', N'Ngô Thị K', '1989-10-10', 'nv10@example.com', N'Hải Phòng', 0, '0901000010', N'Hoạt động');
+(1, 1, N'NV01', N'Phạm Thị Quỳnh Thu', CAST(N'2002-07-10' AS Date), N'ptqt10722@gmail.com', N'Phương Canh, Nam Từ Liêm, Hà Nội', 0, N'0359765372', N'Đang hoạt động'),
+(2, 2, N'NV02', N'Nguyễn Hữu Nghĩa', CAST(N'2000-10-17' AS Date), N'nghianhph46340@fpt.edu.vn', N'Phương Canh, Nam Từ Liêm, Hà Nội', 1, N'0353225292', N'Đang hoạt động'),
+(2, 2, N'NV03', N'Hoàng Thọ Chính', CAST(N'2004-12-13' AS Date), N'chinhhtph46334@fpt.edu.vn', N'Hoài Đức, Hà Nội', 1, N'0989864737', N'Đang hoạt động'),
+(2, 2, N'NV04', N'Nguyễn Thị Kiều Anh', CAST(N'2003-04-12' AS Date), N'annv@gmail.com', N'Bắc Từ Liêm, Hà Nội', 0, N'0378854735', N'Đã nghỉ việc'),
+(2, 2, N'NV05', N'Vũ Tuấn Huy', CAST(N'2004-02-15' AS Date), N'huyvtph46307@fpt.edu.vn', N'Đội Cấn, Ba Đình, Hà Nội', 1, N'0912301363', N'Đang hoạt động'),
+(2, 2, N'NV06', N'Hồ Bá Dũng', CAST(N'2004-11-14' AS Date), N'dunghbph46428@fpt.edu.vn', N'Xã Đàn, Đống Đa, Hà Nội', 1, N'0397572262', N'Đang hoạt động'),
+(2, 2, N'NV07', N'Phùn Văn Lềnh', CAST(N'2003-09-10' AS Date), N'lenhpvph46331@fpt.edu.vn', N'Cổ Nhuế 2, Hà Nội', 1, N'0388109763', N'Đang hoạt động'),
+(2, 2, N'NV08', N'Hà Trung Thành', CAST(N'2001-11-23' AS Date), N'thanhht@gmail.com', N'Hồ Chí Minh', 1, N'0325467832', N'Đã nghỉ việc'),
+(2, 2, N'NV09', N'Lê Thành Dương', CAST(N'2000-01-17' AS Date), N'duonglt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
+(2, 2, N'NV10', N'Lê Thị Nhàn', CAST(N'1999-08-29' AS Date), N'nhanlt@gmail.com', N'Hồ Chí Minh', 0, N'0987678543', N'Đã nghỉ việc'),
+(2, 2, N'NV11', N'Hoàng Văn Nam', CAST(N'1999-08-25' AS Date), N'namhv@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
+(2, 2, N'NV12', N'Lê Thành Dương', CAST(N'2000-01-17' AS Date), N'duonglt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
+(2, 2, N'NV13', N'Lê Thành Nhân', CAST(N'2000-01-17' AS Date), N'nhanlt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc');
 
 -------------------------------------
 -- 5. Bảng danh_muc_san_pham (10 dòng)
@@ -374,18 +356,13 @@ INSERT INTO san_pham (id_danh_muc, ma_san_pham, ten_san_pham, mo_ta, trang_thai,
 -------------------------------------
 -- 9. Bảng khuyen_mai (10 dòng)
 -------------------------------------
-INSERT INTO khuyen_mai (ma_khuyen_mai, ten_khuyen_mai, mo_ta, ngay_bat_dau, ngay_het_han, gia_tri_giam, kieu_giam_gia, trang_thai) VALUES
-('KM001', N'Khuyến mãi 1', N'Mô tả KM 1', '2025-02-01', '2025-02-28', 10, N'%', N'Hoạt động'),
-('KM002', N'Khuyến mãi 2', N'Mô tả KM 2', '2025-02-02', '2025-02-28', 15, N'%', N'Hoạt động'),
-('KM003', N'Khuyến mãi 3', N'Mô tả KM 3', '2025-02-03', '2025-02-28', 20, N'%', N'Hoạt động'),
-('KM004', N'Khuyến mãi 4', N'Mô tả KM 4', '2025-02-04', '2025-02-28', 25, N'%', N'Hoạt động'),
-('KM005', N'Khuyến mãi 5', N'Mô tả KM 5', '2025-02-05', '2025-02-28', 30, N'%', N'Hoạt động'),
-('KM006', N'Khuyến mãi 6', N'Mô tả KM 6', '2025-02-06', '2025-02-28', 35, N'%', N'Hoạt động'),
-('KM007', N'Khuyến mãi 7', N'Mô tả KM 7', '2025-02-07', '2025-02-28', 40, N'%', N'Hoạt động'),
-('KM008', N'Khuyến mãi 8', N'Mô tả KM 8', '2025-02-08', '2025-02-28', 45, N'%', N'Hoạt động'),
-('KM009', N'Khuyến mãi 9', N'Mô tả KM 9', '2025-02-09', '2025-02-28', 50, N'%', N'Hoạt động'),
-('KM010', N'Khuyến mãi 10', N'Mô tả KM 10', '2025-02-10', '2025-02-28', 55, N'%', N'Hoạt động');
-
+INSERT INTO khuyen_mai (ma_khuyen_mai, ten_khuyen_mai, mo_ta, ngay_bat_dau, ngay_het_han, gia_tri_toi_da, gia_tri_giam, kieu_giam_gia, trang_thai)
+VALUES 
+('KM001', N'Giảm giá Tết', N'Giảm 20% cho đơn hàng trên 500k', '2025-01-01', '2025-02-15', 100000, 20, N'Phần trăm', N'Đã kết thúc'),
+('KM002', N'Flash Sale', N'Giảm 100K cho đơn từ 300K', '2025-03-10', '2025-03-20', 100000, 100000, N'Tiền mặt', N'Đang diễn ra'),
+('KM003', N'Mừng sinh nhật', N'Giảm 15% tối đa 50K', '2025-05-01', '2025-05-07', 50000, 15, N'Phần trăm', N'Sắp diễn ra'),
+('KM004', N'Khuyến mãi hè', N'Giảm giá 50K đơn từ 400K', '2025-06-01', '2025-06-30', 50000, 50000, N'Tiền mặt', N'Sắp diễn ra'),
+('KM005', N'Black Friday', N'Giảm 30% tối đa 200K', '2024-11-20', '2024-11-30', 200000, 30, N'Phần trăm', N'Đã kết thúc');
 -------------------------------------
 -- 10. Bảng kich_thuoc (10 dòng)
 -------------------------------------
@@ -454,12 +431,7 @@ INSERT INTO chi_tiet_khuyen_mai (id_khuyen_mai, id_chi_tiet_san_pham) VALUES
 (2, 2),
 (3, 3),
 (4, 4),
-(5, 5),
-(6, 6),
-(7, 7),
-(8, 8),
-(9, 9),
-(10, 10);
+(5, 5);
 
 -------------------------------------
 -- 15. Bảng khach_hang (10 dòng)
@@ -467,14 +439,7 @@ INSERT INTO chi_tiet_khuyen_mai (id_khuyen_mai, id_chi_tiet_san_pham) VALUES
 INSERT INTO khach_hang (ma_khach_hang, ten_khach_hang, gioi_tinh, so_dien_thoai, ngay_sinh, email, id_tai_khoan, trang_thai) VALUES
 ('KH001', N'Nguyễn Văn M', 1, '0910000001', '1990-01-01', 'kh1@example.com', 1, N'Hoạt động'),
 ('KH002', N'Phạm Thị N', 0, '0910000002', '1991-02-02', 'kh2@example.com', 2, N'Hoạt động'),
-('KH003', N'Lê Văn O', 1, '0910000003', '1992-03-03', 'kh3@example.com', 3, N'Hoạt động'),
-('KH004', N'Trần Thị P', 0, '0910000004', '1993-04-04', 'kh4@example.com', 4, N'Hoạt động'),
-('KH005', N'Vũ Văn Q', 1, '0910000005', '1994-05-05', 'kh5@example.com', 5, N'Hoạt động'),
-('KH006', N'Đỗ Thị R', 0, '0910000006', '1995-06-06', 'kh6@example.com', 6, N'Hoạt động'),
-('KH007', N'Phạm Văn S', 1, '0910000007', '1996-07-07', 'kh7@example.com', 7, N'Hoạt động'),
-('KH008', N'Nguyễn Thị T', 0, '0910000008', '1997-08-08', 'kh8@example.com', 8, N'Hoạt động'),
-('KH009', N'Trần Văn U', 1, '0910000009', '1998-09-09', 'kh9@example.com', 9, N'Hoạt động'),
-('KH010', N'Lê Thị V', 0, '0910000010', '1999-10-10', 'kh10@example.com', 10, N'Hoạt động');
+('KH003', N'Lê Văn O', 1, '0910000003', '1992-03-03', 'kh3@example.com', 3, N'Hoạt động');
 
 -------------------------------------
 -- 16. Bảng gio_hang (10 dòng)
@@ -482,14 +447,7 @@ INSERT INTO khach_hang (ma_khach_hang, ten_khach_hang, gioi_tinh, so_dien_thoai,
 INSERT INTO gio_hang (id_khach_hang) VALUES
 (1),
 (2),
-(3),
-(4),
-(5),
-(6),
-(7),
-(8),
-(9),
-(10);
+(3);
 
 -------------------------------------
 -- 17. Bảng chi_tiet_gio_hang (10 dòng)
@@ -497,14 +455,7 @@ INSERT INTO gio_hang (id_khach_hang) VALUES
 INSERT INTO chi_tiet_gio_hang (id_gio_hang, id_chi_tiet_san_pham, so_luong) VALUES
 (1, 1, 1),
 (2, 2, 2),
-(3, 3, 1),
-(4, 4, 1),
-(5, 5, 2),
-(6, 6, 1),
-(7, 7, 3),
-(8, 8, 1),
-(9, 9, 2),
-(10, 10, 1);
+(3, 3, 1);
 
 -------------------------------------
 -- 18. Bảng binh_luan (10 dòng) - khóa chính (id_khach_hang, id_chi_tiet_san_pham)
@@ -512,14 +463,7 @@ INSERT INTO chi_tiet_gio_hang (id_gio_hang, id_chi_tiet_san_pham, so_luong) VALU
 INSERT INTO binh_luan (id_khach_hang, id_chi_tiet_san_pham, binh_luan, danh_gia, ngay_binh_luan, ngay_sua) VALUES
 (1, 1, N'Bình luận của khách 1', 4.5, '2025-02-01', '2025-02-01'),
 (2, 2, N'Bình luận của khách 2', 4.0, '2025-02-02', '2025-02-02'),
-(3, 3, N'Bình luận của khách 3', 5.0, '2025-02-03', '2025-02-03'),
-(4, 4, N'Bình luận của khách 4', 3.5, '2025-02-04', '2025-02-04'),
-(5, 5, N'Bình luận của khách 5', 4.2, '2025-02-05', '2025-02-05'),
-(6, 6, N'Bình luận của khách 6', 4.8, '2025-02-06', '2025-02-06'),
-(7, 7, N'Bình luận của khách 7', 4.0, '2025-02-07', '2025-02-07'),
-(8, 8, N'Bình luận của khách 8', 3.8, '2025-02-08', '2025-02-08'),
-(9, 9, N'Bình luận của khách 9', 5.0, '2025-02-09', '2025-02-09'),
-(10, 10, N'Bình luận của khách 10', 4.7, '2025-02-10', '2025-02-10');
+(3, 3, N'Bình luận của khách 3', 5.0, '2025-02-03', '2025-02-03');
 
 -------------------------------------
 -- 19. Bảng danh_sach_yeu_thich (10 dòng) - khóa chính (id_khach_hang, id_chi_tiet_san_pham)
@@ -527,14 +471,7 @@ INSERT INTO binh_luan (id_khach_hang, id_chi_tiet_san_pham, binh_luan, danh_gia,
 INSERT INTO danh_sach_yeu_thich (id_khach_hang, id_chi_tiet_san_pham, ngay_them) VALUES
 (1, 1, '2025-02-01'),
 (2, 2, '2025-02-02'),
-(3, 3, '2025-02-03'),
-(4, 4, '2025-02-04'),
-(5, 5, '2025-02-05'),
-(6, 6, '2025-02-06'),
-(7, 7, '2025-02-07'),
-(8, 8, '2025-02-08'),
-(9, 9, '2025-02-09'),
-(10, 10, '2025-02-10');
+(3, 3, '2025-02-03');
 
 -------------------------------------
 -- 20. Bảng dia_chi_khach_hang (10 dòng)
@@ -542,44 +479,25 @@ INSERT INTO danh_sach_yeu_thich (id_khach_hang, id_chi_tiet_san_pham, ngay_them)
 INSERT INTO dia_chi_khach_hang (id_khach_hang, dia_chi_khach_hang) VALUES
 (1, N'123 Đường A, Hà Nội'),
 (2, N'456 Đường B, Hồ Chí Minh'),
-(3, N'789 Đường C, Đà Nẵng'),
-(4, N'101 Đường D, Cần Thơ'),
-(5, N'202 Đường E, Huế'),
-(6, N'303 Đường F, Nha Trang'),
-(7, N'404 Đường G, Biên Hòa'),
-(8, N'505 Đường H, Hải Phòng'),
-(9, N'606 Đường I, Vũng Tàu'),
-(10, N'707 Đường J, Bình Dương');
+(3, N'789 Đường C, Đà Nẵng');
 
 -------------------------------------
 -- 21. Bảng voucher (10 dòng)
 -------------------------------------
-INSERT INTO voucher (ma_voucher, ten_voucher, ngay_tao, ngay_het_han, gia_tri_giam, gia_tri_toi_thieu, trang_thai, so_luong, kieu_giam_gia, mo_ta, gia_tri_toi_da) VALUES
-('VC001', N'Voucher 1', '2025-01-01', '2025-12-31', 50000, 200000, N'Hoạt động', 100, N'Giảm cố định', N'Mô tả voucher 1', 300000),
-('VC002', N'Voucher 2', '2025-01-02', '2025-12-31', 60000, 200000, N'Hoạt động', 90, N'Giảm cố định', N'Mô tả voucher 2', 300000),
-('VC003', N'Voucher 3', '2025-01-03', '2025-12-31', 70000, 200000, N'Hoạt động', 80, N'Giảm cố định', N'Mô tả voucher 3', 300000),
-('VC004', N'Voucher 4', '2025-01-04', '2025-12-31', 80000, 200000, N'Hoạt động', 70, N'Giảm cố định', N'Mô tả voucher 4', 300000),
-('VC005', N'Voucher 5', '2025-01-05', '2025-12-31', 90000, 200000, N'Hoạt động', 60, N'Giảm cố định', N'Mô tả voucher 5', 300000),
-('VC006', N'Voucher 6', '2025-01-06', '2025-12-31', 100000, 200000, N'Hoạt động', 50, N'Giảm cố định', N'Mô tả voucher 6', 300000),
-('VC007', N'Voucher 7', '2025-01-07', '2025-12-31', 110000, 200000, N'Hoạt động', 40, N'Giảm cố định', N'Mô tả voucher 7', 300000),
-('VC008', N'Voucher 8', '2025-01-08', '2025-12-31', 120000, 200000, N'Hoạt động', 30, N'Giảm cố định', N'Mô tả voucher 8', 300000),
-('VC009', N'Voucher 9', '2025-01-09', '2025-12-31', 130000, 200000, N'Hoạt động', 20, N'Giảm cố định', N'Mô tả voucher 9', 300000),
-('VC010', N'Voucher 10', '2025-01-10', '2025-12-31', 140000, 200000, N'Hoạt động', 10, N'Giảm cố định', N'Mô tả voucher 10', 300000);
-
+INSERT INTO voucher (ma_voucher, ten_voucher, ngay_tao, ngay_het_han, gia_tri_giam, gia_tri_toi_thieu, trang_thai, so_luong, kieu_giam_gia, mo_ta, gia_tri_toi_da)
+VALUES 
+('VC001', N'Voucher 50K', '2025-01-05', '2025-03-01', 50000, 300000, N'Đã kết thúc', 0, N'Tiền mặt', N'Giảm 50K cho đơn hàng từ 300K', 50000),
+('VC002', N'Voucher 10%', '2025-02-10', '2025-04-01', 10, 500000, N'Đang diễn ra', 50, N'Phần trăm', N'Giảm 10% cho đơn từ 500K', 100000),
+('VC003', N'Voucher sinh nhật', '2025-03-01', '2025-03-31', 20, 400000, N'Đang diễn ra', 30, N'Phần trăm', N'Ưu đãi sinh nhật 20% đơn từ 400K', 80000),
+('VC004', N'Voucher 150K', '2025-06-05', '2025-07-01', 150000, 700000, N'Sắp diễn ra', 30, N'Tiền mặt', N'Giảm ngay 150K cho đơn từ 700K', 150000),
+('VC005', N'Voucher mùa hè', '2025-07-10', '2025-08-10', 15, 350000, N'Sắp diễn ra', 20, N'Phần trăm', N'Giảm 15% tối đa 75K', 75000);
 -------------------------------------
 -- 22. Bảng hoa_don (10 dòng)
 -------------------------------------
 INSERT INTO hoa_don (ma_hoa_don, id_nhan_vien, id_khach_hang, ngay_tao, ngay_sua, trang_thai, id_voucher, sdt_nguoi_nhan, dia_chi, email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten, tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang) VALUES
 ('HD001', 1, 1, '2025-02-01', '2025-02-01', N'Chờ xử lý', 1, '0910000001', N'123 Đường A, Hà Nội', 'kh1@example.com', 1000000, 50000, N'Nguyễn Văn M', 950000, N'Tiền mặt', N'Giao hàng'),
 ('HD002', 2, 2, '2025-02-02', '2025-02-02', N'Chờ xử lý', 2, '0910000002', N'456 Đường B, Hồ Chí Minh', 'kh2@example.com', 2000000, 60000, N'Phạm Thị N', 1940000, N'Chuyển khoản', N'Nhận tại cửa hàng'),
-('HD003', 3, 3, '2025-02-03', '2025-02-03', N'Chờ xử lý', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 3000000, 70000, N'Lê Văn O', 2930000, N'Tiền mặt', N'Giao hàng'),
-('HD004', 4, 4, '2025-02-04', '2025-02-04', N'Chờ xử lý', 4, '0910000004', N'101 Đường D, Cần Thơ', 'kh4@example.com', 4000000, 80000, N'Trần Thị P', 3920000, N'Chuyển khoản', N'Nhận tại cửa hàng'),
-('HD005', 5, 5, '2025-02-05', '2025-02-05', N'Chờ xử lý', 5, '0910000005', N'202 Đường E, Huế', 'kh5@example.com', 5000000, 90000, N'Vũ Văn Q', 4910000, N'Tiền mặt', N'Giao hàng'),
-('HD006', 6, 6, '2025-02-06', '2025-02-06', N'Chờ xử lý', 6, '0910000006', N'303 Đường F, Nha Trang', 'kh6@example.com', 6000000, 100000, N'Đỗ Thị R', 5900000, N'Chuyển khoản', N'Nhận tại cửa hàng'),
-('HD007', 7, 7, '2025-02-07', '2025-02-07', N'Chờ xử lý', 7, '0910000007', N'404 Đường G, Biên Hòa', 'kh7@example.com', 7000000, 110000, N'Phạm Văn S', 6890000, N'Tiền mặt', N'Giao hàng'),
-('HD008', 8, 8, '2025-02-08', '2025-02-08', N'Chờ xử lý', 8, '0910000008', N'505 Đường H, Hải Phòng', 'kh8@example.com', 8000000, 120000, N'Nguyễn Thị T', 7880000, N'Chuyển khoản', N'Nhận tại cửa hàng'),
-('HD009', 9, 9, '2025-02-09', '2025-02-09', N'Chờ xử lý', 9, '0910000009', N'606 Đường I, Vũng Tàu', 'kh9@example.com', 9000000, 130000, N'Trần Văn U', 8870000, N'Tiền mặt', N'Giao hàng'),
-('HD010', 10, 10, '2025-02-10', '2025-02-10', N'Chờ xử lý', 10, '0910000010', N'707 Đường J, Bình Dương', 'kh10@example.com', 10000000, 140000, N'Lê Thị V', 9860000, N'Chuyển khoản', N'Nhận tại cửa hàng');
+('HD003', 3, 3, '2025-02-03', '2025-02-03', N'Chờ xử lý', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 3000000, 70000, N'Lê Văn O', 2930000, N'Tiền mặt', N'Giao hàng');
 
 -------------------------------------
 -- 23. Bảng hoa_don_chi_tiet (10 dòng)
@@ -587,14 +505,7 @@ INSERT INTO hoa_don (ma_hoa_don, id_nhan_vien, id_khach_hang, ngay_tao, ngay_sua
 INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia) VALUES
 (1, 1, 1, 100000),
 (2, 2, 2, 200000),
-(3, 3, 1, 300000),
-(4, 4, 1, 400000),
-(5, 5, 2, 500000),
-(6, 6, 1, 600000),
-(7, 7, 3, 700000),
-(8, 8, 1, 800000),
-(9, 9, 2, 900000),
-(10, 10, 1, 1000000);
+(3, 3, 1, 300000);
 
 -------------------------------------
 -- 24. Bảng theo_doi_don_hang (10 dòng)
@@ -602,14 +513,7 @@ INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gi
 INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
 (1, N'Đang xử lý', '2025-02-02'),
 (2, N'Đang xử lý', '2025-02-03'),
-(3, N'Đang xử lý', '2025-02-04'),
-(4, N'Đang xử lý', '2025-02-05'),
-(5, N'Đang xử lý', '2025-02-06'),
-(6, N'Đang xử lý', '2025-02-07'),
-(7, N'Đang xử lý', '2025-02-08'),
-(8, N'Đang xử lý', '2025-02-09'),
-(9, N'Đang xử lý', '2025-02-10'),
-(10, N'Đang xử lý', '2025-02-11');
+(3, N'Đang xử lý', '2025-02-04');
 
 -------------------------------------
 -- 25. Bảng yeu_cau_doi_hang (10 dòng)
@@ -617,14 +521,7 @@ INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
 INSERT INTO yeu_cau_doi_hang (ma_yeu_cau, id_hoa_don, id_san_pham_moi, trang_thai_san_pham, ngay_yeu_cau, ngay_xu_ly, ly_do_doi) VALUES
 ('YC001', 1, 1, N'Mới', '2025-02-03', '2025-02-04', N'Lỗi sản phẩm'),
 ('YC002', 2, 2, N'Mới', '2025-02-04', '2025-02-05', N'Lỗi sản phẩm'),
-('YC003', 3, 3, N'Mới', '2025-02-05', '2025-02-06', N'Lỗi sản phẩm'),
-('YC004', 4, 4, N'Mới', '2025-02-06', '2025-02-07', N'Lỗi sản phẩm'),
-('YC005', 5, 5, N'Mới', '2025-02-07', '2025-02-08', N'Lỗi sản phẩm'),
-('YC006', 6, 6, N'Mới', '2025-02-08', '2025-02-09', N'Lỗi sản phẩm'),
-('YC007', 7, 7, N'Mới', '2025-02-09', '2025-02-10', N'Lỗi sản phẩm'),
-('YC008', 8, 8, N'Mới', '2025-02-10', '2025-02-11', N'Lỗi sản phẩm'),
-('YC009', 9, 9, N'Mới', '2025-02-11', '2025-02-12', N'Lỗi sản phẩm'),
-('YC010', 10, 10, N'Mới', '2025-02-12', '2025-02-13', N'Lỗi sản phẩm');
+('YC003', 3, 3, N'Mới', '2025-02-05', '2025-02-06', N'Lỗi sản phẩm');
 
 -------------------------------------
 -- 26. Bảng hinh_anh_doi_hang (10 dòng)
@@ -632,14 +529,7 @@ INSERT INTO yeu_cau_doi_hang (ma_yeu_cau, id_hoa_don, id_san_pham_moi, trang_tha
 INSERT INTO hinh_anh_doi_hang (id_yeu_cau, hinh_anh) VALUES
 (1, 'doi_img1.jpg'),
 (2, 'doi_img2.jpg'),
-(3, 'doi_img3.jpg'),
-(4, 'doi_img4.jpg'),
-(5, 'doi_img5.jpg'),
-(6, 'doi_img6.jpg'),
-(7, 'doi_img7.jpg'),
-(8, 'doi_img8.jpg'),
-(9, 'doi_img9.jpg'),
-(10, 'doi_img10.jpg');
+(3, 'doi_img3.jpg');
 
 -------------------------------------
 -- 27. Bảng phieu_doi_hang (10 dòng)
@@ -647,12 +537,5 @@ INSERT INTO hinh_anh_doi_hang (id_yeu_cau, hinh_anh) VALUES
 INSERT INTO phieu_doi_hang (id_yeu_cau, ma_phieu_doi, phuong_thuc_thanh_toan, ngay_xuat_phieu, trang_thai, gia_tri_chenh_lech) VALUES
 (1, 'PDH001', N'Tiền mặt', '2025-02-05', N'Đã xuất', 10000),
 (2, 'PDH002', N'Chuyển khoản', '2025-02-06', N'Đã xuất', 20000),
-(3, 'PDH003', N'Tiền mặt', '2025-02-07', N'Đã xuất', 30000),
-(4, 'PDH004', N'Chuyển khoản', '2025-02-08', N'Đã xuất', 40000),
-(5, 'PDH005', N'Tiền mặt', '2025-02-09', N'Đã xuất', 50000),
-(6, 'PDH006', N'Chuyển khoản', '2025-02-10', N'Đã xuất', 60000),
-(7, 'PDH007', N'Tiền mặt', '2025-02-11', N'Đã xuất', 70000),
-(8, 'PDH008', N'Chuyển khoản', '2025-02-12', N'Đã xuất', 80000),
-(9, 'PDH009', N'Tiền mặt', '2025-02-13', N'Đã xuất', 90000),
-(10, 'PDH010', N'Chuyển khoản', '2025-02-14', N'Đã xuất', 100000);
+(3, 'PDH003', N'Tiền mặt', '2025-02-07', N'Đã xuất', 30000);
 

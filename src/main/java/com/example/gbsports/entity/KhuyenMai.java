@@ -30,12 +30,10 @@ public class KhuyenMai {
     @Column(name = "mo_ta")
     private String moTa;
 
-    @Column(name = "ngay_bat_dau")
-    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_bat_dau", columnDefinition = "TIMESTAMP")
     private LocalDateTime ngayBatDau;
 
-    @Column(name = "ngay_het_han")
-    @Temporal(TemporalType.DATE)
+    @Column(name = "ngay_het_han", columnDefinition = "TIMESTAMP")
     private LocalDateTime ngayHetHan;
 
     @Column(name = "gia_tri_giam")

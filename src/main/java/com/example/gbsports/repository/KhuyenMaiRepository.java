@@ -15,7 +15,7 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
     @Query("""
         SELECT new com.example.gbsports.response.KhuyenMaiResponse
         (km.id, km.maKhuyenMai, km.tenKhuyenMai, km.moTa, km.ngayBatDau, km.ngayHetHan, 
-         km.giaTriGiam, km.kieuGiamGia, km.trangThai) 
+         km.giaTriGiam, km.kieuGiamGia, km.trangThai, km.giaTriToiDa) 
         FROM KhuyenMai km
         """)
     Page<KhuyenMaiResponse> phanTrang(Pageable pageable);
@@ -26,7 +26,7 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
         SELECT new com.example.gbsports.response.KhuyenMaiResponse(
             km.id, km.maKhuyenMai, km.tenKhuyenMai, km.moTa, 
             km.ngayBatDau, km.ngayHetHan, km.giaTriGiam, 
-            km.kieuGiamGia, km.trangThai)
+            km.kieuGiamGia, km.trangThai, km.giaTriToiDa)
         FROM KhuyenMai km
         WHERE km.trangThai = :trangThai
     """)
@@ -35,7 +35,7 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
         SELECT new com.example.gbsports.response.KhuyenMaiResponse(
             km.id, km.maKhuyenMai, km.tenKhuyenMai, km.moTa, 
             km.ngayBatDau, km.ngayHetHan, km.giaTriGiam, 
-            km.kieuGiamGia, km.trangThai)
+            km.kieuGiamGia, km.trangThai, km.giaTriToiDa)
         FROM KhuyenMai km
         WHERE (:search IS NULL OR km.maKhuyenMai LIKE %:search% OR km.tenKhuyenMai LIKE %:search%) 
     """)
