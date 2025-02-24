@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/datngbsprort.iml" filepath="$PROJECT_DIR$/datngbsprort.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gbsport.iml" filepath="$PROJECT_DIR$/gbsport.iml" />
     </modules>
   </component>
 </project>
