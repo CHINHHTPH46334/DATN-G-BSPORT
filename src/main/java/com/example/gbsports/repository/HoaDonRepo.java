@@ -17,24 +17,24 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     Page<HoaDonResponse> phanTrang(Pageable pageable);
 
     @Query(value = """
-                SELECT * 
+                SELECT hd.*
                 FROM hoa_don hd
                 JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                WHERE (:maHoaDon IS NULL OR hd.ma_hoa_don LIKE %:maHoaDon%)
-                AND (:maNhanVien IS NULL OR nv.ma_nhan_vien LIKE %:maNhanVien%)
-                AND (:sdtNguoiNhan IS NULL OR hd.sdt_nguoi_nhan LIKE %:sdtNguoiNhan%)
+                WHERE (:keyword IS NULL OR hd.ma_hoa_don LIKE %:keyword%)
+                OR (:keyword IS NULL OR nv.ma_nhan_vien LIKE %:keyword%)
+                OR (:keyword IS NULL OR hd.sdt_nguoi_nhan LIKE %:keyword%)
             """, nativeQuery = true)
     List<HoaDonResponse> timHoaDon(
-            @Param("maHoaDon") String maHoaDon,
-            @Param("maNhanVien") String maNhanVien,
-            @Param("sdtNguoiNhan") String sdtNguoiNhan
+            @Param("keyword") String keyword
+//            @Param("maNhanVien") String maNhanVien,
+//            @Param("sdtNguoiNhan") String sdtNguoiNhan
     );
 
     //Lọc theo khoảng ngày
     @Query(value = """
-                SELECT * 
-                FROM hoa_don 
-                WHERE ngay_tao BETWEEN :tuNgay AND :denNgay
+                SELECT hd.* 
+                FROM hoa_don hd
+                WHERE hd.ngay_tao BETWEEN :tuNgay AND :denNgay
             """, nativeQuery = true)
     List<HoaDonResponse> findHoaDonByNgay(
             @Param("tuNgay") Date tuNgay,
@@ -46,7 +46,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 SELECT hd.*
                 FROM hoa_don hd
                 JOIN theo_doi_don_hang tdh ON hd.id_hoa_don = tdh.id_hoa_don
-                WHERE tdh.trang_thai = :trangThai
+                WHERE tdh.trang_thai = ?1
             """, nativeQuery = true)
     List<HoaDonResponse> findHoaDonByTrangThaiGiaoHang(@Param("trangThai") String trangThai);
 

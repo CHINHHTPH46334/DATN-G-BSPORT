@@ -4,7 +4,7 @@ import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.HoaDonChiTietRepo;
 import com.example.gbsports.repository.HoaDonRepo;
 import com.example.gbsports.response.HoaDonResponse;
-import com.example.gbsports.service.HoaDonService;
+//import com.example.gbsports.service.HoaDonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +14,8 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/hoa_don")
 public class HoaDonController {
 
@@ -30,37 +32,65 @@ public class HoaDonController {
     private HoaDonRepo hoaDonRepo;
     @Autowired
     private HoaDonChiTietRepo hoaDonChiTietRepo;
-    @Autowired
-    private HoaDonService hoaDonService;
+//    @Autowired
+//    private HoaDonService hoaDonService;
 
     @GetMapping("/danh_sach_hoa_don")
-    public List<HoaDon> getAllHD(){
-        return hoaDonRepo.findAll();
+    public String getAllHD(Model model) {
+        model.addAttribute("hd", hoaDonRepo.findAll());
+        return "hoa_don";
     }
 
     @GetMapping("/phan_trang")
-    public List<HoaDonResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
-                                          @RequestParam(value = "size", defaultValue = "5") Integer size){
+    public String phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
+                            @RequestParam(value = "size", defaultValue = "3") Integer size, Model model) {
         Pageable pageable = PageRequest.of(page, size);
         Page<HoaDonResponse> list = hoaDonRepo.phanTrang(pageable);
-        return list.getContent();
+        if (page == (list.getTotalPages() - 1)) {
+            page = list.getTotalPages() - 1;
+            model.addAttribute("pagephai", page);
+        } else {
+            model.addAttribute("pagephai", page + 1);
+        }
+        if (page == 0) {
+            page = 0;
+            model.addAttribute("pagetrai", page);
+        } else {
+            model.addAttribute("pagetrai", page - 1);
+        }
+        model.addAttribute("hd", list.getContent());
+        return "hoa_don";
     }
+
     @GetMapping("/tim_kiem")
-    public List<HoaDonResponse> search(@RequestParam(name = "maHoaDon", required = false) String maHoaDon,
-                                       @RequestParam(name = "maNhanVien", required = false) String maNhanVien,
-                                       @RequestParam(name = "sdtNguoiNhan", required = false) String sdtNguoiNhan){
-        return hoaDonRepo.timHoaDon(maHoaDon, maNhanVien, sdtNguoiNhan);
+    public String search(@RequestParam(name = "keyword", required = false) String keyword, Model model) {
+        if (keyword == null || keyword.isEmpty()) {
+            model.addAttribute("hd", hoaDonRepo.findAll());
+        } else {
+            model.addAttribute("hd", hoaDonRepo.timHoaDon(keyword));
+        }
+        return "hoa_don";
     }
 
     @GetMapping("/loc_ngay")
-    public List<HoaDonResponse> locTheoNgay(@RequestParam(name = "tuNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date tuNgay,
-                                            @RequestParam(name = "denNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date denNgay){
-        return hoaDonRepo.findHoaDonByNgay(tuNgay, denNgay);
+    public String locTheoNgay(@RequestParam(name = "tuNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date tuNgay,
+                              @RequestParam(name = "denNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date denNgay, Model model) {
+        model.addAttribute("hd", hoaDonRepo.findHoaDonByNgay(tuNgay, denNgay));
+        return "hoa_don";
     }
 
     @GetMapping("/loc_trang_thai_don_hang")
-    public List<HoaDonResponse> getHoaDonByTrangThaiGiaoHang(@RequestParam(name = "trangThai", required = false) String trangThai) {
-        return hoaDonRepo.findHoaDonByTrangThaiGiaoHang(trangThai);
+    public String getHoaDonByTrangThaiGiaoHang(@RequestParam(name = "trangThai", required = false) String trangThai, Model model) {
+        if (trangThai == null || trangThai.isEmpty()) {
+            model.addAttribute("hd", hoaDonRepo.findAll());
+        } else {
+            trangThai.trim();
+            model.addAttribute("hd", hoaDonRepo.findHoaDonByTrangThaiGiaoHang(trangThai));
+        }
+        model.addAttribute("selectedTT", trangThai);
+        System.out.println("trạng thái: " + trangThai);
+        System.out.println("List: " + hoaDonRepo.findHoaDonByTrangThaiGiaoHang(trangThai).size());
+        return "hoa_don";
     }
 
 //    @GetMapping("/xuat_hoa_don")
