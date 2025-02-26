@@ -24,10 +24,11 @@ public interface KhachHangRepo extends JpaRepository<KhachHang, Integer> {
             "LOWER(ten_khach_hang) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "so_dien_thoai LIKE %:keyword% OR " +
             "LOWER(ma_khach_hang) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    List<KhachHangResponse> timKhachHang(@Param("keyword") String keyword);
+    Page<KhachHang> timKhachHang(@Param("keyword") String keyword, Pageable pageable);
 
     @Query(value = "SELECT * FROM khach_hang WHERE trang_thai = :trangThai", nativeQuery = true)
-    List<KhachHangResponse> locKhachHangTheoTrangThai(@Param("trangThai") String trangThai);
+    Page<KhachHang> locKhachHangTheoTrangThai(@Param("trangThai") String trangThai, Pageable pageable);
+
 
     @Query("SELECT k FROM KhachHang k WHERE k.idKhachHang = :id")
     Optional<KhachHang> findOriginalById(@Param("id") Long id);

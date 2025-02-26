@@ -12,7 +12,7 @@ import java.util.Date;
 public class KhachHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_khach_hang")
+    @Column(name = "id_khach_hang") // Đảm bảo tên cột đúng với database
     private Integer idKhachHang;
 
     @Column(name = "ma_khach_hang")
@@ -39,7 +39,7 @@ public class KhachHang {
     private String trangThai;
 
     @ManyToOne
-    @JoinColumn(name = "id_tai_khoan")
+    @JoinColumn(name = "id_tai_khoan") // Đảm bảo ánh xạ khóa ngoại đúng
     private TaiKhoan taiKhoan;
 }
 
