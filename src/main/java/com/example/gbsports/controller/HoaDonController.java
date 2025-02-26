@@ -36,16 +36,11 @@ public class HoaDonController {
 //    private HoaDonService hoaDonService;
 
     @GetMapping("/danh_sach_hoa_don")
-    public String getAllHD(Model model) {
-        model.addAttribute("hd", hoaDonRepo.findAll());
-        return "hoa_don";
-    }
-
-    @GetMapping("/phan_trang")
-    public String phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
-                            @RequestParam(value = "size", defaultValue = "3") Integer size, Model model) {
+    public String getAllHD(Model model,
+                           @RequestParam(value = "page", defaultValue = "0") Integer page,
+                           @RequestParam(value = "size", defaultValue = "3") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<HoaDonResponse> list = hoaDonRepo.phanTrang(pageable);
+        Page<HoaDon> list = hoaDonRepo.findAll(pageable);
         if (page == (list.getTotalPages() - 1)) {
             page = list.getTotalPages() - 1;
             model.addAttribute("pagephai", page);
@@ -58,17 +53,59 @@ public class HoaDonController {
         } else {
             model.addAttribute("pagetrai", page - 1);
         }
+        model.addAttribute("pagemax", list.getTotalPages() - 1);
         model.addAttribute("hd", list.getContent());
         return "hoa_don";
     }
 
+//    @GetMapping("/phan_trang")
+//    public String phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
+//                            @RequestParam(value = "size", defaultValue = "3") Integer size, Model model) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<HoaDonResponse> list = hoaDonRepo.phanTrang(pageable);
+//        if (page == (list.getTotalPages() - 1)) {
+//            page = list.getTotalPages() - 1;
+//            model.addAttribute("pagephai", page);
+//        } else {
+//            model.addAttribute("pagephai", page + 1);
+//        }
+//        if (page == 0) {
+//            page = 0;
+//            model.addAttribute("pagetrai", page);
+//        } else {
+//            model.addAttribute("pagetrai", page - 1);
+//        }
+//        model.addAttribute("hd", list.getContent());
+//        return "hoa_don";
+//    }
+
     @GetMapping("/tim_kiem")
-    public String search(@RequestParam(name = "keyword", required = false) String keyword, Model model) {
+    public String search(@RequestParam(name = "keyword", required = false) String keyword, Model model,
+                         @RequestParam(value = "page", defaultValue = "0") Integer page,
+                         @RequestParam(value = "size", defaultValue = "3") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<HoaDon> list;
         if (keyword == null || keyword.isEmpty()) {
-            model.addAttribute("hd", hoaDonRepo.findAll());
+            list = hoaDonRepo.findAll(pageable);
         } else {
-            model.addAttribute("hd", hoaDonRepo.timHoaDon(keyword));
+            list = hoaDonRepo.timHoaDon(keyword, pageable);
         }
+        if (page == (list.getTotalPages() - 1)) {
+            page = list.getTotalPages() - 1;
+            model.addAttribute("pagephai", page);
+        } else {
+            model.addAttribute("pagephai", page + 1);
+        }
+        if (page == 0) {
+            page = 0;
+            model.addAttribute("pagetrai", page);
+        } else {
+            model.addAttribute("pagetrai", page - 1);
+        }
+        model.addAttribute("pagemax", list.getTotalPages() - 1);
+        model.addAttribute("hd", list.getContent());
+        System.out.println("keyword: "+ keyword);
+        System.out.println("size"+ list.getContent().size());
         return "hoa_don";
     }
 

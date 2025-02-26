@@ -110,13 +110,21 @@
         </table>
 
         <!-- Phân trang -->
+<%--        <nav>--%>
+<%--            <ul class="pagination justify-content-center">--%>
+<%--                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=${pagetrai}&size=3">«</a></li>--%>
+<%--                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=0&size=3">1</a></li>--%>
+<%--                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=1&size=3">2</a></li>--%>
+<%--                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=2&size=3">3</a></li>--%>
+<%--                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=${pagephai}&size=3">»</a></li>--%>
+<%--            </ul>--%>
+<%--        </nav>--%>
         <nav>
             <ul class="pagination justify-content-center">
-                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=${pagetrai}&size=3">«</a></li>
-                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=0&size=3">1</a></li>
-                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=1&size=3">2</a></li>
-                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=2&size=3">3</a></li>
-                <li class="page-item"><a class="page-link" href="/hoa_don/phan_trang?page=${pagephai}&size=3">»</a></li>
+                <li class="page-item"><a class="page-link" href="?page=0">Trang đầu</a></li>
+                <li class="page-item"><a class="page-link" href="?page=${pagetrai}">Trước</a></li>
+                <li class="page-item"><a class="page-link" href="?page=${pagephai}">Sau</a></li>
+                <li class="page-item"><a class="page-link" href="?page=${pagemax}">Trang cuối</a></li>
             </ul>
         </nav>
     </div>

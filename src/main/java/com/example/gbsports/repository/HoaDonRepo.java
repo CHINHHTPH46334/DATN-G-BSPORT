@@ -20,12 +20,12 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 SELECT hd.*
                 FROM hoa_don hd
                 JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                WHERE (:keyword IS NULL OR hd.ma_hoa_don LIKE %:keyword%)
-                OR (:keyword IS NULL OR nv.ma_nhan_vien LIKE %:keyword%)
-                OR (:keyword IS NULL OR hd.sdt_nguoi_nhan LIKE %:keyword%)
+                WHERE :keyword IS NULL OR hd.ma_hoa_don LIKE %:keyword%
+                OR :keyword IS NULL OR nv.ma_nhan_vien LIKE %:keyword%
+                OR :keyword IS NULL OR hd.sdt_nguoi_nhan LIKE %:keyword%
             """, nativeQuery = true)
-    List<HoaDonResponse> timHoaDon(
-            @Param("keyword") String keyword
+    Page<HoaDon> timHoaDon(
+            @Param("keyword") String keyword, Pageable pageable
 //            @Param("maNhanVien") String maNhanVien,
 //            @Param("sdtNguoiNhan") String sdtNguoiNhan
     );
