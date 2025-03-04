@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -19,24 +20,26 @@ public class HoaDon {
     @ManyToOne
     @JoinColumn(name = "id_nhan_vien")
     private NhanVien nhanVien;
-    //    id_khach_hang int references khach_hang(id_khach_hang),
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date ngay_sua;
+    @ManyToOne
+    @JoinColumn(name = "id_khach_hang")
+    private KhachHang khachHang;
+    @Column(name = "ngay_tao")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_tao;
+    @Column(name = "ngay_sua")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_sua;
     private String trang_thai;
-    //    @ManyToOne
-//    @JoinColumn(name = "id_voucher")
-    //    id_voucher int references voucher(id_voucher),
+    @ManyToOne
+    @JoinColumn(name = "id_voucher")
+    private Voucher voucher;
     private String sdt_nguoi_nhan;
     private String dia_chi;
     private String email;
-    private float tong_tien_truoc_giam;
-    private float phi_van_chuyen;
+    private BigDecimal tong_tien_truoc_giam;
+    private BigDecimal phi_van_chuyen;
     private String ho_ten;
-    private float tong_tien_sau_giam;
+    private BigDecimal tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
 

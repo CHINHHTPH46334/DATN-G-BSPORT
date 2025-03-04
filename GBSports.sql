@@ -19,7 +19,7 @@ mat_khau varchar(200)
 create table lich_su_dang_nhap(
 id_lich_su_dang_nhap int identity(1,1) primary key,
 id_tai_khoan int references tai_khoan(id_tai_khoan),
-ngay_dang_nhap date,
+ngay_dang_nhap datetime,
 ip_adress varchar(200)
 );
 --Nhân viên
@@ -34,6 +34,8 @@ email varchar(200),
 dia_chi_lien_he nvarchar(200),
 gioi_tinh bit,
 so_dien_thoai varchar(20),
+anh_nhan_vien varchar(200),
+ngay_tham_gia date,
 trang_thai nvarchar(50)
 );
 --Danh mục sản phẩm
@@ -42,8 +44,8 @@ id_danh_muc int identity(1,1) primary key,
 ma_danh_muc varchar(50),
 ten_danh_muc nvarchar(200),
 trang_thai nvarchar(50),
-ngay_tao date,
-ngay_sua date
+ngay_tao datetime,
+ngay_sua datetime
 );
 --Chất liệu
 create table chat_lieu(
@@ -57,8 +59,8 @@ id_thuong_hieu int identity(1,1) primary key,
 ma_thuong_hieu varchar(50),
 ten_thuong_hieu nvarchar(200),
 trang_thai nvarchar(50),
-ngay_tao date,
-ngay_sua date
+ngay_tao datetime,
+ngay_sua datetime
 );
 --Sản phẩm
 create table san_pham(
@@ -106,8 +108,8 @@ qr_code varchar(200),
 gia_ban decimal(12,2),
 so_luong int,
 trang_thai nvarchar(50),
-ngay_tao date,
-ngay_sua date,
+ngay_tao datetime,
+ngay_sua datetime,
 gia_nhap decimal(12,2),
 id_kich_thuoc int references kich_thuoc(id_kich_thuoc),
 id_mau_sac int references mau_sac(id_mau_sac)
@@ -133,7 +135,7 @@ ma_khach_hang nvarchar(50),
 ten_khach_hang nvarchar(200),
 gioi_tinh bit,
 so_dien_thoai varchar(20),
-ngay_sinh date,
+ngay_sinh datetime,
 email varchar(200),
 id_tai_khoan int references tai_khoan(id_tai_khoan),
 trang_thai nvarchar(50)
@@ -156,15 +158,15 @@ id_khach_hang int references khach_hang(id_khach_hang),
 id_chi_tiet_san_pham int references chi_tiet_san_pham(id_chi_tiet_san_pham),
 binh_luan nvarchar(250),
 danh_gia float,
-ngay_binh_luan date,
-ngay_sua date
+ngay_binh_luan datetime,
+ngay_sua datetime
 primary key(id_khach_hang, id_chi_tiet_san_pham)
 );
 --Danh sách yêu thích
 create table danh_sach_yeu_thich(
 id_khach_hang int references khach_hang(id_khach_hang),
 id_chi_tiet_san_pham int references chi_tiet_san_pham(id_chi_tiet_san_pham),
-ngay_them date
+ngay_them datetime
 primary key(id_khach_hang, id_chi_tiet_san_pham)
 );
 --địa chỉ khách hàng
@@ -194,8 +196,8 @@ id_hoa_don int identity(1,1) primary key,
 ma_hoa_don varchar(50),
 id_nhan_vien int references nhan_vien(id_nhan_vien),
 id_khach_hang int references khach_hang(id_khach_hang),
-ngay_tao date,
-ngay_sua date,
+ngay_tao datetime,
+ngay_sua datetime,
 trang_thai nvarchar(50),
 id_voucher int references voucher(id_voucher),
 sdt_nguoi_nhan varchar(20),
@@ -222,7 +224,7 @@ create table theo_doi_don_hang(
 id_don_hang int identity(1,1) primary key,
 id_hoa_don int references hoa_don(id_hoa_don),
 trang_thai nvarchar(50),
-ngay_chuyen date
+ngay_chuyen datetime
 );
 --Yêu cầu đổi hàng
 create table yeu_cau_doi_hang(
@@ -231,8 +233,8 @@ ma_yeu_cau varchar(50),
 id_hoa_don int references hoa_don(id_hoa_don),
 id_san_pham_moi int references chi_tiet_san_pham(id_chi_tiet_san_pham),
 trang_thai_san_pham nvarchar(100),
-ngay_yeu_cau date,
-ngay_xu_ly date,
+ngay_yeu_cau datetime,
+ngay_xu_ly datetime,
 ly_do_doi nvarchar(200)
 );
 --Hình ảnh đổi hàng
@@ -247,7 +249,7 @@ id_phieu_doi int identity(1,1) primary key,
 id_yeu_cau int references yeu_cau_doi_hang(id_yeu_cau),
 ma_phieu_doi varchar(50),
 phuong_thuc_thanh_toan nvarchar(50),
-ngay_xuat_phieu date,
+ngay_xuat_phieu datetime,
 trang_thai nvarchar(50),
 gia_tri_chenh_lech decimal
 );
@@ -278,20 +280,17 @@ INSERT INTO lich_su_dang_nhap (id_tai_khoan, ngay_dang_nhap, ip_adress) VALUES
 -------------------------------------
 -- 4. Bảng nhan_vien (10 dòng)
 -------------------------------------
-INSERT INTO nhan_vien (id_roles, id_tai_khoan, ma_nhan_vien, ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, trang_thai) VALUES
-(1, 1, N'NV01', N'Phạm Thị Quỳnh Thu', CAST(N'2002-07-10' AS Date), N'ptqt10722@gmail.com', N'Phương Canh, Nam Từ Liêm, Hà Nội', 0, N'0359765372', N'Đang hoạt động'),
-(2, 2, N'NV02', N'Nguyễn Hữu Nghĩa', CAST(N'2000-10-17' AS Date), N'nghianhph46340@fpt.edu.vn', N'Phương Canh, Nam Từ Liêm, Hà Nội', 1, N'0353225292', N'Đang hoạt động'),
-(2, 2, N'NV03', N'Hoàng Thọ Chính', CAST(N'2004-12-13' AS Date), N'chinhhtph46334@fpt.edu.vn', N'Hoài Đức, Hà Nội', 1, N'0989864737', N'Đang hoạt động'),
-(2, 2, N'NV04', N'Nguyễn Thị Kiều Anh', CAST(N'2003-04-12' AS Date), N'annv@gmail.com', N'Bắc Từ Liêm, Hà Nội', 0, N'0378854735', N'Đã nghỉ việc'),
-(2, 2, N'NV05', N'Vũ Tuấn Huy', CAST(N'2004-02-15' AS Date), N'huyvtph46307@fpt.edu.vn', N'Đội Cấn, Ba Đình, Hà Nội', 1, N'0912301363', N'Đang hoạt động'),
-(2, 2, N'NV06', N'Hồ Bá Dũng', CAST(N'2004-11-14' AS Date), N'dunghbph46428@fpt.edu.vn', N'Xã Đàn, Đống Đa, Hà Nội', 1, N'0397572262', N'Đang hoạt động'),
-(2, 2, N'NV07', N'Phùn Văn Lềnh', CAST(N'2003-09-10' AS Date), N'lenhpvph46331@fpt.edu.vn', N'Cổ Nhuế 2, Hà Nội', 1, N'0388109763', N'Đang hoạt động'),
-(2, 2, N'NV08', N'Hà Trung Thành', CAST(N'2001-11-23' AS Date), N'thanhht@gmail.com', N'Hồ Chí Minh', 1, N'0325467832', N'Đã nghỉ việc'),
-(2, 2, N'NV09', N'Lê Thành Dương', CAST(N'2000-01-17' AS Date), N'duonglt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
-(2, 2, N'NV10', N'Lê Thị Nhàn', CAST(N'1999-08-29' AS Date), N'nhanlt@gmail.com', N'Hồ Chí Minh', 0, N'0987678543', N'Đã nghỉ việc'),
-(2, 2, N'NV11', N'Hoàng Văn Nam', CAST(N'1999-08-25' AS Date), N'namhv@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
-(2, 2, N'NV12', N'Lê Thành Dương', CAST(N'2000-01-17' AS Date), N'duonglt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc'),
-(2, 2, N'NV13', N'Lê Thành Nhân', CAST(N'2000-01-17' AS Date), N'nhanlt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'Đã nghỉ việc');
+INSERT INTO nhan_vien (id_roles, id_tai_khoan, ma_nhan_vien, ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, anh_nhan_vien, ngay_tham_gia, trang_thai) VALUES
+(1, 1, N'NV01', N'Phạm Thị Quỳnh Thu', CAST(N'2002-07-10' AS Date), N'ptqt10722@gmail.com', N'Phương Canh, Nam Từ Liêm, Hà Nội', 0, N'0359765372', N'avatar1.jpg', CAST(N'2023-01-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV02', N'Nguyễn Hữu Nghĩa', CAST(N'2000-10-17' AS Date), N'nghianhph46340@fpt.edu.vn', N'Phương Canh, Nam Từ Liêm, Hà Nội', 1, N'0353225292', N'avatar2.jpg', CAST(N'2023-02-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV03', N'Hoàng Thọ Chính', CAST(N'2004-12-13' AS Date), N'chinhhtph46334@fpt.edu.vn', N'Hoài Đức, Hà Nội', 1, N'0989864737', N'avatar3.jpg', CAST(N'2023-03-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV04', N'Nguyễn Thị Kiều Anh', CAST(N'2003-04-12' AS Date), N'annv@gmail.com', N'Bắc Từ Liêm, Hà Nội', 0, N'0378854735', N'avatar4.jpg', CAST(N'2023-04-01' AS Date), N'Đã nghỉ việc'),
+(2, 2, N'NV05', N'Vũ Tuấn Huy', CAST(N'2004-02-15' AS Date), N'huyvtph46307@fpt.edu.vn', N'Đội Cấn, Ba Đình, Hà Nội', 1, N'0912301363', N'avatar5.jpg', CAST(N'2023-05-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV06', N'Hồ Bá Dũng', CAST(N'2004-11-14' AS Date), N'dunghbph46428@fpt.edu.vn', N'Xã Đàn, Đống Đa, Hà Nội', 1, N'0397572262', N'avatar6.jpg', CAST(N'2023-06-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV07', N'Phùn Văn Lềnh', CAST(N'2003-09-10' AS Date), N'lenhpvph46331@fpt.edu.vn', N'Cổ Nhuế 2, Hà Nội', 1, N'0388109763', N'avatar7.jpg', CAST(N'2023-07-01' AS Date), N'Đang hoạt động'),
+(2, 2, N'NV08', N'Hà Trung Thành', CAST(N'2001-11-23' AS Date), N'thanhht@gmail.com', N'Hồ Chí Minh', 1, N'0325467832', N'avatar8.jpg', CAST(N'2023-08-01' AS Date), N'Đã nghỉ việc'),
+(2, 2, N'NV09', N'Lê Thành Dương', CAST(N'2000-01-17' AS Date), N'duonglt@gmail.com', N'Hồ Chí Minh', 1, N'0987678543', N'avatar9.jpg', CAST(N'2023-09-01' AS Date), N'Đã nghỉ việc'),
+(2, 2, N'NV10', N'Lê Thị Nhàn', CAST(N'1999-08-29' AS Date), N'nhanlt@gmail.com', N'Hồ Chí Minh', 0, N'0987678543', N'avatar10.jpg', CAST(N'2023-10-01' AS Date), N'Đã nghỉ việc');
 
 -------------------------------------
 -- 5. Bảng danh_muc_san_pham (10 dòng)

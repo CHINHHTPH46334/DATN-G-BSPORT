@@ -1,12 +1,14 @@
 package com.example.gbsports.request;
 
+import com.example.gbsports.entity.KhachHang;
 import com.example.gbsports.entity.NhanVien;
+import com.example.gbsports.entity.Voucher;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class HoaDonRequest {
@@ -14,15 +16,13 @@ public class HoaDonRequest {
     private String ma_hoa_don;
     private NhanVien nhanVien;
     private Integer id_nhan_vien;
-    //    id_khach_hang int references khach_hang(id_khach_hang),
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date ngay_sua;
+    private KhachHang khachHang;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_tao;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_sua;
     private String trang_thai;
-    //    id_voucher int references voucher(id_voucher),
+    private Voucher voucher;
     private String sdt_nguoi_nhan;
     private String dia_chi;
     private String email;

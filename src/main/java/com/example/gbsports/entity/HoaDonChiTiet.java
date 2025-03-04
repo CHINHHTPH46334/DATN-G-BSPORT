@@ -3,6 +3,8 @@ package com.example.gbsports.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Entity
 @Table(name = "hoa_don_chi_tiet")
@@ -17,5 +19,5 @@ public class HoaDonChiTiet {
     @JoinColumn(name = "id_chi_tiet_san_pham")
     private ChiTietSanPham chiTietSanPham;
     private Integer so_luong;
-    private float don_gia;
+    private BigDecimal don_gia;
 }
