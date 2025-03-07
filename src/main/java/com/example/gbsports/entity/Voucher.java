@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,36 +22,38 @@ public class Voucher {
     @Column(name = "id_voucher")
     private Integer id;
 
-    @Column(name = "ma_voucher", unique = true, nullable = false, length = 50)
+    @Column(name = "ma_voucher")
     private String maVoucher;
 
-    @Column(name = "ten_voucher", nullable = false, length = 255)
+    @Column(name = "ten_voucher")
     private String tenVoucher;
 
-    @Column(name = "ngay_tao", nullable = false, columnDefinition = "TIMESTAMP")
-    private LocalDateTime ngayTao;
+    @Column(name = "ngay_tao")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") // Định dạng datetime từ form
+    private LocalDateTime ngayBatDau;
 
-    @Column(name = "ngay_het_han", nullable = false, columnDefinition = "TIMESTAMP")
+    @Column(name = "ngay_het_han")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime ngayHetHan;
 
-    @Column(name = "gia_tri_giam", nullable = false, precision = 18, scale = 2)
+    @Column(name = "gia_tri_giam")
     private BigDecimal giaTriGiam;
 
     @Column(name = "gia_tri_toi_thieu")
     private BigDecimal giaTriToiThieu;
 
-    @Column(name = "trang_thai", nullable = false, length = 20)
+    @Column(name = "trang_thai")
     private String trangThai;
 
-    @Column(name = "so_luong", nullable = false)
+    @Column(name = "so_luong")
     private Integer soLuong;
 
-    @Column(name = "kieu_giam_gia", nullable = false, length = 50)
+    @Column(name = "kieu_giam_gia")
     private String kieuGiamGia;
 
-    @Column(name = "mo_ta", length = 500)
+    @Column(name = "mo_ta")
     private String moTa;
 
-    @Column(name = "gia_tri_toi_da", precision = 18, scale = 2)
+    @Column(name = "gia_tri_toi_da")
     private BigDecimal giaTriToiDa;
 }

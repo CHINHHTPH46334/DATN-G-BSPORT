@@ -23,13 +23,19 @@ public interface KhachHangRepo extends JpaRepository<KhachHang, Integer> {
             "(email LIKE %:keyword% OR " +
             "LOWER(ten_khach_hang) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "so_dien_thoai LIKE %:keyword% OR " +
-            "LOWER(ma_khach_hang) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+            "LOWER(ma_khach_hang) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "ORDER BY id_khach_hang DESC")
     Page<KhachHang> timKhachHang(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query(value = "SELECT * FROM khach_hang WHERE trang_thai = :trangThai", nativeQuery = true)
+    @Query(value = "SELECT * FROM khach_hang WHERE trang_thai = :trangThai ORDER BY id_khach_hang DESC", nativeQuery = true)
     Page<KhachHang> locKhachHangTheoTrangThai(@Param("trangThai") String trangThai, Pageable pageable);
-
 
     @Query("SELECT k FROM KhachHang k WHERE k.idKhachHang = :id")
     Optional<KhachHang> findOriginalById(@Param("id") Long id);
+
+    Optional<KhachHang> findByMaKhachHang(String maKhachHang);
+
+    // Thêm phương thức để thay thế findAll với sắp xếp
+    @Query(value = "SELECT * FROM khach_hang ORDER BY id_khach_hang DESC", nativeQuery = true)
+    Page<KhachHang> findAllSortedByIdDesc(Pageable pageable);
 }

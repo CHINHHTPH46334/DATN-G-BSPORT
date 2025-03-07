@@ -61,6 +61,10 @@
             <td>${khachHang.email}</td>
         </tr>
         <tr>
+            <th>Địa chỉ</th>
+            <td>${diaChi}</td>
+        </tr>
+        <tr>
             <th>Trạng Thái</th>
             <td>
                 <c:choose>
