@@ -11,6 +11,7 @@ public interface HoaDonChiTietResponse {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_tao();
     String getHo_ten();
+    String getTrang_thai();
     String getSdt_nguoi_nhan();
     String getDia_chi();
     String getEmail();

@@ -15,6 +15,8 @@ public interface HoaDonResponse {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_sua();
     String getTrang_thai();
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime getNgay_chuyen();
     String getSdt_nguoi_nhan();
     String getDia_chi();
     String getMa_voucher();

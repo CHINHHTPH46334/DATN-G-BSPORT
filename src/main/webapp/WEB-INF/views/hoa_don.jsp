@@ -49,6 +49,7 @@
         .btn-custom {
             background-color: #007bff;
             border: none;
+            color: white;
             border-radius: 5px;
             padding: 8px 16px;
             transition: background-color 0.3s ease;
@@ -56,6 +57,7 @@
 
         .btn-custom:hover {
             background-color: #0056b3;
+            color: white;
         }
 
         .pagination-custom .page-link {
@@ -132,14 +134,20 @@
                     <form action="/hoa_don/loc_trang_thai_don_hang" method="get">
                         <select name="trangThai" class="form-select" onchange="this.form.submit()">
                             <option value="">Tất cả</option>
-                            <option value="Đang xử lý" <c:if test="${trangThai == 'Đang xử lý'}">selected</c:if>>
-                                Đang xử lý
+                            <option value="Chờ xác nhận" <c:if test="${trangThai == 'Chờ xác nhận'}">selected</c:if>>
+                                Chờ xác nhận
+                            </option>
+                            <option value="Đã xác nhận" <c:if test="${trangThai == 'Đã xác nhận'}">selected</c:if>>
+                                Đã xác nhận
                             </option>
                             <option value="Đang giao" <c:if test="${trangThai == 'Đang giao'}">selected</c:if>>
                                 Đang giao
                             </option>
-                            <option value="Đã giao" <c:if test="${trangThai == 'Đã giao'}">selected</c:if>>
-                                Đã giao
+                            <option value="Hoàn thành" <c:if test="${trangThai == 'Hoàn thành'}">selected</c:if>>
+                                Hoàn thành
+                            </option>
+                            <option value="Đã hủy" <c:if test="${trangThai == 'Đã hủy'}">selected</c:if>>
+                                Đã hủy
                             </option>
                         </select>
                     </form>
@@ -182,10 +190,10 @@
             <tr>
                 <th>STT</th>
                 <th>Mã HD</th>
-                <th>Ngày tạo</th>
+<%--                <th>Ngày tạo</th>--%>
                 <th>Khách hàng</th>
-                <th>Giảm giá (VNĐ)</th>
-                <th>Tổng cuối (VNĐ)</th>
+<%--                <th>Giảm giá (VNĐ)</th>--%>
+                <th>Tổng tiền (VNĐ)</th>
                 <th>Trạng thái</th>
                 <th>Thanh toán</th>
                 <th>Hình thức</th>
@@ -198,15 +206,16 @@
                     <td>${loop.index + 1 + (currentPage * size)}</td>
                     <td>${hoaDon.ma_hoa_don}</td>
                         <%--                    <td><fmt:formatDate value="${hoaDon.ngay_tao}" pattern="yyyy-MM-dd HH:mm:ss"/></td>--%>
-                    <td>${hoaDon.ngay_tao}</td>
+<%--                    <td>${hoaDon.ngay_tao}</td>--%>
                     <td>
                             ${hoaDon.ho_ten} <br>
                         ĐT: ${hoaDon.sdt_nguoi_nhan} <br>
                         ĐC: ${hoaDon.dia_chi}
                     </td>
-                    <td>${not empty hoaDon.ma_voucher ? hoaDon.ma_voucher : 'Không có'}</td>
+<%--                    <td>${not empty hoaDon.ma_voucher ? hoaDon.ma_voucher : 'Không có'}</td>--%>
                         <%--                    <td><fmt:formatNumber value="${hoaDon.tong_tien_sau_giam}" type="currency" currencySymbol=" VNĐ" groupingUsed="true"/></td>--%>
-                    <td>${hoaDon.tong_tien_sau_giam}</td>
+<%--                    <td>${hoaDon.tong_tien_sau_giam}</td>--%>
+                    <td><fmt:formatNumber value="${hoaDon.tong_tien_sau_giam}" pattern="#,###"/></td>
                     <td>${hoaDon.trang_thai}</td>
                     <td>${hoaDon.hinh_thuc_thanh_toan}</td>
                     <td>${hoaDon.phuong_thuc_nhan_hang}</td>

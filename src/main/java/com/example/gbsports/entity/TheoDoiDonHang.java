@@ -14,7 +14,7 @@ public class TheoDoiDonHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_don_hang;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "id_hoa_don")
     private HoaDon hoaDon;
     private String trang_thai;
