@@ -24,10 +24,10 @@ public class ChiTietSanPham {
     private float gia_ban;
     private Integer so_luong;
     private String trang_thai;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
     private float gia_nhap;

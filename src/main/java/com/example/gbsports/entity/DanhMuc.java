@@ -20,10 +20,10 @@ public class DanhMuc {
     private String ma_danh_muc;
     private String ten_danh_muc;
     private String trang_thai;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
 }

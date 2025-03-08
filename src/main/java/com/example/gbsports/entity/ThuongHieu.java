@@ -19,10 +19,10 @@ public class ThuongHieu {
     private String ma_thuong_hieu;
     private String ten_thuong_hieu;
     private String trang_thai;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
+//    @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
 }
