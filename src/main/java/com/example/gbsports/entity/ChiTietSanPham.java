@@ -1,6 +1,8 @@
 package com.example.gbsports.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -15,6 +17,8 @@ public class ChiTietSanPham {
     private Integer id_chi_tiet_san_pham;
     @ManyToOne
     @JoinColumn(name = "id_san_pham")
+    @NotNull(message = "Không để trống sản phẩm")
+    @Valid
     SanPham sanPham;
     private String qr_code;
     private float gia_ban;
