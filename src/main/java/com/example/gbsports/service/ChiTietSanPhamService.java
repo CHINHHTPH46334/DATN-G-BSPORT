@@ -1,9 +1,13 @@
 package com.example.gbsports.service;
 
 import com.example.gbsports.entity.ChiTietSanPham;
+import com.example.gbsports.entity.SanPham;
 import com.example.gbsports.repository.ChiTietSanPhamRepo;
+import com.example.gbsports.repository.HinhAnhSanPhamRepo;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
-import com.example.gbsports.response.ChiTietSanPhamView;
+import com.example.gbsports.request.SanPhamRequest;
+import com.example.gbsports.respon.ChiTietSanPhamView;
+import com.example.gbsports.respon.HinhAnhView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +29,8 @@ import java.util.stream.Collectors;
 public class ChiTietSanPhamService {
     @Autowired
     ChiTietSanPhamRepo chiTietSanPhamRepo;
+    @Autowired
+    HinhAnhSanPhamRepo hinhAnhSanPhamRepo;
 
     public List<ChiTietSanPhamView> getAllCTSP() {
         return chiTietSanPhamRepo.listCTSP();
@@ -79,7 +86,7 @@ public class ChiTietSanPhamService {
         return "Chuyển trạng thái thành công";
     }
 
-    public ArrayList<ChiTietSanPhamView> listTimKiem(String keyword) {
+    public ArrayList<ChiTietSanPhamView> listTimKiem(@RequestParam(name = "keywork") String keyword) {
         ArrayList<ChiTietSanPhamView> listTam = new ArrayList<>();
         for (ChiTietSanPhamView ctsp : chiTietSanPhamRepo.listCTSP()) {
             if (ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT)) ||
@@ -106,5 +113,6 @@ public class ChiTietSanPhamService {
     public ArrayList<ChiTietSanPhamView> listCTSPTheoSanPham(@PathVariable Integer id) {
         return chiTietSanPhamRepo.listCTSPFolowSanPham(id);
     }
+
 
 }

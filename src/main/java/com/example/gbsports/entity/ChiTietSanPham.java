@@ -37,4 +37,6 @@ public class ChiTietSanPham {
     @ManyToOne
     @JoinColumn(name = "id_mau_sac")
     MauSac mauSac;
+
+
 }

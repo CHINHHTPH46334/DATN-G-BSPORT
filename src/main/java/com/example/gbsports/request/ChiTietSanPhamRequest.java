@@ -3,6 +3,8 @@ package com.example.gbsports.request;
 import com.example.gbsports.entity.KichThuoc;
 import com.example.gbsports.entity.MauSac;
 import com.example.gbsports.entity.SanPham;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.Valid;

@@ -2,7 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
-import com.example.gbsports.response.ChiTietSanPhamView;
+import com.example.gbsports.respon.ChiTietSanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @RestController
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
 @RequestMapping("/admin/quan_ly_san_pham")
 public class ChiTietSanPhamController {
     @Autowired
@@ -55,8 +56,8 @@ public class ChiTietSanPhamController {
         return chiTietSanPhamService.chuyenTrangThai(id);
     }
 
-    @GetMapping("/searchCTSP/{keyword}")
-    public ArrayList<ChiTietSanPhamView> search(@PathVariable String keyword) {
+    @GetMapping("/searchCTSP")
+    public ArrayList<ChiTietSanPhamView> search(@RequestParam(name = "keywork") String keyword) {
         return chiTietSanPhamService.listTimKiem(keyword);
     }
 
@@ -98,8 +99,8 @@ public class ChiTietSanPhamController {
         return chiTietSanPhamService.sapXep(pageable).getContent();
     }
 
-    @GetMapping("/CTSPTheoSanPham/{id}")
-    public List<ChiTietSanPhamView> ctspTheoSanPham(@PathVariable Integer id) {
+    @GetMapping("/CTSPTheoSanPham")
+    public List<ChiTietSanPhamView> ctspTheoSanPham(@RequestParam(name = "id") Integer id) {
         return chiTietSanPhamService.listCTSPTheoSanPham(id);
     }
 }

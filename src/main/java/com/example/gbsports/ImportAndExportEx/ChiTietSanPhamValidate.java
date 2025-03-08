@@ -4,6 +4,7 @@ import com.example.gbsports.request.ChiTietSanPhamRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.Data;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

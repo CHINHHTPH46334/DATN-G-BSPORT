@@ -1,7 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.ChiTietSanPham;
-import com.example.gbsports.response.ChiTietSanPhamView;
+import com.example.gbsports.respon.ChiTietSanPhamView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,8 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.ArrayList;
 
 public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Integer> {
-    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu\n" +
+    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -22,8 +22,8 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     ArrayList<ChiTietSanPhamView> listCTSP();
 
-    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu\n" +
+    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -33,8 +33,8 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     Page<ChiTietSanPhamView> listPhanTrangChiTietSanPham(Pageable pageable);
 
-    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu\n" +
+    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -63,8 +63,8 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                                               @Param("tenThuongHieu") String tenThuongHieu,
                                               @Param("tenChatLieu") String tenChatLieu);
 
-    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu\n" +
+    @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
