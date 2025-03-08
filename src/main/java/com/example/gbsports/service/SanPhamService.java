@@ -5,7 +5,8 @@ import com.example.gbsports.entity.SanPham;
 import com.example.gbsports.repository.ChiTietSanPhamRepo;
 import com.example.gbsports.repository.SanPhamRepo;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.response.SanPhamView;
+import com.example.gbsports.respon.ChiTietSanPhamView;
+import com.example.gbsports.respon.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.List;

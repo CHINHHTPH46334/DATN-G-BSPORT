@@ -5,10 +5,12 @@ import com.example.gbsports.ImportAndExportEx.ExcelExport;
 import com.example.gbsports.ImportAndExportEx.ExcelSaveDB;
 import com.example.gbsports.ImportAndExportEx.Excelmport;
 import com.example.gbsports.entity.SanPham;
+import com.example.gbsports.repository.ChiTietSanPhamRepo;
+import com.example.gbsports.repository.SanPhamRepo;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.response.ChiTietSanPhamView;
-import com.example.gbsports.response.SanPhamView;
+import com.example.gbsports.respon.ChiTietSanPhamView;
+import com.example.gbsports.respon.SanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import com.example.gbsports.service.SanPhamService;
 import jakarta.validation.Valid;
@@ -24,10 +26,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+
 @RestController
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/admin/quan_ly_san_pham/")
 public class SanPhamController {
     @Autowired

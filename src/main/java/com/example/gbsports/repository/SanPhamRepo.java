@@ -1,7 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.response.SanPhamView;
+import com.example.gbsports.respon.SanPhamView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query(nativeQuery = true, value = "select id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
-            "th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu\n" +
+            "th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh\n" +
             "from san_pham sp\n" +
             "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
             "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
@@ -20,7 +20,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     ArrayList<SanPhamView> getAllSanPham();
 
     @Query(nativeQuery = true, value = "select id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
-            "th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu\n" +
+            "th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh\n" +
             "from san_pham sp\n" +
             "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
             "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
@@ -28,7 +28,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     Page<SanPhamView> getAllSanPhamPhanTrang(Pageable pageable);
 
     @Query(nativeQuery = true, value = "select id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
-            "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu\n" +
+            "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh\n" +
             "            from san_pham sp\n" +
             "            join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
             "            join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
