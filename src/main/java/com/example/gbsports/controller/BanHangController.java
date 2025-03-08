@@ -122,7 +122,6 @@ public class BanHangController {
                                    @RequestParam("soLuong") Integer so_luong) {
         System.out.println("---------------------------------------------------------------------------------");
         Integer slmoi = null;
-        BigDecimal donGiaMoi = 0.0b;
         return "redirect:/admin/ban-hang/view";
     }
 }
