@@ -1,42 +1,46 @@
 package com.example.gbsports.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
-
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
+@Data
+@Table(name = "hoa_don")
 public class HoaDon {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_hoa_don;
     private String ma_hoa_don;
-    //    id_nhan_vien int references nhan_vien(id_nhan_vien),
-//    id_khach_hang int references khach_hang(id_khach_hang),
-    private Date ngay_tao;
-    private Date ngay_sua;
+    @ManyToOne
+    @JoinColumn(name = "id_nhan_vien")
+    private NhanVien nhanVien;
+    @ManyToOne
+    @JoinColumn(name = "id_khach_hang")
+    private KhachHang khachHang;
+    @Column(name = "ngay_tao")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_tao;
+    @Column(name = "ngay_sua")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_sua;
     private String trang_thai;
-    //    id_voucher int references voucher(id_voucher),
+    @ManyToOne
+    @JoinColumn(name = "id_voucher")
+    private Voucher voucher;
     private String sdt_nguoi_nhan;
     private String dia_chi;
     private String email;
-    private Double tong_tien_truoc_giam;
-    private Double phi_van_chuyen;
+    private BigDecimal tong_tien_truoc_giam;
+    private BigDecimal phi_van_chuyen;
     private String ho_ten;
-    private Double tong_tien_sau_giam;
+    private BigDecimal tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
+
 
 }

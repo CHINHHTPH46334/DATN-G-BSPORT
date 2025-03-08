@@ -1,6 +1,6 @@
 package com.example.gbsports.service;
 
-
+import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.entity.SanPham;
 import com.example.gbsports.repository.ChiTietSanPhamRepo;
 import com.example.gbsports.repository.SanPhamRepo;
@@ -55,6 +55,7 @@ public class SanPhamService {
     }
 
     public String deleteSanPham(@PathVariable Integer id) {
+        ArrayList<ChiTietSanPham> list = new ArrayList<>();
         SanPham spDelete = new SanPham();
         for (SanPham sp : sanPhamRepo.findAll()) {
             if (sp.getId_san_pham() == id) {
@@ -62,21 +63,55 @@ public class SanPhamService {
                 spDelete.setTrang_thai("Không hoạt động");
             }
         }
-        sanPhamRepo.save(spDelete);
-        return "Xóa thành công";
+        for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+            if (ctsp.getSanPham().getId_san_pham() == id) {
+                list.add(ctsp);
+            }
+        }
+        if (list.isEmpty()) {
+            return "Không có chi tiết sản phẩm cho sản phẩm này";
+        } else {
+            for (ChiTietSanPham ctspXoa : list) {
+                ctspXoa.setTrang_thai("Không hoạt động");
+                chiTietSanPhamRepo.save(ctspXoa);
+            }
+            sanPhamRepo.save(spDelete);
+            return "Xóa thành công";
+        }
+
     }
 
     public String chuyenTrangThai(@PathVariable Integer id) {
+        ArrayList<ChiTietSanPham> list = new ArrayList<>();
         SanPham spDelete = new SanPham();
         for (SanPham sp : sanPhamRepo.findAll()) {
             if (sp.getId_san_pham() == id) {
                 spDelete = sp;
             }
         }
-        if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
-            spDelete.setTrang_thai("Không hoạt động");
+        for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+            if (ctsp.getSanPham().getId_san_pham() == id) {
+                list.add(ctsp);
+            }
+        }
+        if (list.isEmpty()) {
+            return "Không có chi tiết sản phẩm cho sản phẩm này";
         } else {
-            spDelete.setTrang_thai("Hoạt động");
+            if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
+                for (ChiTietSanPham ctspXoa : list) {
+                    ctspXoa.setTrang_thai("Không hoạt động");
+                    chiTietSanPhamRepo.save(ctspXoa);
+                }
+                spDelete.setTrang_thai("Không hoạt động");
+                sanPhamRepo.save(spDelete);
+            } else {
+                for (ChiTietSanPham ctspXoa : list) {
+                    ctspXoa.setTrang_thai("Hoạt động");
+                    chiTietSanPhamRepo.save(ctspXoa);
+                }
+                spDelete.setTrang_thai("Hoạt động");
+                sanPhamRepo.save(spDelete);
+            }
         }
         return "Chuyển trạng thái thành công";
     }
@@ -94,5 +129,14 @@ public class SanPhamService {
         }
         return listTam;
     }
+
+    public List<SanPhamView> locSanPham(String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
+        return sanPhamRepo.locSanPham(tenDanhMuc, tenThuongHieu, tenChatLieu);
+    }
+
+    public Page<SanPhamView> sapXep(Pageable pageable) {
+        return sanPhamRepo.getAllSanPhamPhanTrang(pageable);
+    }
+
 
 }

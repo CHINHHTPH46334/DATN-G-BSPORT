@@ -1,19 +1,23 @@
 package com.example.gbsports.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @Entity
+@Table(name = "hoa_don_chi_tiet")
 public class HoaDonChiTiet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_hoa_don_chi_tiet;
-//    id_hoa_don int references hoa_don(id_hoa_don),
-//    id_chi_tiet_san_pham int references chi_tiet_san_pham(id_chi_tiet_san_pham),
+    @ManyToOne
+    @JoinColumn(name = "id_hoa_don")
+    private HoaDon hoaDon;
+    @ManyToOne
+    @JoinColumn(name = "id_chi_tiet_san_pham")
+    private ChiTietSanPham chiTietSanPham;
     private Integer so_luong;
-    private Double don_gia;
+    private BigDecimal don_gia;
 }

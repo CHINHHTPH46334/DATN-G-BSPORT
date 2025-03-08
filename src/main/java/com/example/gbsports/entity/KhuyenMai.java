@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,11 +32,11 @@ public class KhuyenMai {
     private String moTa;
 
     @Column(name = "ngay_bat_dau")
-    @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") // Định dạng datetime từ form
     private LocalDateTime ngayBatDau;
 
     @Column(name = "ngay_het_han")
-    @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime ngayHetHan;
 
     @Column(name = "gia_tri_giam")

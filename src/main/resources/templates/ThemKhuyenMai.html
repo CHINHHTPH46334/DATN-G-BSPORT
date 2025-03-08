@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khuyến Mãi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+
+        }
+        .sidebar {
+            background-color: #f8f9fa;
+            border-right: 1px solid #a1a1a1;
+        }
+        .sidebar a {
+            text-decoration: none;
+            display: block;
+            padding: 10px 20px;
+            color: #ffffff;
+        }
+        .sidebar a:hover {
+            border: 1px solid #a1a1a1;
+        }
+        .sidebar .active {
+            border: 1px solid #a1a1a1;
+        }
+        .content {
+            padding: 20px;
+        }
+        .backg {
+            background-color: dimgrey;
+        }
+        .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: nowrap
+        }
+
+        footer {
+            background-color: #f8f9fa;
+            padding: 10px 0;
+            position: relative;
+            width: 100%;
+        }
+        .co{
+            background-color: #a1a1a1;
+        }
+        .dropdown-menu {
+            background-color: dimgrey;
+            color: white;
+            padding: 10px;
+        }
+        .dropdown-item:hover {
+            background-color: dimgrey;
+            color: white;
+        }
+    </style>
+
+</head>
+<body class="container">
+<div style="background-color: rgb(240, 240, 240);">
+    <div>
+        <nav class="navbar text-bg-success d-flex align-items-center">
+            <div>
+                <h4 class="m-3">G&B SPORTS</h4>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    VTH
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="row mt-2">
+            <!-- Sidebar -->
+            <div class=" col-lg-2 backg sidebar pt-2">
+                <a href="/hien-thi-KM" class="active">Quản lý khuyến mãi</a>
+                <a href="/hien-thi-voucher" >Quản lý voucher</a>
+
+            </div>
+
+            <!-- Main content -->
+            <div class="col-lg-10">
+
+                <div>
+                    <!-- Header and Add Button -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 co" style="padding-right: 10px;">
+                        <h2 style="padding: 13px;">Thêm khuyến mãi</h2>
+                    </div>
+
+                    <div th:if="${error != null}" class="alert alert-danger" role="alert">
+                        <p th:text="${error}"></p>
+                    </div>
+                        <!-- Form thêm khuyến mãi -->
+                    <form th:action="@{/addKm}" th:object="${khuyenMai}" method="post" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="maKhuyenMai" class="form-label">Mã khuyến mãi</label>
+                            <input type="text" class="form-control" id="maKhuyenMai" th:field="*{maKhuyenMai}" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tenKhuyenMai" class="form-label">Tên khuyến mãi</label>
+                            <input type="text" class="form-control" id="tenKhuyenMai" th:field="*{tenKhuyenMai}" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="giaTriGiam" class="form-label">Giá trị giảm</label>
+                            <input type="number" step="0.01" class="form-control" id="giaTriGiam" th:field="*{giaTriGiam}" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="kieuGiamGia" class="form-label">Kiểu giảm giá</label>
+                            <select class="form-select" id="kieuGiamGia" th:field="*{kieuGiamGia}" >
+                                <option value="">Chọn kiểu</option>
+                                <option value="Phần trăm">Phần trăm</option>
+                                <option value="Tiền mặt">Tiền mặt</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="giaTriToiDa" class="form-label">Giá trị tối đa</label>
+                            <input type="number" step="0.01" class="form-control" id="giaTriToiDa" th:field="*{giaTriToiDa}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ngayBatDau" class="form-label">Ngày bắt đầu</label>
+                            <input type="datetime-local" class="form-control" id="ngayBatDau" th:field="*{ngayBatDau}" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ngayHetHan" class="form-label">Ngày kết thúc</label>
+                            <input type="datetime-local" class="form-control" id="ngayHetHan" th:field="*{ngayHetHan}" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="moTa" class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="moTa"  th:field="*{moTa}"></textarea>
+                        </div>
+                        <div class="col-12 mt-5">
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="submit" class="btn btn-primary">Lưu</button>
+                                <a href="/hien-thi-KM" class="btn btn-secondary">Quay lại</a>
+                            </div>
+                        </div>
+                    </form>
+                    <footer class="co mt-5">
+                        <small style="margin-left: 15px;">Release 1.0</small>
+                    </footer>
+    </div>
+            </div>
+        </div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

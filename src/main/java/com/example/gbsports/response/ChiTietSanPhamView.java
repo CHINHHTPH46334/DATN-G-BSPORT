@@ -15,4 +15,7 @@ public interface ChiTietSanPhamView {
      String getGia_tri();
      String getDon_vi();
      String getTen_mau();
+     String getTen_danh_muc();
+     String getTen_thuong_hieu();
+     String getTen_chat_lieu();
 }
