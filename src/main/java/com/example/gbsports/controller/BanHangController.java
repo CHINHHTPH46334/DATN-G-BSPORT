@@ -121,7 +121,8 @@ public class BanHangController {
     public String addAndUpdateSPGH(@RequestParam("idCTSP") Integer id_chi_tiet_san_pham,
                                    @RequestParam("soLuong") Integer so_luong) {
         System.out.println("---------------------------------------------------------------------------------");
-        hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham,so_luong);
+        Integer slmoi = null;
+        BigDecimal donGiaMoi = 0.0b;
         return "redirect:/admin/ban-hang/view";
     }
 }

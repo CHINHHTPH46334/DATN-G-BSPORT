@@ -32,13 +32,12 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             @Param("idHoaDon") Integer idHoaDon
     );
 
-    @Modifying
-    @Query(value = """
-    UPDATE hoa_don_chi_tiet
-               SET
-                   so_luong = so_luong + :soLuong,
-                   don_gia = (so_luong + :soLuong) * (SELECT gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = :idCTSP)
-               WHERE id_chi_tiet_san_pham = :idCTSP
-    """, nativeQuery = true)
-    void addSLGH(@Param("idCTSP") Integer idCTSP, @Param("soLuong") Integer soLuong);
+//    @Query(value = """
+//    UPDATE hoa_don_chi_tiet
+//               SET
+//                   so_luong = so_luong + :soLuong,
+//                   don_gia = (so_luong + :soLuong) * (SELECT gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = :idCTSP)
+//               WHERE id_chi_tiet_san_pham = :idCTSP
+//    """, nativeQuery = true)
+//    void addSLGH(@Param("idCTSP") Integer idCTSP, @Param("soLuong") Integer soLuong);
 }
