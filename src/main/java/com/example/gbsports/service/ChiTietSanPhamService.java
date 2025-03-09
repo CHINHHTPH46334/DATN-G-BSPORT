@@ -104,6 +104,7 @@ public class ChiTietSanPhamService {
                                                      String tenMauSac, String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
         return chiTietSanPhamRepo.listLocCTSP(tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax,
                 trangThai, tenMauSac, tenDanhMuc, tenThuongHieu, tenChatLieu);
+        //Thiếu Kích thước
     }
 
     public Page<ChiTietSanPhamView> sapXep(Pageable pageable) {
