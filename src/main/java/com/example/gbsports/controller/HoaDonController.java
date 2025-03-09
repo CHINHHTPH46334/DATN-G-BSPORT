@@ -5,6 +5,7 @@ import com.example.gbsports.repository.HoaDonChiTietRepo;
 import com.example.gbsports.repository.HoaDonRepo;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
+import com.example.gbsports.response.TheoDoiDonHangResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,15 +13,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/hoa_don")
@@ -212,11 +215,12 @@ public class HoaDonController {
     public String getHDCTBymaHD(@RequestParam("id") String maHoaDon, Model model) {
         try {
             // Tìm id_hoa_don dựa trên ma_hoa_don
-            HoaDon hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
+            HoaDonResponse hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon));
             Integer idHoaDon = hoaDon.getId_hoa_don();
             // Lấy chi tiết hóa đơn (dạng List)
             List<HoaDonChiTietResponse> chiTietHoaDons = hoaDonChiTietRepo.findHoaDonChiTietById(idHoaDon);
+            List<TheoDoiDonHangResponse> trangThaiHistory = hoaDonRepo.findTrangThaiHistoryByIdHoaDon(idHoaDon);
             // Kiểm tra nếu danh sách chi tiết rỗng
             if (chiTietHoaDons.isEmpty()) {
                 model.addAttribute("error", "Không có chi tiết hóa đơn nào cho hóa đơn này.");
@@ -226,11 +230,65 @@ public class HoaDonController {
                 // Thêm vào model
                 model.addAttribute("hoaDon", chiTietHoaDons.get(0)); // Lấy thông tin hóa đơn từ response đầu tiên
                 model.addAttribute("chiTietHoaDons", chiTietHoaDons);
+                model.addAttribute("trangThaiHistory", trangThaiHistory);
             }
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi khi lấy chi tiết hóa đơn: " + e.getMessage());
-            return "hdct";
+            return "hdct2";
         }
-        return "hdct";
+        return "hdct2";
+    }
+
+    @PostMapping("/chuyen-trang-thai")
+    public String updateTrangThai(@RequestParam("maHoaDon") String maHoaDon,
+                                  @RequestParam("newTrangThai") String newTrangThai,
+                                  RedirectAttributes redirectAttributes) {
+        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
+        Integer idHoaDon = hoaDonOpt.get().getId_hoa_don();
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "Mã hóa đơn không hợp lệ.");
+            return "redirect:/hoa_don/hdct?id=" + maHoaDon;
+        }
+        if (!hoaDonOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy hóa đơn với mã: " + maHoaDon);
+            return "redirect:/hoa_don/hdct?id=" + maHoaDon;
+        }
+
+        if (newTrangThai == null || newTrangThai.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "Trạng thái mới không hợp lệ.");
+            return "redirect:/hoa_don/hdct?id=" + maHoaDon;
+        }
+
+        try {
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, newTrangThai, ngayChuyen);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật trạng thái thành công: " + newTrangThai);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            // Log lỗi chi tiết để debug
+            e.printStackTrace();
+        }
+        // Chuyển hướng về trang chi tiết hóa đơn
+        return "redirect:/hoa_don/hdct?id=" + maHoaDon;
+    }
+
+    @PostMapping("/cancel-order")
+    public String cancelOrder(@RequestParam("id") String maHoaDon, RedirectAttributes redirectAttributes) {
+        // Kiểm tra hóa đơn tồn tại
+        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
+        if (!hoaDonOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy hóa đơn với mã: " + maHoaDon);
+            return "redirect:/hoa_don/hdct?id=" + maHoaDon;
+        }
+        try {
+            // Thêm trạng thái "Đã hủy" vào bảng theo_doi_don_hang
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã hủy", ngayChuyen);
+            redirectAttributes.addFlashAttribute("message", "Đơn hàng đã được hủy!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi hủy đơn: " + e.getMessage());
+        }
+        // Chuyển hướng về trang chi tiết hóa đơn
+        return "redirect:/hoa_don/hdct?id=" + maHoaDon;
     }
 }

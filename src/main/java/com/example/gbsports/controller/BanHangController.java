@@ -10,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -112,16 +111,29 @@ public class BanHangController {
     }
 
     @GetMapping("/view/{id}")
-    public String detail(@PathVariable("id") Integer id) {
+    public String detail(@RequestParam("id") Integer id) {
         idHD = id;
         return "redirect:/admin/ban-hang/view";
     }
 
-    @PostMapping("/view/addAndUdateSPGH")
+    @GetMapping("/view/addAndUdateSPGH")
     public String addAndUpdateSPGH(@RequestParam("idCTSP") Integer id_chi_tiet_san_pham,
+                                   @RequestParam("idHoaDon") Integer id_hoa_don,
                                    @RequestParam("soLuong") Integer so_luong) {
-        System.out.println("---------------------------------------------------------------------------------");
-        Integer slmoi = null;
+        for (HoaDonChiTiet hdcts: hoaDonChiTietRepo.findAll()) {
+            if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() == id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
+                hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham,id_hoa_don,so_luong);
+            } else if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() != id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
+                HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+                for (ChiTietSanPham chiTietSanPham: chiTietSanPhamRepo.findAll()) {
+                    if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
+
+                    }
+                }
+            }
+        }
+
+
         return "redirect:/admin/ban-hang/view";
     }
 }

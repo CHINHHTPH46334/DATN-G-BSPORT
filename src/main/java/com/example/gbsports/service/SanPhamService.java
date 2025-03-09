@@ -5,7 +5,6 @@ import com.example.gbsports.entity.SanPham;
 import com.example.gbsports.repository.ChiTietSanPhamRepo;
 import com.example.gbsports.repository.SanPhamRepo;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.respon.ChiTietSanPhamView;
 import com.example.gbsports.respon.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;

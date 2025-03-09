@@ -1,21 +1,20 @@
 package com.example.gbsports.response;
 
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Date;
 
 public interface NhanVienResponse {
-     Integer getId_nhan_vien();
-     String getMa_nhan_vien();
-     String getTen_nhan_vien();
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-     Date getNgay_sinh();
-     String getEmail();
-     String getDia_chi_lien_he();
-     boolean getGioi_tinh();
-     String getSo_dien_thoai();
-     String getTrang_thai();
+    Integer getIdNhanVien();
+    String getMaNhanVien();
+    String getTenNhanVien();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd",timezone = "Asia/Ho_Chi_Minh")
+    Date getNgaySinh();
+    String getEmail();
+    String getDiaChiLienHe();
+    boolean getGioiTinh();
+    String getSoDienThoai();
+    String getTrangThai();
+    String getAnhNhanVien();
+    Date getNgayThamGia();
 }

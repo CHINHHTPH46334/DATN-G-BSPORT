@@ -2,7 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
-import com.example.gbsports.respon.ChiTietSanPhamView;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
