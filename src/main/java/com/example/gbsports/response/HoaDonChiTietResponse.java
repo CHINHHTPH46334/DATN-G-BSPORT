@@ -35,4 +35,7 @@ public interface HoaDonChiTietResponse {
     Integer getId_voucher();
     String getTen_voucher();
     String getMa_voucher();
+    String getTrang_thai();
+
+
 }

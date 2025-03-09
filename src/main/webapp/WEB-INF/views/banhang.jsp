@@ -344,8 +344,9 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="/admin/ban-hang/view/addAndUdateSPGH" method="post">
+                        <form action="/admin/ban-hang/view/addAndUdateSPGH" method="get">
                             <input type="hidden" name="idCTSP" id="idSanPham">
+                            <input type="hidden" name="idHoaDon" value="${hdbh.id_hoa_don}">
                             <div class="mb-3">
                                 <label for="soLuong" class="form-label">Sản phẩm</label>
                                 <input type="text" class="form-control" id="tenSP">
