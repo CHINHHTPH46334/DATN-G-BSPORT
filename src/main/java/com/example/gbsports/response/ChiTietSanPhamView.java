@@ -1,4 +1,4 @@
-package com.example.gbsports.respon;
+package com.example.gbsports.response;
 
 import com.example.gbsports.entity.KichThuoc;
 import com.example.gbsports.entity.MauSac;

@@ -72,7 +72,8 @@ mo_ta nvarchar(250),
 trang_thai nvarchar(50),
 gioi_tinh bit,
 id_chat_lieu int references chat_lieu(id_chat_lieu),
-id_thuong_hieu int references thuong_hieu(id_thuong_hieu)
+id_thuong_hieu int references thuong_hieu(id_thuong_hieu),
+hinh_anh varchar(200)
 );
 --Khuyến mãi
 create table khuyen_mai(

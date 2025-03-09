@@ -12,22 +12,45 @@ import java.util.Date;
 public class NhanVien {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id_nhan_vien;
-    private String ma_nhan_vien;
-    private String ten_nhan_vien;
+    @Column(name = "id_nhan_vien")
+    private Integer idNhanVien;
+
+    @Column(name = "ma_nhan_vien")
+    private String maNhanVien;
+
+    @Column(name = "ten_nhan_vien")
+    private String tenNhanVien;
+
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date ngay_sinh;
+    @Column(name = "ngay_sinh")
+    private Date ngaySinh;
+
+    @Column(name = "email")
     private String email;
-    private String dia_chi_lien_he;
-    private Boolean gioi_tinh;
-    private String so_dien_thoai;
-    private String trang_thai;
+
+    @Column(name = "dia_chi_lien_he")
+    private String diaChiLienHe;
+
+    @Column(name = "gioi_tinh")
+    private Boolean gioiTinh;
+
+    @Column(name = "so_dien_thoai")
+    private String soDienThoai;
+    @Column(name = "anh_nhan_vien")
+    private String anhNhanVien;
+    @Column(name = "ngay_tham_gia")
+    private Date ngayThamGia;
+    @Column(name = "trang_thai")
+    private String trangThai;
     @ManyToOne
     @JoinColumn(name = "id_roles")
     private Roles roles;
+
     @ManyToOne
     @JoinColumn(name = "id_tai_khoan")
     private TaiKhoan taiKhoan;
 
+
+    // Getter & Setter (Bạn có thể generate tự động trong IDE)
 }

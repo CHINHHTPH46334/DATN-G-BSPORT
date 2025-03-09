@@ -11,20 +11,48 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
-    @Query(nativeQuery = true, value = "select id_nhan_vien, ma_nhan_vien,ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, trang_thai from nhan_vien")
+    @Query(nativeQuery = true, value = """
+        SELECT id_nhan_vien AS idNhanVien,anh_nhan_vien as anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien, 
+               ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh, 
+               so_dien_thoai AS soDienThoai, trang_thai AS trangThai
+        FROM nhan_vien nv
+    """)
     List<NhanVienResponse> getAll();
 
-    @Query(nativeQuery = true, value = "select id_nhan_vien, ma_nhan_vien,ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, trang_thai from nhan_vien")
+    @Query(nativeQuery = true, value = """
+        SELECT id_nhan_vien AS idNhanVien, anh_nhan_vien as anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien, 
+               ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh, 
+               so_dien_thoai AS soDienThoai, trang_thai AS trangThai
+        FROM nhan_vien nv
+        
+    """
+//            countQuery = "SELECT COUNT(*) FROM nhan_vien"
+    )
     Page<NhanVienResponse> listPT(Pageable pageable);
 
-    @Query(nativeQuery = true, value = "SELECT * FROM nhan_vien WHERE \n" +
-            "(email like %:keyword% OR \n" +
-            "LOWER(ten_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%')) OR \n" +
-            "so_dien_thoai like %:keyword%)")
+    @Query(nativeQuery = true, value = """
+        SELECT id_nhan_vien AS idNhanVien, anh_nhan_vien as anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien, 
+               ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh, 
+               so_dien_thoai AS soDienThoai, trang_thai AS trangThai
+        FROM nhan_vien nv
+        WHERE email LIKE %:keyword% 
+        OR LOWER(ten_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%')) 
+        OR so_dien_thoai LIKE %:keyword%
+    """)
     List<NhanVienResponse> timNhanVien(@Param("keyword") String keyword);
 
-    @Query(value = "SELECT * FROM nhan_vien WHERE (trang_thai = :trangThai)", nativeQuery = true)
-    List<NhanVienResponse> locNhanVienTheoTrangThai(@Param("trangThai") String trangThai);
+    @Query(nativeQuery = true, value = """
+        SELECT id_nhan_vien AS idNhanVien, anh_nhan_vien as anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien, 
+               ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh, 
+               so_dien_thoai AS soDienThoai, trang_thai AS trangThai
+        FROM nhan_vien nv
+        WHERE (:trangThai IS NULL OR :trangThai = '' OR trang_thai = :trangThai)
+        order by id_nhan_vien desc
+    """)
+    Page<NhanVienResponse> locNhanVienTheoTrangThai(@Param("trangThai") String trangThai,Pageable pageable);
+    boolean existsByMaNhanVien(String maNhanVien);
+    boolean existsByEmail(String email);
+    boolean existsBySoDienThoai(String soDienThoai);
 
 
 }
