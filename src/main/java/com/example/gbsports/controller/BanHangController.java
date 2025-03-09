@@ -127,9 +127,17 @@ public class BanHangController {
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
                 for (ChiTietSanPham chiTietSanPham: chiTietSanPhamRepo.findAll()) {
                     if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
+                        hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
+                        hoaDonChiTiet.setSo_luong(so_luong);
 
                     }
                 }
+                for (HoaDon hoaDon: hoaDonRepo.findAll()) {
+                    if (hoaDon.getId_hoa_don() == id_hoa_don) {
+                        hoaDonChiTiet.setHoaDon(hoaDon);
+                    }
+                }
+                hoaDonChiTietRepo.save(hoaDonChiTiet);
             }
         }
 
