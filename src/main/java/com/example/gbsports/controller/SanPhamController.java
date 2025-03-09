@@ -5,11 +5,9 @@ import com.example.gbsports.ImportAndExportEx.ExcelExport;
 import com.example.gbsports.ImportAndExportEx.ExcelSaveDB;
 import com.example.gbsports.ImportAndExportEx.Excelmport;
 import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.repository.ChiTietSanPhamRepo;
-import com.example.gbsports.repository.SanPhamRepo;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.respon.SanPhamView;
+import com.example.gbsports.response.SanPhamView;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import com.example.gbsports.service.SanPhamService;
@@ -26,9 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -53,13 +49,14 @@ public class SanPhamController {
 
     @GetMapping("/allSanPham")
     public List<SanPhamView> getAll(@RequestParam(name = "page", defaultValue = "0") Integer page,
-                                    @RequestParam(name = "size", defaultValue = "5") Integer size) {
+            @RequestParam(name = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
 
     @PostMapping("/saveSanPham")
-    public ResponseEntity<?> addSanPham(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult bindingResult) {
+    public ResponseEntity<?> addSanPham(@Valid @RequestBody SanPhamRequest sanPhamRequest,
+            BindingResult bindingResult) {
         return sanPhamService.saveSanPham(sanPhamRequest, bindingResult);
     }
 
@@ -82,8 +79,7 @@ public class SanPhamController {
     public List<SanPhamView> locSanPham(
             @RequestParam(value = "danhMuc", required = false) String danhMuc,
             @RequestParam(value = "thuongHieu", required = false) String thuongHieu,
-            @RequestParam(value = "chatLieu", required = false) String chatLieu
-    ) {
+            @RequestParam(value = "chatLieu", required = false) String chatLieu) {
         return sanPhamService.locSanPham(danhMuc, thuongHieu, chatLieu);
     }
 
@@ -91,8 +87,7 @@ public class SanPhamController {
     public List<SanPhamView> sapXep(
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "5") Integer size,
-            @RequestParam(name = "tieuChi", required = false) String tieuChi
-    ) {
+            @RequestParam(name = "tieuChi", required = false) String tieuChi) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(tieuChi).ascending());
         return sanPhamService.sapXep(pageable).getContent();
     }
@@ -111,15 +106,19 @@ public class SanPhamController {
         List<ChiTietSanPhamRequest> list = excelmport.readExcel(file);
         return ResponseEntity.ok(list);
     }
+
     @Autowired
     ChiTietSanPhamValidate chiTietSanPhamValidate;
+
     @PostMapping("/validate")
     public ResponseEntity<?> validate(@RequestBody List<ChiTietSanPhamRequest> list) {
         List<String> errors = chiTietSanPhamValidate.validate(list);
         return errors.isEmpty() ? ResponseEntity.ok("Hợp lệ") : ResponseEntity.badRequest().body(errors);
     }
+
     @Autowired
     ExcelSaveDB excelSaveDB;
+
     @PostMapping("/save")
     public ResponseEntity<?> saveToDB(@RequestBody List<ChiTietSanPhamRequest> list) {
         excelSaveDB.saveToDB(list);

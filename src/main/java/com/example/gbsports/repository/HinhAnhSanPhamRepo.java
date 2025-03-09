@@ -1,7 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.HinhAnhSanPham;
-import com.example.gbsports.respon.HinhAnhView;
+import com.example.gbsports.response.HinhAnhView;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
