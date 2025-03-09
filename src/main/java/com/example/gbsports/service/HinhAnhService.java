@@ -1,7 +1,7 @@
 package com.example.gbsports.service;
 
 import com.example.gbsports.repository.HinhAnhSanPhamRepo;
-import com.example.gbsports.respon.HinhAnhView;
+import com.example.gbsports.response.HinhAnhView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;

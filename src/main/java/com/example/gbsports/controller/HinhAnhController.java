@@ -1,6 +1,6 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.respon.HinhAnhView;
+import com.example.gbsports.response.HinhAnhView;
 import com.example.gbsports.service.HinhAnhService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
