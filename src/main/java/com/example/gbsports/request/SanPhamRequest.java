@@ -24,6 +24,7 @@ public class SanPhamRequest {
     private String trang_thai;
     @NotNull(message = "Không để trống giới tính")
     private Boolean gioi_tinh;
+    private String hinh_anh;
     @NotNull(message = "Danh mục không được để trống")
     @Valid
     DanhMuc danhMuc;
