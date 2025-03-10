@@ -99,14 +99,14 @@ public class SanPhamService {
         } else {
             if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Không hoạt động");
+                    ctspXoa.setTrang_thai("Hết hàng");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Không hoạt động");
                 sanPhamRepo.save(spDelete);
             } else {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Hoạt động");
+                    ctspXoa.setTrang_thai("Còn hàng");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Hoạt động");

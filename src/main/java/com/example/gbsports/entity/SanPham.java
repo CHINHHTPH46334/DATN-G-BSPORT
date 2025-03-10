@@ -15,6 +15,7 @@ public class SanPham {
     private String mo_ta;
     private String trang_thai;
     private Boolean gioi_tinh;
+    private String hinh_anh;
     @ManyToOne
     @JoinColumn(name = "id_danh_muc")
     DanhMuc danhMuc;
