@@ -132,7 +132,7 @@ primary key(id_khuyen_mai,id_chi_tiet_san_pham)
 --Khách hàng
 create table khach_hang(
 id_khach_hang int  identity(1,1) primary key,
-ma_khach_hang nvarchar(50),
+ma_khach_hang varchar(50),
 ten_khach_hang nvarchar(200),
 gioi_tinh bit,
 so_dien_thoai varchar(20),
@@ -171,10 +171,13 @@ ngay_them datetime
 primary key(id_khach_hang, id_chi_tiet_san_pham)
 );
 --địa chỉ khách hàng
-create table dia_chi_khach_hang(
-id_dia_chi_khach_hang int identity(1,1) primary key,
-id_khach_hang int references khach_hang(id_khach_hang),
-dia_chi_khach_hang nvarchar(200)
+CREATE TABLE dia_chi_khach_hang (
+    id_dia_chi_khach_hang INT IDENTITY(1,1) PRIMARY KEY,
+    id_khach_hang INT NOT NULL,
+    xa_phuong NVARCHAR(255),
+    quan_huyen NVARCHAR(255),
+    tinh_thanh_pho NVARCHAR(255),
+    FOREIGN KEY (id_khach_hang) REFERENCES khach_hang(id_khach_hang)
 );
 --Voucher
 create table voucher(
@@ -437,9 +440,9 @@ INSERT INTO chi_tiet_khuyen_mai (id_khuyen_mai, id_chi_tiet_san_pham) VALUES
 -- 15. Bảng khach_hang (10 dòng)
 -------------------------------------
 INSERT INTO khach_hang (ma_khach_hang, ten_khach_hang, gioi_tinh, so_dien_thoai, ngay_sinh, email, id_tai_khoan, trang_thai) VALUES
-('KH001', N'Nguyễn Văn M', 1, '0910000001', '1990-01-01', 'kh1@example.com', 1, N'Hoạt động'),
-('KH002', N'Phạm Thị N', 0, '0910000002', '1991-02-02', 'kh2@example.com', 2, N'Hoạt động'),
-('KH003', N'Lê Văn O', 1, '0910000003', '1992-03-03', 'kh3@example.com', 3, N'Hoạt động');
+('KH001', N'Nguyễn Văn M', 1, '0910000001', '1990-01-01', 'kh1@example.com', 1, N'Đang hoạt động'),
+('KH002', N'Phạm Thị N', 0, '0910000002', '1991-02-02', 'kh2@example.com', 2, N'Không hoạt động'),
+('KH003', N'Lê Văn O', 1, '0910000003', '1992-03-03', 'kh3@example.com', 3, N'Đang hoạt động');
 
 -------------------------------------
 -- 16. Bảng gio_hang (10 dòng)
@@ -476,11 +479,13 @@ INSERT INTO danh_sach_yeu_thich (id_khach_hang, id_chi_tiet_san_pham, ngay_them)
 -------------------------------------
 -- 20. Bảng dia_chi_khach_hang (10 dòng)
 -------------------------------------
-INSERT INTO dia_chi_khach_hang (id_khach_hang, dia_chi_khach_hang) VALUES
-(1, N'123 Đường A, Hà Nội'),
-(2, N'456 Đường B, Hồ Chí Minh'),
-(3, N'789 Đường C, Đà Nẵng');
-
+INSERT INTO dia_chi_khach_hang (id_khach_hang, xa_phuong, quan_huyen, tinh_thanh_pho) VALUES
+(1, N'Phường Cổ Nhuế 1', N'Quận Bắc Từ Liêm', N'Hà Nội'),
+(1, N'Phường Phương Canh', N'Quận Nam Từ Liêm', N'Hà Nội'),
+(2, N'Phường 15', N'Quận Tân Bình', N'Hồ Chí Minh'),
+(2, N'Phường Bến Nghé', N'Quận 1', N'Hồ Chí Minh'),
+(3, N'Phường Hải Châu 1', N'Quận Hải Châu', N'Đà Nẵng'),
+(3, N'Phường Thọ Quang', N'Quận Sơn Trà', N'Đà Nẵng');
 -------------------------------------
 -- 21. Bảng voucher (10 dòng)
 -------------------------------------

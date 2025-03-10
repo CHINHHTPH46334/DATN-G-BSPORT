@@ -110,8 +110,8 @@ public class BanHangController {
         return maHoaDon;
     }
 
-    @GetMapping("/view/{id}")
-    public String detail(@RequestParam("id") Integer id) {
+    @GetMapping("/view/{idHd}")
+    public String detail(@RequestParam("idHd") Integer id) {
         idHD = id;
         return "redirect:/admin/ban-hang/view";
     }
@@ -125,11 +125,12 @@ public class BanHangController {
                 hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham,id_hoa_don,so_luong);
             } else if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() != id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+                BigDecimal giaSP = null;
                 for (ChiTietSanPham chiTietSanPham: chiTietSanPhamRepo.findAll()) {
                     if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
                         hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
                         hoaDonChiTiet.setSo_luong(so_luong);
-
+                        giaSP = BigDecimal.valueOf(chiTietSanPham.getGia_ban());
                     }
                 }
                 for (HoaDon hoaDon: hoaDonRepo.findAll()) {
@@ -137,6 +138,10 @@ public class BanHangController {
                         hoaDonChiTiet.setHoaDon(hoaDon);
                     }
                 }
+                BigDecimal slhdct = BigDecimal.valueOf(so_luong);
+                BigDecimal don_giahdct;
+                don_giahdct = slhdct.multiply(giaSP);
+                hoaDonChiTiet.setDon_gia(don_giahdct);
                 hoaDonChiTietRepo.save(hoaDonChiTiet);
             }
         }
