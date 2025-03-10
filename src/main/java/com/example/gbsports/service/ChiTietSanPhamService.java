@@ -6,7 +6,7 @@ import com.example.gbsports.repository.ChiTietSanPhamRepo;
 import com.example.gbsports.repository.HinhAnhSanPhamRepo;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.respon.HinhAnhView;
+import com.example.gbsports.response.HinhAnhView;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -104,6 +104,7 @@ public class ChiTietSanPhamService {
                                                      String tenMauSac, String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
         return chiTietSanPhamRepo.listLocCTSP(tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax,
                 trangThai, tenMauSac, tenDanhMuc, tenThuongHieu, tenChatLieu);
+        //Thiếu Kích thước
     }
 
     public Page<ChiTietSanPhamView> sapXep(Pageable pageable) {

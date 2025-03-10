@@ -1,7 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.respon.SanPhamView;
+import com.example.gbsports.response.SanPhamView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

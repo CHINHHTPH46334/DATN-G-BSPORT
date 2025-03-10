@@ -5,11 +5,9 @@ import com.example.gbsports.ImportAndExportEx.ExcelExport;
 import com.example.gbsports.ImportAndExportEx.ExcelSaveDB;
 import com.example.gbsports.ImportAndExportEx.Excelmport;
 import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.repository.ChiTietSanPhamRepo;
-import com.example.gbsports.repository.SanPhamRepo;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.respon.SanPhamView;
+import com.example.gbsports.response.SanPhamView;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import com.example.gbsports.service.SanPhamService;
@@ -28,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -53,7 +50,7 @@ public class SanPhamController {
 
     @GetMapping("/allSanPham")
     public List<SanPhamView> getAll(@RequestParam(name = "page", defaultValue = "0") Integer page,
-                                    @RequestParam(name = "size", defaultValue = "5") Integer size) {
+            @RequestParam(name = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
