@@ -16,6 +16,6 @@ public interface SanPhamView {
      String getTen_danh_muc();
      String getTen_thuong_hieu();
      String getTen_chat_lieu();
-     Integer getSo_luong();
+     Integer getTong_so_luong();
      String getHinh_anh();
 }

@@ -60,18 +60,18 @@ public class SanPhamController {
         return sanPhamService.saveSanPham(sanPhamRequest, bindingResult);
     }
 
-    @PostMapping("/xoaSanPham/{id}")
-    public String xoaSanPham(@PathVariable Integer id) {
+    @PostMapping("/xoaSanPham")
+    public String xoaSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.deleteSanPham(id);
     }
 
-    @GetMapping("/timKiemSanPham/{search}")
-    public List<SanPham> searchSanPham(@PathVariable String search) {
+    @GetMapping("/timKiemSanPham")
+    public List<SanPham> searchSanPham(@RequestParam("id") String search) {
         return sanPhamService.listTimKiem(search);
     }
 
-    @PostMapping("/chuyenTrangThaiSanPham/{id}")
-    public String chuyenTrangThaiSanPham(@PathVariable Integer id) {
+    @PutMapping ("/chuyenTrangThaiSanPham")
+    public String chuyenTrangThaiSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.chuyenTrangThai(id);
     }
 
