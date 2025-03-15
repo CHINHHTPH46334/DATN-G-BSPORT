@@ -328,7 +328,7 @@
                         </div>
                         <div class="col">
                             <p>Ngày tạo: ${hoaDon.ngay_tao}</p>
-                            <p>Nhân viên tiếp nhận: AAAAAAAAAAAAA</p>
+                            <p>Nhân viên tiếp nhận: ${hoaDon.ten_nhan_vien}</p>
                             <p>Hình thức nhận hàng: ${hoaDon.phuong_thuc_nhan_hang}</p>
                         </div>
                     </div>

@@ -14,7 +14,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 hd.dia_chi, hd.email, hd.tong_tien_truoc_giam, hd.phi_van_chuyen, 
                 hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, 
                 tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia, 
-                sp.ten_san_pham, sp.ma_san_pham, 
+                sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien,
                 kt.gia_tri AS kich_thuoc, 
                 ms.ten_mau_sac, 
                 ha.hinh_anh, ha.anh_chinh
@@ -22,6 +22,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
             JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
             JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
             JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
             JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
             LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai

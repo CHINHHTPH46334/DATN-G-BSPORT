@@ -13,6 +13,7 @@ public interface HoaDonChiTietResponse {
     String getHo_ten();
     String getTrang_thai();
     String getSdt_nguoi_nhan();
+    String getTen_nhan_vien();
     String getDia_chi();
     String getEmail();
     BigDecimal getTong_tien_truoc_giam();
