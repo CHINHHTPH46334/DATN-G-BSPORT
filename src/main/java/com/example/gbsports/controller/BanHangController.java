@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.entity.HoaDonChiTiet;
+import com.example.gbsports.entity.NhanVien;
 import com.example.gbsports.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 
@@ -41,6 +43,7 @@ public class BanHangController {
 
     Integer idHD = null;
     Integer idCTSP = null;
+    Integer idNV = null;
 
     public void viewALl(Model model) {
         model.addAttribute("listHoaDon", hoaDonRepo.getAllHoaDonCTT());
@@ -76,7 +79,10 @@ public class BanHangController {
     @PostMapping("/view/add-hoa-don")
     public String addHoaDon() {
         HoaDon hoaDon = new HoaDon();
+        idNV = 1;
+        Optional<NhanVien> nv = nhanVienRepo.findById(idNV);
         hoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
+        hoaDon.setNhanVien(nv.get());
         hoaDon.setNgay_tao(LocalDateTime.now());
         hoaDon.setTrang_thai("Chưa thanh toán");
         hoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);

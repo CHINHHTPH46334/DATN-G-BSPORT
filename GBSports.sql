@@ -516,9 +516,9 @@ INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gi
 -- 24. Bảng theo_doi_don_hang (10 dòng)
 -------------------------------------
 INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
-(1, N'Đang xử lý', '2025-02-02'),
-(2, N'Đang xử lý', '2025-02-03'),
-(3, N'Đang xử lý', '2025-02-04');
+(1, N'Chờ xác nhận', '2025-02-02'),
+(2, N'Chờ xác nhận', '2025-02-03'),
+(3, N'Chờ xác nhận', '2025-02-04');
 
 -------------------------------------
 -- 25. Bảng yeu_cau_doi_hang (10 dòng)

@@ -46,9 +46,9 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Query(value = """
     BEGIN TRANSACTION;
     	
-    	DECLARE @SOLUONG INT = 1;
-    	DECLARE @IDCTSP INT = 1;
-    	DECLARE @IDHD INT = 1;
+    	DECLARE @SOLUONG INT = :soLuong;
+    	DECLARE @IDCTSP INT = :idCTSP;
+    	DECLARE @IDHD INT = :idHoaDon;
     	
     	UPDATE hoa_don_chi_tiet
         SET

@@ -203,6 +203,7 @@
 
                 <div class="mb-3">
                     <label for="idKhachHang" class="form-label">Khách hàng</label>
+                    <button onclick="window.location.href = '/admin/khach-hang/view'" class="btn btn-primary">Tạo khách hàng mới</button>
                     <select class="form-select" id="idKhachHang" name="idKhachHang" required>
                         <option value="">Chọn khách hàng</option>
                         <c:choose>
