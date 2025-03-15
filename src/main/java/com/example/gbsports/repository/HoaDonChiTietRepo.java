@@ -44,12 +44,38 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Modifying
     @Transactional
     @Query(value = """
-    UPDATE hoa_don_chi_tiet
-    SET
-        so_luong = so_luong + :soLuong,
-        don_gia = (so_luong + :soLuong) * (SELECT gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = :idCTSP)
-    WHERE id_chi_tiet_san_pham = :idCTSP
-    AND id_hoa_don = :idHoaDon;
+    BEGIN TRANSACTION;
+    	
+    	DECLARE @SOLUONG INT = :soLuong;
+    	DECLARE @IDCTSP INT = :idCTSP;
+    	DECLARE @IDHD INT = :idHoaDon;
+    	
+    	UPDATE hoa_don_chi_tiet
+        SET
+            so_luong = so_luong + @SOLUONG,
+            don_gia = (so_luong + @SOLUONG) * (SELECT gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP)
+        WHERE id_chi_tiet_san_pham = @IDCTSP
+        AND id_hoa_don = @IDHD;
+    
+    	UPDATE chi_tiet_san_pham\s
+    	SET\s
+    		so_luong = so_luong - @SOLUONG
+    	WHERE id_chi_tiet_san_pham = @IDCTSP;
+    
+    	UPDATE hoa_don
+    	SET
+    		tong_tien_truoc_giam = phi_van_chuyen + (SELECT TOP 1 SUM(don_gia) FROM hoa_don_chi_tiet hdct WHERE hdct.id_hoa_don = @IDHD),
+    		tong_tien_sau_giam = phi_van_chuyen +\s
+    		(SELECT TOP 1 SUM(don_gia) FROM hoa_don_chi_tiet hdct WHERE hdct.id_hoa_don = @IDHD) -
+    		(SELECT COALESCE((
+    			SELECT vc.gia_tri_toi_da\s
+    			FROM hoa_don hd\s
+    			LEFT JOIN voucher vc ON vc.id_voucher = hd.id_voucher
+    			WHERE hd.tong_tien_truoc_giam >= vc.gia_tri_toi_thieu
+    			AND hd.id_hoa_don = @IDHD
+    		), 0) AS GiaTriToiDa)
+    	WHERE id_hoa_don = @IDHD;
+    COMMIT;
     """, nativeQuery = true)
     void addSLGH(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon, @Param("soLuong") Integer soLuong);
 

@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.entity.HoaDonChiTiet;
+import com.example.gbsports.entity.NhanVien;
 import com.example.gbsports.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 
@@ -41,6 +43,7 @@ public class BanHangController {
 
     Integer idHD = null;
     Integer idCTSP = null;
+    Integer idNV = null;
 
     public void viewALl(Model model) {
         model.addAttribute("listHoaDon", hoaDonRepo.getAllHoaDonCTT());
@@ -76,7 +79,10 @@ public class BanHangController {
     @PostMapping("/view/add-hoa-don")
     public String addHoaDon() {
         HoaDon hoaDon = new HoaDon();
+        idNV = 1;
+        Optional<NhanVien> nv = nhanVienRepo.findById(idNV);
         hoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
+        hoaDon.setNhanVien(nv.get());
         hoaDon.setNgay_tao(LocalDateTime.now());
         hoaDon.setTrang_thai("Chưa thanh toán");
         hoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);
@@ -110,8 +116,8 @@ public class BanHangController {
         return maHoaDon;
     }
 
-    @GetMapping("/view/{id}")
-    public String detail(@RequestParam("id") Integer id) {
+    @GetMapping("/view/{idHd}")
+    public String detail(@RequestParam("idHd") Integer id) {
         idHD = id;
         return "redirect:/admin/ban-hang/view";
     }
@@ -125,11 +131,24 @@ public class BanHangController {
                 hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham,id_hoa_don,so_luong);
             } else if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() != id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
                 HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+                BigDecimal giaSP = null;
                 for (ChiTietSanPham chiTietSanPham: chiTietSanPhamRepo.findAll()) {
                     if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
-
+                        hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
+                        hoaDonChiTiet.setSo_luong(so_luong);
+                        giaSP = BigDecimal.valueOf(chiTietSanPham.getGia_ban());
                     }
                 }
+                for (HoaDon hoaDon: hoaDonRepo.findAll()) {
+                    if (hoaDon.getId_hoa_don() == id_hoa_don) {
+                        hoaDonChiTiet.setHoaDon(hoaDon);
+                    }
+                }
+                BigDecimal slhdct = BigDecimal.valueOf(so_luong);
+                BigDecimal don_giahdct;
+                don_giahdct = slhdct.multiply(giaSP);
+                hoaDonChiTiet.setDon_gia(don_giahdct);
+                hoaDonChiTietRepo.save(hoaDonChiTiet);
             }
         }
 

@@ -153,6 +153,6 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
             where hd.id_hoa_don = :idHd
 """, nativeQuery = true)
-    List<HoaDonResponse> findHoaDonById(Integer idHd);
+    List<HoaDonResponse> findHoaDonById(@Param("idHd") Integer idHd);
 
 }

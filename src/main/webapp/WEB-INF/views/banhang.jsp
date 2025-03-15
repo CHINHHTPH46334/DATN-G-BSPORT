@@ -128,7 +128,7 @@
                     </thead>
                     <tbody>
                     <c:forEach items="${listHoaDon}" var="hd" varStatus="s">
-                        <tr style="text-align: center" onclick="window.location.href = '/admin/ban-hang/view/${hd.id_hoa_don}'">
+                        <tr style="text-align: center" onclick="window.location.href = '/admin/ban-hang/view/${hd.id_hoa_don}?idHd=${hd.id_hoa_don}'">
                             <td>${s.count}</td>
                             <td>${hd.ma_hoa_don}</td>
                             <td>${hd.ngay_tao}</td>
@@ -186,15 +186,15 @@
                         <c:choose>
                             <c:when test="${not empty hdbh and not empty hdbh.id_nhan_vien}">
                                 <c:forEach var="nv" items="${listNV}">
-                                    <c:if test="${nv.id_nhan_vien == hdbh.id_nhan_vien}">
-                                        <option value="${nv.id_nhan_vien}" selected>${nv.ten_nhan_vien}</option>
+                                    <c:if test="${nv.idNhanVien == hdbh.id_nhan_vien}">
+                                        <option value="${nv.idNhanVien}" selected>${nv.tenNhanVien}</option>
                                     </c:if>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
                                 <option value="">Chọn nhân viên</option>
                                 <c:forEach var="nv" items="${listNV}">
-                                    <option value="${nv.id_nhan_vien}">${nv.ten_nhan_vien}</option>
+                                    <option value="${nv.idNhanVien}">${nv.tenNhanVien}</option>
                                 </c:forEach>
                             </c:otherwise>
                         </c:choose>
@@ -203,6 +203,7 @@
 
                 <div class="mb-3">
                     <label for="idKhachHang" class="form-label">Khách hàng</label>
+                    <button onclick="window.location.href = '/admin/khach-hang/view'" class="btn btn-primary">Tạo khách hàng mới</button>
                     <select class="form-select" id="idKhachHang" name="idKhachHang" required>
                         <option value="">Chọn khách hàng</option>
                         <c:choose>
