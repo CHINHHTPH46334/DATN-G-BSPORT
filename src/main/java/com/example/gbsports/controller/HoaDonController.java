@@ -42,7 +42,6 @@ public class HoaDonController {
         if (size <= 0) {
             throw new IllegalArgumentException("Kích thước trang không hợp lệ");
         }
-
         Pageable pageable = PageRequest.of(page, size);
         Page<HoaDonResponse> list = hoaDonRepo.getAllHD(pageable);
         return list; // Trả về danh sách, kể cả khi rỗng
@@ -56,7 +55,6 @@ public class HoaDonController {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page hoặc size không hợp lệ");
         }
-
         Pageable pageable = PageRequest.of(page, size);
         String searchKeyword = null;
         if (keyword != null) {
@@ -66,7 +64,6 @@ public class HoaDonController {
             }
             searchKeyword = "%" + trimmedKeyword.replaceAll("[^a-zA-Z0-9\\s]", "") + "%";
         }
-
         return hoaDonRepo.timHoaDon(searchKeyword, pageable);
     }
 
@@ -79,7 +76,6 @@ public class HoaDonController {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page hoặc size không hợp lệ");
         }
-
         Pageable pageable = PageRequest.of(page, size);
         LocalDateTime tuNgay = null;
         LocalDateTime denNgay = null;
@@ -94,7 +90,6 @@ public class HoaDonController {
         if (tuNgay != null && denNgay != null && tuNgay.isAfter(denNgay)) {
             throw new IllegalArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc");
         }
-
         return hoaDonRepo.findHoaDonByNgay(tuNgay, denNgay, pageable);
     }
 
@@ -106,7 +101,6 @@ public class HoaDonController {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Page hoặc size không hợp lệ");
         }
-
         Pageable pageable = PageRequest.of(page, size);
         return (trangThai == null || trangThai.trim().isEmpty())
                 ? hoaDonRepo.getAllHD(pageable)
@@ -118,15 +112,12 @@ public class HoaDonController {
         HoaDonResponse hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon));
         Integer idHoaDon = hoaDon.getId_hoa_don();
-
         List<HoaDonChiTietResponse> chiTietHoaDons = hoaDonChiTietRepo.findHoaDonChiTietById(idHoaDon);
         List<TheoDoiDonHangResponse> trangThaiHistory = hoaDonRepo.findTrangThaiHistoryByIdHoaDon(idHoaDon);
-
         Map<String, Object> response = new HashMap<>();
         response.put("hoaDon", hoaDon);
         response.put("chiTietHoaDons", chiTietHoaDons);
         response.put("trangThaiHistory", trangThaiHistory);
-
         return response;
     }
 
@@ -138,12 +129,10 @@ public class HoaDonController {
                 newTrangThai == null || newTrangThai.trim().isEmpty()) {
             throw new IllegalArgumentException("Thông tin không hợp lệ");
         }
-
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
         }
-
         LocalDateTime ngayChuyen = LocalDateTime.now();
         hoaDonRepo.insertTrangThaiDonHang(maHoaDon, newTrangThai, ngayChuyen);
         return "Cập nhật trạng thái thành công: " + newTrangThai;
@@ -155,7 +144,6 @@ public class HoaDonController {
         if (!hoaDonOpt.isPresent()) {
             throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
         }
-
         LocalDateTime ngayChuyen = LocalDateTime.now();
         hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã hủy", ngayChuyen);
         return "Đơn hàng đã được hủy";
