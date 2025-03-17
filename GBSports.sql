@@ -11,7 +11,7 @@ ten_roles nvarchar(200)
 --Tài khoản
 create table tai_khoan(
 id_tai_khoan int identity(1,1) primary key,
-ma_tai_khoan varchar(50),
+id_roles int references roles(id_roles),
 ten_dang_nhap varchar(100),
 mat_khau varchar(200)
 );
@@ -25,7 +25,6 @@ ip_adress varchar(200)
 --Nhân viên
 create table nhan_vien(
 id_nhan_vien int identity(1,1) primary key,
-id_roles int references roles(id_roles),
 id_tai_khoan int references tai_khoan(id_tai_khoan),
 ma_nhan_vien varchar(50),
 ten_nhan_vien nvarchar(200),
@@ -51,7 +50,10 @@ ngay_sua datetime
 create table chat_lieu(
 id_chat_lieu int identity(1,1) primary key,
 ma_chat_lieu varchar(50),
-ten_chat_lieu nvarchar(200)
+ten_chat_lieu nvarchar(200),
+ngay_tao datetime,
+ngay_sua datetime,
+trang_thai nvarchar(50),
 );
 --Thương hiệu
 create table thuong_hieu(
@@ -93,13 +95,15 @@ create table kich_thuoc(
 id_kich_thuoc int identity(1,1) primary key,
 ma_kich_thuoc varchar(50),
 gia_tri varchar(200),
-don_vi nvarchar(20)
+don_vi nvarchar(20),
+trang_thai nvarchar(50)
 );
 --Màu sắc
 create table mau_sac(
 id_mau_sac int identity(1,1) primary key,
 ma_mau_sac varchar(50),
-ten_mau_sac nvarchar(50)
+ten_mau_sac nvarchar(50),
+trang_thai nvarchar(50)
 );
 --Chi tiết sản phẩm
 create table chi_tiet_san_pham(

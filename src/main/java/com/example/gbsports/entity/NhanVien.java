@@ -43,9 +43,9 @@ public class NhanVien {
     private Date ngayThamGia;
     @Column(name = "trang_thai")
     private String trangThai;
-    @ManyToOne
-    @JoinColumn(name = "id_roles")
-    private Roles roles;
+//    @ManyToOne
+//    @JoinColumn(name = "id_roles")
+//    private Roles roles;
 
     @ManyToOne
     @JoinColumn(name = "id_tai_khoan")
