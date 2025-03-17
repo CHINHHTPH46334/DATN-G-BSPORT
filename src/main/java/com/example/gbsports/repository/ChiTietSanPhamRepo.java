@@ -14,34 +14,34 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
-            "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
+            "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
+            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     ArrayList<ChiTietSanPhamView> listCTSP();
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
-            "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
+            "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
+            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     Page<ChiTietSanPhamView> listPhanTrangChiTietSanPham(Pageable pageable);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
-            "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+            "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
+            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "        WHERE (:tenSanPham IS NULL OR ten_san_pham LIKE CONCAT('%', :tenSanPham, '%')) \n" +
             "        AND (:giaBanMin IS NULL OR gia_ban >= :giaBanMin) \n" +
             "        AND (:giaBanMax IS NULL OR gia_ban <= :giaBanMax) \n" +
@@ -66,12 +66,12 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, gioi_tinh\n" +
             "from chi_tiet_san_pham ctsp\n" +
-            "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+            "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
+            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "where ctsp.id_san_pham = :idSanPham ")
     ArrayList<ChiTietSanPhamView> listCTSPFolowSanPham(@Param("idSanPham") Integer idSanPham);
 
