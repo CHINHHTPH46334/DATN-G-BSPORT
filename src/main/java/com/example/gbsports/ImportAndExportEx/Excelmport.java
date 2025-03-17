@@ -116,8 +116,8 @@ public class Excelmport {
         }
         return false;
     }
-    public ArrayList<ChiTietSanPhamRequest> readExcel(MultipartFile file) throws IOException {
-        ArrayList<ChiTietSanPhamRequest> list = new ArrayList<>();
+    public ArrayList<ChiTietSanPham> readExcel(MultipartFile file) throws IOException {
+        ArrayList<ChiTietSanPham> list = new ArrayList<>();
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
             throw new IllegalArgumentException("File không hợp lệ. Vui lòng chọn file excel khác");
         }
@@ -128,7 +128,7 @@ public class Excelmport {
                 if (row.getRowNum() == 0) continue; // Bỏ qua dòng tiêu đề
 
                 // ✅ Đọc dữ liệu cho Sản Phẩm
-                SanPhamRequest sanPham = new SanPhamRequest();
+                SanPham sanPham = new SanPham();
                 sanPham.setId_san_pham(getIntegerValueFromCell(row.getCell(0)));
                 sanPham.setMa_san_pham(row.getCell(1).getStringCellValue());
                 sanPham.setTen_san_pham(row.getCell(2).getStringCellValue());
@@ -162,7 +162,7 @@ public class Excelmport {
                 // ✅ Đọc dữ liệu cho Chi Tiết Sản Phẩm
                 SanPham sp = new SanPham();
                 BeanUtils.copyProperties(sanPham, sp);
-                ChiTietSanPhamRequest chiTietSanPham = new ChiTietSanPhamRequest();
+                ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                 chiTietSanPham.setSanPham(sp);
                 chiTietSanPham.setQr_code(row.getCell(21).getStringCellValue());
                 chiTietSanPham.setGia_ban((float) row.getCell(22).getNumericCellValue());

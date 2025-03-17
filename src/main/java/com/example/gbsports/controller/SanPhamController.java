@@ -4,6 +4,7 @@ import com.example.gbsports.ImportAndExportEx.ChiTietSanPhamValidate;
 import com.example.gbsports.ImportAndExportEx.ExcelExport;
 import com.example.gbsports.ImportAndExportEx.ExcelSaveDB;
 import com.example.gbsports.ImportAndExportEx.Excelmport;
+import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.entity.SanPham;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
@@ -28,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
 @RequestMapping("/admin/quan_ly_san_pham/")
 public class SanPhamController {
     @Autowired
@@ -50,14 +51,19 @@ public class SanPhamController {
 
     @GetMapping("/allSanPham")
     public List<SanPhamView> getAll(@RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "5") Integer size) {
+                                    @RequestParam(name = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
 
+    @PostMapping("/saveSanPham2")
+    public ResponseEntity<?> addSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult bindingResult) {
+        return sanPhamService.saveSanPham2(sanPhamRequest, bindingResult);
+    }
+
     @PostMapping("/saveSanPham")
-    public ResponseEntity<?> addSanPham(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult bindingResult) {
-        return sanPhamService.saveSanPham(sanPhamRequest, bindingResult);
+    public ResponseEntity<?> addSanPham(@RequestBody SanPhamRequest sanPhamRequest) {
+        return sanPhamService.saveSanPham(sanPhamRequest);
     }
 
     @PostMapping("/xoaSanPham")
@@ -70,7 +76,7 @@ public class SanPhamController {
         return sanPhamService.listTimKiem(search);
     }
 
-    @PutMapping ("/chuyenTrangThaiSanPham")
+    @PutMapping("/chuyenTrangThaiSanPham")
     public String chuyenTrangThaiSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.chuyenTrangThai(id);
     }
@@ -105,20 +111,24 @@ public class SanPhamController {
 
     @PostMapping("/listImport")
     public ResponseEntity<?> getListImport(@RequestParam("file") MultipartFile file) throws IOException {
-        List<ChiTietSanPhamRequest> list = excelmport.readExcel(file);
+        List<ChiTietSanPham> list = excelmport.readExcel(file);
         return ResponseEntity.ok(list);
     }
+
     @Autowired
     ChiTietSanPhamValidate chiTietSanPhamValidate;
+
     @PostMapping("/validate")
-    public ResponseEntity<?> validate(@RequestBody List<ChiTietSanPhamRequest> list) {
+    public ResponseEntity<?> validate(@RequestBody List<ChiTietSanPham> list) {
         List<String> errors = chiTietSanPhamValidate.validate(list);
         return errors.isEmpty() ? ResponseEntity.ok("Hợp lệ") : ResponseEntity.badRequest().body(errors);
     }
+
     @Autowired
     ExcelSaveDB excelSaveDB;
+
     @PostMapping("/save")
-    public ResponseEntity<?> saveToDB(@RequestBody List<ChiTietSanPhamRequest> list) {
+    public ResponseEntity<?> saveToDB(@RequestBody List<ChiTietSanPham> list) {
         excelSaveDB.saveToDB(list);
         return ResponseEntity.ok("Dữ liệu đã lưu");
     }

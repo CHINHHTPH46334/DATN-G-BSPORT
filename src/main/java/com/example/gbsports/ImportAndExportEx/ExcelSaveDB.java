@@ -21,8 +21,8 @@ public class ExcelSaveDB {
     private final MauSacRepo mauSacRepo;
     private final KichThuocRepo kichThuocRepo;
     @Transactional
-    public void saveToDB(List<ChiTietSanPhamRequest> list) {
-        for (ChiTietSanPhamRequest request : list) {
+    public void saveToDB(List<ChiTietSanPham> list) {
+        for (ChiTietSanPham request : list) {
             SanPham sanPham = sanPhamRepo.findById(request.getSanPham().getId_san_pham())
                     .orElseGet(() -> sanPhamRepo.save(request.getSanPham()));
 

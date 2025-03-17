@@ -1,9 +1,10 @@
 package com.example.gbsports.service;
 
 import com.example.gbsports.entity.ChiTietSanPham;
+import com.example.gbsports.entity.KichThuoc;
+import com.example.gbsports.entity.MauSac;
 import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.repository.ChiTietSanPhamRepo;
-import com.example.gbsports.repository.HinhAnhSanPhamRepo;
+import com.example.gbsports.repository.*;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
 import com.example.gbsports.response.HinhAnhView;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +33,12 @@ public class ChiTietSanPhamService {
     ChiTietSanPhamRepo chiTietSanPhamRepo;
     @Autowired
     HinhAnhSanPhamRepo hinhAnhSanPhamRepo;
-
+    @Autowired
+    MauSacRepo mauSacRepo;
+    @Autowired
+    KichThuocRepo kichThuocRepo;
+    @Autowired
+    SanPhamRepo sanPhamRepo;
     public List<ChiTietSanPhamView> getAllCTSP() {
         return chiTietSanPhamRepo.listCTSP();
     }
@@ -51,7 +58,16 @@ public class ChiTietSanPhamService {
             return ResponseEntity.badRequest().body(errors);
         } else {
             ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+            Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
+            Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
+            Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
             BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+            KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
+            MauSac mauSac = mauSacOptional.orElse(new MauSac());
+            SanPham sanPham = sanPhamOptional.orElse(new SanPham());
+            chiTietSanPham.setMauSac(mauSac);
+            chiTietSanPham.setKichThuoc(kichThuoc);
+            chiTietSanPham.setSanPham(sanPham);
             chiTietSanPhamRepo.save(chiTietSanPham);
             return ResponseEntity.ok("Lưu thành công");
         }

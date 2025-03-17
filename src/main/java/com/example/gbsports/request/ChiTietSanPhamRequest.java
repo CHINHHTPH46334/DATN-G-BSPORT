@@ -19,8 +19,7 @@ import java.util.Date;
 public class ChiTietSanPhamRequest {
     private Integer id_chi_tiet_san_pham;
     @NotNull(message = "Không để trống sản phẩm")
-    @Valid
-    SanPham sanPham;
+    private Integer id_san_pham;
     private String qr_code;
     @NotNull(message = "Không để trống giá bán")
     private float gia_ban;
@@ -38,9 +37,7 @@ public class ChiTietSanPhamRequest {
     @NotNull(message = "Không để trống giá nhập")
     private float gia_nhap;
     @NotNull(message = "Không để trống kích thước")
-    @Valid
-    KichThuoc kichThuoc;
+    private Integer id_kich_thuoc;
     @NotNull(message = "Không để trống màu sắc")
-    @Valid
-    MauSac mauSac;
+    private Integer id_mau_sac;
 }

@@ -25,13 +25,10 @@ public class SanPhamRequest {
     @NotNull(message = "Không để trống giới tính")
     private Boolean gioi_tinh;
     private String hinh_anh;
-    @NotNull(message = "Danh mục không được để trống")
-    @Valid
-    DanhMuc danhMuc;
-    @NotNull(message = "Thương hiệu không được để trống")
-    @Valid
-    ThuongHieu thuongHieu;
-    @NotNull(message = "Chất liệu không được để trống")
-    @Valid
-    ChatLieu chatLieu;
+//    @NotNull(message = "Danh mục không được để trống")
+    private Integer id_danh_muc;
+//    @NotNull(message = "Thương hiệu không được để trống")
+    private Integer id_thuong_hieu;
+//    @NotNull(message = "Chất liệu không được để trống")
+    private Integer id_chat_lieu;
 }
