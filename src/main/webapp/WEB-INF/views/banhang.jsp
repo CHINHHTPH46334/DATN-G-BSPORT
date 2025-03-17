@@ -174,7 +174,8 @@
         </div>
         <div class="form col-lg-4">
             <h2>Form Bán Hàng</h2>
-            <form action="BanHangServlet" method="POST">
+            <form action="/api/zalopay/create-order" method="POST">
+                <input type="hidden" name="id_hoa_don" value="${hdbh.id_hoa_don}">
                 <div class="mb-3">
                     <label for="maHoaDon" class="form-label">Mã hóa đơn</label>
                     <input type="text" class="form-control" id="maHoaDon" name="ma_hoa_don" value="${hdbh.ma_hoa_don}" readonly>
@@ -281,7 +282,10 @@
                     <input type="text" class="form-control" id="tongTienSG" name="tongTienSauGiam" min="0" value="${hdbh.tong_tien_sau_giam}" readonly>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100">Thanh toán</button>
+                <button type="submit"
+                        class="btn btn-success w-100">
+                    Thanh toán
+                </button>
             </form>
         </div>
         <div class="table-responsive">
