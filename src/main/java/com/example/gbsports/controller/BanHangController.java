@@ -5,6 +5,7 @@ import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.entity.HoaDonChiTiet;
 import com.example.gbsports.entity.NhanVien;
 import com.example.gbsports.repository.*;
+import com.example.gbsports.service.ZaloPayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -61,7 +63,7 @@ public class BanHangController {
             model.addAttribute("slgh", null);
         } else {
             ChiTietSanPham ct = new ChiTietSanPham();
-            for (ChiTietSanPham ctsp: chiTietSanPhamRepo.findAll()) {
+            for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
                 if (idCTSP == ctsp.getId_chi_tiet_san_pham()) {
                     ct = ctsp;
                 }
@@ -107,7 +109,7 @@ public class BanHangController {
             }
             maHoaDon = code.toString();
 
-            for (HoaDon hd: hoaDonRepo.findAll()) {
+            for (HoaDon hd : hoaDonRepo.findAll()) {
                 if (maHoaDon.equalsIgnoreCase(hd.getMa_hoa_don())) {
                     check = true;
                 }
@@ -126,32 +128,32 @@ public class BanHangController {
     public String addAndUpdateSPGH(@RequestParam("idCTSP") Integer id_chi_tiet_san_pham,
                                    @RequestParam("idHoaDon") Integer id_hoa_don,
                                    @RequestParam("soLuong") Integer so_luong) {
-        for (HoaDonChiTiet hdcts: hoaDonChiTietRepo.findAll()) {
-            if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() == id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
-                hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham,id_hoa_don,so_luong);
-            } else if (hdcts.getChiTietSanPham().getId_chi_tiet_san_pham() != id_chi_tiet_san_pham && hdcts.getHoaDon().getId_hoa_don() == id_hoa_don) {
-                HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
-                BigDecimal giaSP = null;
-                for (ChiTietSanPham chiTietSanPham: chiTietSanPhamRepo.findAll()) {
-                    if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
-                        hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
-                        hoaDonChiTiet.setSo_luong(so_luong);
-                        giaSP = BigDecimal.valueOf(chiTietSanPham.getGia_ban());
-                    }
-                }
-                for (HoaDon hoaDon: hoaDonRepo.findAll()) {
-                    if (hoaDon.getId_hoa_don() == id_hoa_don) {
-                        hoaDonChiTiet.setHoaDon(hoaDon);
-                    }
-                }
-                BigDecimal slhdct = BigDecimal.valueOf(so_luong);
-                BigDecimal don_giahdct;
-                don_giahdct = slhdct.multiply(giaSP);
-                hoaDonChiTiet.setDon_gia(don_giahdct);
-                hoaDonChiTietRepo.save(hoaDonChiTiet);
-            }
-        }
+        Optional<HoaDonChiTiet> existingHdct = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(id_chi_tiet_san_pham, id_hoa_don);
 
+        if (existingHdct.isPresent()) {
+            // Nếu đã tồn tại, cập nhật số lượng
+            hoaDonChiTietRepo.addSLGH(id_chi_tiet_san_pham, id_hoa_don, so_luong);
+        } else {
+            HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+            BigDecimal giaSP = null;
+            for (ChiTietSanPham chiTietSanPham : chiTietSanPhamRepo.findAll()) {
+                if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
+                    hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
+                    hoaDonChiTiet.setSo_luong(so_luong);
+                    giaSP = BigDecimal.valueOf(chiTietSanPham.getGia_ban());
+                }
+            }
+            for (HoaDon hoaDon : hoaDonRepo.findAll()) {
+                if (hoaDon.getId_hoa_don() == id_hoa_don) {
+                    hoaDonChiTiet.setHoaDon(hoaDon);
+                }
+            }
+            BigDecimal slhdct = BigDecimal.valueOf(so_luong);
+            BigDecimal don_giahdct;
+            don_giahdct = slhdct.multiply(giaSP);
+            hoaDonChiTiet.setDon_gia(don_giahdct);
+            hoaDonChiTietRepo.save(hoaDonChiTiet);
+        }
 
         return "redirect:/admin/ban-hang/view";
     }

@@ -1,9 +1,7 @@
 package com.example.gbsports.service;
 
-import com.example.gbsports.entity.ChiTietSanPham;
-import com.example.gbsports.entity.SanPham;
-import com.example.gbsports.repository.ChiTietSanPhamRepo;
-import com.example.gbsports.repository.SanPhamRepo;
+import com.example.gbsports.entity.*;
+import com.example.gbsports.repository.*;
 import com.example.gbsports.request.SanPhamRequest;
 import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
@@ -11,15 +9,14 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +25,12 @@ public class SanPhamService {
     SanPhamRepo sanPhamRepo;
     @Autowired
     ChiTietSanPhamRepo chiTietSanPhamRepo;
+    @Autowired
+    DanhMucRepo danhMucRepo;
+    @Autowired
+    ThuongHieuRepo thuongHieuRepo;
+    @Autowired
+    ChatLieuRepo chatLieuRepo;
 
     public ArrayList<SanPhamView> getAll() {
         return sanPhamRepo.getAllSanPham();
@@ -41,16 +44,76 @@ public class SanPhamService {
         return sanPhamRepo.getAllSanPhamPhanTrang(pageable);
     }
 
-    public ResponseEntity<?> saveSanPham(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult result) {
+    public ResponseEntity<?> saveSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult result) {
+        Map<String, Object> response = new HashMap<>();
+
         if (result.hasErrors()) {
-            List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
+            List<String> errors = result.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
-            return ResponseEntity.badRequest().body(errors);
-        } else {
+            response.put("success", false);
+            response.put("message", "Validation failed");
+            response.put("errors", errors);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
             SanPham sanPham = new SanPham();
+            Optional<DanhMuc> danhMucOp = danhMucRepo.findById(sanPhamRequest.getId_danh_muc());
+            Optional<ThuongHieu> thuongHieuOp = thuongHieuRepo.findById(sanPhamRequest.getId_thuong_hieu());
+            Optional<ChatLieu> chatLieuOp = chatLieuRepo.findById(sanPhamRequest.getId_chat_lieu());
+
+            ChatLieu chatLieu = chatLieuOp.orElse(new ChatLieu());
+            ThuongHieu thuongHieu = thuongHieuOp.orElse(new ThuongHieu());
+            DanhMuc danhMuc = danhMucOp.orElse(new DanhMuc());
+
             BeanUtils.copyProperties(sanPhamRequest, sanPham);
-            sanPhamRepo.save(sanPham);
-            return ResponseEntity.ok("Lưu thành công");
+            sanPham.setChatLieu(chatLieu);
+            sanPham.setDanhMuc(danhMuc);
+            sanPham.setThuongHieu(thuongHieu);
+
+            SanPham savedSanPham = sanPhamRepo.save(sanPham);
+
+            response.put("success", true);
+            response.put("message", "Lưu thành công");
+            response.put("data", savedSanPham);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi lưu sản phẩm");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    public ResponseEntity<?> saveSanPham(@RequestBody SanPhamRequest sanPhamRequest) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            SanPham sanPham = new SanPham();
+            Optional<DanhMuc> danhMucOp = danhMucRepo.findById(sanPhamRequest.getId_danh_muc());
+            Optional<ThuongHieu> thuongHieuOp = thuongHieuRepo.findById(sanPhamRequest.getId_thuong_hieu());
+            Optional<ChatLieu> chatLieuOp = chatLieuRepo.findById(sanPhamRequest.getId_chat_lieu());
+
+            ChatLieu chatLieu = chatLieuOp.orElse(new ChatLieu());
+            ThuongHieu thuongHieu = thuongHieuOp.orElse(new ThuongHieu());
+            DanhMuc danhMuc = danhMucOp.orElse(new DanhMuc());
+
+            BeanUtils.copyProperties(sanPhamRequest, sanPham);
+            sanPham.setChatLieu(chatLieu);
+            sanPham.setDanhMuc(danhMuc);
+            sanPham.setThuongHieu(thuongHieu);
+
+            SanPham savedSanPham = sanPhamRepo.save(sanPham);
+
+            response.put("success", true);
+            response.put("message", "Lưu thành công");
+            response.put("data", savedSanPham);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi lưu sản phẩm");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

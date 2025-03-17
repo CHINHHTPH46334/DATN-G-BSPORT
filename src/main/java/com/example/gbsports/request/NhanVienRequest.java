@@ -63,7 +63,7 @@ private String maNhanVien;
     @JsonProperty("trang_thai")
     private String trangThai;
 
-    private Roles roles;
+//    private Roles roles;
     private TaiKhoan taiKhoan;
 
 }
