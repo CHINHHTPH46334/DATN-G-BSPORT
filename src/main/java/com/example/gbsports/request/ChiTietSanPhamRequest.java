@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -22,7 +23,7 @@ public class ChiTietSanPhamRequest {
     private Integer id_san_pham;
     private String qr_code;
     @NotNull(message = "Không để trống giá bán")
-    private float gia_ban;
+    private BigDecimal gia_ban;
     @NotNull(message = "Không để trống số lượng")
     private Integer so_luong;
     @NotBlank(message = "Không để trống trạng thái")
@@ -35,7 +36,7 @@ public class ChiTietSanPhamRequest {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
     @NotNull(message = "Không để trống giá nhập")
-    private float gia_nhap;
+    private BigDecimal gia_nhap;
     @NotNull(message = "Không để trống kích thước")
     private Integer id_kich_thuoc;
     @NotNull(message = "Không để trống màu sắc")

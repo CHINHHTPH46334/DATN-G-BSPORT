@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -165,8 +166,8 @@ public class Excelmport {
                 ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                 chiTietSanPham.setSanPham(sp);
                 chiTietSanPham.setQr_code(row.getCell(21).getStringCellValue());
-                chiTietSanPham.setGia_ban((float) row.getCell(22).getNumericCellValue());
-                chiTietSanPham.setGia_nhap((float) row.getCell(23).getNumericCellValue());
+                chiTietSanPham.setGia_ban(BigDecimal.valueOf(row.getCell(22).getNumericCellValue()));
+                chiTietSanPham.setGia_nhap( BigDecimal.valueOf(row.getCell(23).getNumericCellValue()));
                 chiTietSanPham.setSo_luong((int) row.getCell(24).getNumericCellValue());
                 chiTietSanPham.setTrang_thai(row.getCell(25).getStringCellValue());
                 chiTietSanPham.setNgay_tao(getDateValueFromCell(row.getCell(26)));

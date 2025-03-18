@@ -140,7 +140,7 @@ public class BanHangController {
                 if (chiTietSanPham.getId_chi_tiet_san_pham() == id_chi_tiet_san_pham) {
                     hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
                     hoaDonChiTiet.setSo_luong(so_luong);
-                    giaSP = BigDecimal.valueOf(chiTietSanPham.getGia_ban());
+                    giaSP = chiTietSanPham.getGia_ban();
                 }
             }
             for (HoaDon hoaDon : hoaDonRepo.findAll()) {

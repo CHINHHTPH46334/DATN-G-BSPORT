@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -21,7 +22,7 @@ public class ChiTietSanPham {
     @Valid
     SanPham sanPham;
     private String qr_code;
-    private float gia_ban;
+    private BigDecimal gia_ban;
     private Integer so_luong;
     private String trang_thai;
     @Temporal(TemporalType.DATE)
@@ -30,7 +31,7 @@ public class ChiTietSanPham {
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
-    private float gia_nhap;
+    private BigDecimal gia_nhap;
     @ManyToOne
     @JoinColumn(name = "id_kich_thuoc")
     KichThuoc kichThuoc;
