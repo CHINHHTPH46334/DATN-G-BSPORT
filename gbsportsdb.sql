@@ -56,7 +56,10 @@ CREATE TABLE danh_muc_san_pham (
 CREATE TABLE chat_lieu (
     id_chat_lieu INT IDENTITY(1,1) PRIMARY KEY,
     ma_chat_lieu VARCHAR(50),
-    ten_chat_lieu NVARCHAR(200)
+    ten_chat_lieu NVARCHAR(200),
+	ngay_tao DATETIME,
+	ngay_sua DATETIME,
+	trang_thai NVARCHAR(50),
 );
 
 -- 7. Bảng thuong_hieu
@@ -102,14 +105,16 @@ CREATE TABLE kich_thuoc (
     id_kich_thuoc INT IDENTITY(1,1) PRIMARY KEY,
     ma_kich_thuoc VARCHAR(50),
     gia_tri VARCHAR(200),
-    don_vi NVARCHAR(20)
+    don_vi NVARCHAR(20),
+	trang_thai NVARCHAR(50)
 );
 
 -- 11. Bảng mau_sac
 CREATE TABLE mau_sac (
     id_mau_sac INT IDENTITY(1,1) PRIMARY KEY,
     ma_mau_sac VARCHAR(50),
-    ten_mau_sac NVARCHAR(50)
+    ten_mau_sac NVARCHAR(50),
+	trang_thai NVARCHAR(50)
 );
 
 -- 12. Bảng chi_tiet_san_pham
@@ -137,9 +142,10 @@ CREATE TABLE hinh_anh (
 
 -- 14. Bảng chi_tiet_khuyen_mai
 CREATE TABLE chi_tiet_khuyen_mai (
+	id_ctkm INT IDENTITY(1,1) PRIMARY KEY,
     id_khuyen_mai INT REFERENCES khuyen_mai(id_khuyen_mai),
     id_chi_tiet_san_pham INT REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham),
-    PRIMARY KEY (id_khuyen_mai, id_chi_tiet_san_pham)
+    
 );
 
 -- 15. Bảng khach_hang
@@ -149,7 +155,7 @@ CREATE TABLE khach_hang (
     ten_khach_hang NVARCHAR(200),
     gioi_tinh BIT,
     so_dien_thoai VARCHAR(20),
-    ngay_sinh DATETIME,
+    ngay_sinh DATE,
     email VARCHAR(200),
     id_tai_khoan INT REFERENCES tai_khoan(id_tai_khoan),
     trang_thai NVARCHAR(50)
@@ -163,10 +169,11 @@ CREATE TABLE gio_hang (
 
 -- 17. Bảng chi_tiet_gio_hang
 CREATE TABLE chi_tiet_gio_hang (
+	id_chi_tiet_gio_hang INT IDENTITY(1,1) PRIMARY KEY,
     id_gio_hang INT REFERENCES gio_hang(id_gio_hang),
     id_chi_tiet_san_pham INT REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham),
-    so_luong INT,
-    PRIMARY KEY (id_gio_hang, id_chi_tiet_san_pham)
+    so_luong INT
+    
 );
 
 -- 18. Bảng binh_luan
@@ -192,6 +199,7 @@ CREATE TABLE danh_sach_yeu_thich (
 CREATE TABLE dia_chi_khach_hang (
     id_dia_chi_khach_hang INT IDENTITY(1,1) PRIMARY KEY,
     id_khach_hang INT NOT NULL,
+	so_nha NVARCHAR(255),
     xa_phuong NVARCHAR(255),
     quan_huyen NVARCHAR(255),
     tinh_thanh_pho NVARCHAR(255),
@@ -330,16 +338,15 @@ INSERT INTO lich_su_dang_nhap (id_tai_khoan, ngay_dang_nhap, ip_adress) VALUES
 
 -- 4. Bảng nhan_vien
 INSERT INTO nhan_vien (id_tai_khoan, ma_nhan_vien, ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, anh_nhan_vien, ngay_tham_gia, trang_thai) VALUES
-(1, 'NV01', N'Phạm Thị Quỳnh Thu', '2002-07-10', 'ptqt10722@gmail.com', N'Phương Canh, Nam Từ Liêm, Hà Nội', 0, '0359765372', 'avatar1.jpg', '2023-01-01', N'Đang hoạt động'),
-(2, 'NV02', N'Nguyễn Hữu Nghĩa', '2000-10-17', 'nghianhph46340@fpt.edu.vn', N'Phương Canh, Nam Từ Liêm, Hà Nội', 1, '0353225292', 'avatar2.jpg', '2023-02-01', N'Đang hoạt động'),
-(3, 'NV03', N'Hoàng Thọ Chính', '2004-12-13', 'chinhhtph46334@fpt.edu.vn', N'Hoài Đức, Hà Nội', 1, '0989864737', 'avatar3.jpg', '2023-03-01', N'Đang hoạt động'),
-(4, 'NV04', N'Nguyễn Thị Kiều Anh', '2003-04-12', 'annv@gmail.com', N'Bắc Từ Liêm, Hà Nội', 0, '0378854735', 'avatar4.jpg', '2023-04-01', N'Đã nghỉ việc'),
-(5, 'NV05', N'Vũ Tuấn Huy', '2004-02-15', 'huyvtph46307@fpt.edu.vn', N'Đội Cấn, Ba Đình, Hà Nội', 1, '0912301363', 'avatar5.jpg', '2023-05-01', N'Đang hoạt động'),
-(6, 'NV06', N'Hồ Bá Dũng', '2004-11-14', 'dunghbph46428@fpt.edu.vn', N'Xã Đàn, Đống Đa, Hà Nội', 1, '0397572262', 'avatar6.jpg', '2023-06-01', N'Đang hoạt động'),
-(7, 'NV07', N'Phùn Văn Lềnh', '2003-09-10', 'lenhpvph46331@fpt.edu.vn', N'Cổ Nhuế 2, Hà Nội', 1, '0388109763', 'avatar7.jpg', '2023-07-01', N'Đang hoạt động'),
-(8, 'NV08', N'Hà Trung Thành', '2001-11-23', 'thanhht@gmail.com', N'Hồ Chí Minh', 1, '0325467832', 'avatar8.jpg', '2023-08-01', N'Đã nghỉ việc'),
-(9, 'NV09', N'Lê Thành Dương', '2000-01-17', 'duonglt@gmail.com', N'Hồ Chí Minh', 1, '0987678543', 'avatar9.jpg', '2023-09-01', N'Đã nghỉ việc'),
-(10, 'NV10', N'Lê Thị Nhàn', '1999-08-29', 'nhanlt@gmail.com', N'Hồ Chí Minh', 0, '0987678543', 'avatar10.jpg', '2023-10-01', N'Đã nghỉ việc');
+(1, 'NV01', N'Nguyễn Hữu Nghĩa', '2000-10-17', 'nghianhph46340@fpt.edu.vn', N'Số 7, Phường Phương Canh, Quận Nam Từ Liêm, Thành phố Hà Nội', 1, '0353225292', 'avatar2.jpg', '2023-02-01', N'Đang hoạt động'),
+(2, 'NV02', N'Hoàng Thọ Chính', '2004-12-13', 'chinhhtph46334@fpt.edu.vn', N'Số 5, Xã Vân Canh, Huyện Hoài Đức, Thành phố Hà Nội', 1, '0989864737', 'avatar3.jpg', '2023-03-01', N'Đang hoạt động'),
+(3, 'NV03', N'Nguyễn Thị Kiều Anh', '2003-04-12', 'annv@gmail.com', N'Số 123, Phường Tây Tựu, Quận Bắc Từ Liêm, Thành phố Hà Nội', 0, '0378854735', 'avatar4.jpg', '2023-04-01', N'Đã nghỉ việc'),
+(4, 'NV04', N'Vũ Tuấn Huy', '2004-02-15', 'huyvtph46307@fpt.edu.vn', N'Số 26, Phường Đội Cấn, Quận Ba Đình, Thành phố Hà Nội', 1, '0912301363', 'avatar5.jpg', '2023-05-01', N'Đang hoạt động'),
+(5, 'NV05', N'Hồ Bá Dũng', '2004-11-14', 'dunghbph46428@fpt.edu.vn', N'Số 7 ngõ 324, Phường Láng Thượng, Quận Đống Đa, Thành phố Hà Nội', 1, '0397572262', 'avatar6.jpg', '2023-06-01', N'Đang hoạt động'),
+(6, 'NV06', N'Phùn Văn Lềnh', '2003-09-10', 'lenhpvph46331@fpt.edu.vn', N'Số 4 ngõ 45, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Thành phố Hà Nội', 1, '0388109763', 'avatar7.jpg', '2023-07-01', N'Đang hoạt động'),
+(7, 'NV07', N'Hà Trung Thành', '2001-11-23', 'thanhht@gmail.com', N'Số 3 ngõ 89, Phường Thảo Điền, Thành phố Thủ Đức, Thành phố Hồ Chí Minh', 1, '0325467832', 'avatar8.jpg', '2023-08-01', N'Đã nghỉ việc'),
+(8, 'NV08', N'Lê Thành Dương', '2000-01-17', 'duonglt@gmail.com', N'Khu 7, Xã Mai Hạ, Huyện Mai Châu, Tỉnh Hoà Bình', 1, '0987678543', 'avatar9.jpg', '2023-09-01', N'Đã nghỉ việc'),
+(9, 'NV09', N'Lê Thị Nhàn', '1999-08-29', 'nhanlt@gmail.com', N'Khu 8, Xã Đông Xá, Huyện Vân Đồn, Tỉnh Quảng Ninh', 0, '0987678543', 'avatar10.jpg', '2023-10-01', N'Đã nghỉ việc');
 
 -- 5. Bảng danh_muc_san_pham
 INSERT INTO danh_muc_san_pham (ma_danh_muc, ten_danh_muc, trang_thai, ngay_tao, ngay_sua) VALUES
@@ -355,17 +362,17 @@ INSERT INTO danh_muc_san_pham (ma_danh_muc, ten_danh_muc, trang_thai, ngay_tao, 
 ('DM010', N'Giải trí', N'Hoạt động', '2023-10-01', '2023-10-01');
 
 -- 6. Bảng chat_lieu
-INSERT INTO chat_lieu (ma_chat_lieu, ten_chat_lieu) VALUES
-('CL001', N'Cotton'),
-('CL002', N'Len'),
-('CL003', N'Polyester'),
-('CL004', N'Vải Jeans'),
-('CL005', N'Siêu nhẹ'),
-('CL006', N'Chất liệu cao cấp'),
-('CL007', N'Nỉ'),
-('CL008', N'Vải lụa'),
-('CL009', N'Vải dù'),
-('CL010', N'Vải tổng hợp');
+INSERT INTO chat_lieu (ma_chat_lieu, ten_chat_lieu, ngay_tao, ngay_sua, trang_thai) VALUES
+('CL001', N'Cotton', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL002', N'Len', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL003', N'Polyester', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL004', N'Vải Jeans', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL005', N'Siêu nhẹ', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL006', N'Chất liệu cao cấp', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL007', N'Nỉ', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL008', N'Vải lụa', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL009', N'Vải dù', '2023-01-01', '2023-01-01', N'Hoạt động'),
+('CL010', N'Vải tổng hợp', '2023-01-01', '2023-01-01', N'Hoạt động');
 
 -- 7. Bảng thuong_hieu
 INSERT INTO thuong_hieu (ma_thuong_hieu, ten_thuong_hieu, trang_thai, ngay_tao, ngay_sua) VALUES
@@ -407,30 +414,30 @@ INSERT INTO khuyen_mai (ma_khuyen_mai, ten_khuyen_mai, mo_ta, ngay_bat_dau, ngay
 ('KM010', N'Giảm giá cuối năm', N'Giảm 25% tối đa 150K', '2025-12-15', '2025-12-31', 150000, 25, N'Phần trăm', N'Sắp diễn ra');
 
 -- 10. Bảng kich_thuoc
-INSERT INTO kich_thuoc (ma_kich_thuoc, gia_tri, don_vi) VALUES
-('KT001', 'S', ''),
-('KT002', 'M', ''),
-('KT003', 'L', ''),
-('KT004', 'XL', ''),
-('KT005', 'XXL', ''),
-('KT006', '27', 'inch'),
-('KT007', '28', 'inch'),
-('KT008', '29', 'inch'),
-('KT009', '30', 'inch'),
-('KT010', '31', 'inch');
+INSERT INTO kich_thuoc (ma_kich_thuoc, gia_tri, don_vi, trang_thai) VALUES
+('KT001', 'S', '', N'Hoạt động'),
+('KT002', 'M', '', N'Hoạt động'),
+('KT003', 'L', '', N'Hoạt động'),
+('KT004', 'XL', '', N'Hoạt động'),
+('KT005', 'XXL', '', N'Hoạt động'),
+('KT006', '27', 'inch', N'Hoạt động'),
+('KT007', '28', 'inch', N'Hoạt động'),
+('KT008', '29', 'inch', N'Hoạt động'),
+('KT009', '30', 'inch', N'Hoạt động'),
+('KT010', '31', 'inch', N'Hoạt động');
 
 -- 11. Bảng mau_sac
-INSERT INTO mau_sac (ma_mau_sac, ten_mau_sac) VALUES
-('MS001', N'Đỏ'),
-('MS002', N'Xanh'),
-('MS003', N'Vàng'),
-('MS004', N'Đen'),
-('MS005', N'Trắng'),
-('MS006', N'Hồng'),
-('MS007', N'Tím'),
-('MS008', N'Cam'),
-('MS009', N'Nâu'),
-('MS010', N'Xám');
+INSERT INTO mau_sac (ma_mau_sac, ten_mau_sac, trang_thai) VALUES
+('MS001', N'Đỏ', N'Hoạt động'),
+('MS002', N'Xanh', N'Hoạt động'),
+('MS003', N'Vàng', N'Hoạt động'),
+('MS004', N'Đen', N'Hoạt động'),
+('MS005', N'Trắng', N'Hoạt động'),
+('MS006', N'Hồng', N'Hoạt động'),
+('MS007', N'Tím', N'Hoạt động'),
+('MS008', N'Cam', N'Hoạt động'),
+('MS009', N'Nâu', N'Hoạt động'),
+('MS010', N'Xám', N'Hoạt động');
 
 -- 12. Bảng chi_tiet_san_pham
 INSERT INTO chi_tiet_san_pham (id_san_pham, qr_code, gia_ban, so_luong, trang_thai, ngay_tao, ngay_sua, gia_nhap, id_kich_thuoc, id_mau_sac) VALUES
@@ -528,17 +535,17 @@ INSERT INTO danh_sach_yeu_thich (id_khach_hang, id_chi_tiet_san_pham, ngay_them)
 (10, 10, '2025-03-10');
 
 -- 20. Bảng dia_chi_khach_hang
-INSERT INTO dia_chi_khach_hang (id_khach_hang, xa_phuong, quan_huyen, tinh_thanh_pho) VALUES
-(1, N'Phường Cổ Nhuế 1', N'Quận Bắc Từ Liêm', N'Hà Nội'),
-(2, N'Phường Phương Canh', N'Quận Nam Từ Liêm', N'Hà Nội'),
-(3, N'Phường 15', N'Quận Tân Bình', N'Hồ Chí Minh'),
-(4, N'Phường Bến Nghé', N'Quận 1', N'Hồ Chí Minh'),
-(5, N'Phường Hải Châu 1', N'Quận Hải Châu', N'Đà Nẵng'),
-(6, N'Phường Thọ Quang', N'Quận Sơn Trà', N'Đà Nẵng'),
-(7, N'Phường Hòa Khánh', N'Quận Liên Chiểu', N'Đà Nẵng'),
-(8, N'Phường 10', N'Quận 3', N'Hồ Chí Minh'),
-(9, N'Phường Xuân Đỉnh', N'Quận Bắc Từ Liêm', N'Hà Nội'),
-(10, N'Phường Tân Phú', N'Quận 7', N'Hồ Chí Minh');
+INSERT INTO dia_chi_khach_hang (id_khach_hang, so_nha, xa_phuong, quan_huyen, tinh_thanh_pho) VALUES
+(1, N'Số nhà 25', N'Phường Cổ Nhuế 1', N'Quận Bắc Từ Liêm', N'Hà Nội'),
+(2, N'Số nhà 225', N'Phường Phương Canh', N'Quận Nam Từ Liêm', N'Hà Nội'),
+(3, N'Số nhà 125', N'Phường 15', N'Quận Tân Bình', N'Hồ Chí Minh'),
+(4, N'Số nhà 2', N'Phường Bến Nghé', N'Quận 1', N'Hồ Chí Minh'),
+(5, N'Số nhà 5', N'Phường Hải Châu 1', N'Quận Hải Châu', N'Đà Nẵng'),
+(6, N'Số nhà 3', N'Phường Thọ Quang', N'Quận Sơn Trà', N'Đà Nẵng'),
+(7, N'Số nhà 45', N'Phường Hòa Khánh', N'Quận Liên Chiểu', N'Đà Nẵng'),
+(8, N'Số nhà 5', N'Phường 10', N'Quận 3', N'Hồ Chí Minh'),
+(9, N'Số nhà 11', N'Phường Xuân Đỉnh', N'Quận Bắc Từ Liêm', N'Hà Nội'),
+(10, N'Số nhà 41', N'Phường Tân Phú', N'Quận 7', N'Hồ Chí Minh');
 
 -- 21. Bảng voucher
 INSERT INTO voucher (ma_voucher, ten_voucher, ngay_tao, ngay_het_han, gia_tri_giam, gia_tri_toi_thieu, trang_thai, so_luong, kieu_giam_gia, mo_ta, gia_tri_toi_da) VALUES
@@ -566,63 +573,30 @@ INSERT INTO hoa_don (ma_hoa_don, id_nhan_vien, id_khach_hang, ngay_tao, ngay_sua
 INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia) VALUES
 (1, 1, 1, 100000),
 (2, 2, 2, 200000),
-(3, 3, 1, 300000),
-(4, 4, 3, 400000),
-(5, 5, 2, 500000),
-(6, 6, 1, 600000),
-(7, 7, 4, 700000),
-(8, 8, 2, 800000),
-(9, 9, 1, 900000),
-(10, 10, 3, 1000000);
+(3, 3, 1, 300000);
 
 -- 24. Bảng theo_doi_don_hang
 INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
-(1, N'Chờ xác nhận', '2025-03-01'),
-(2, N'Chờ xác nhận', '2025-03-02'),
-(3, N'Đã giao', '2025-03-03'),
-(4, N'Chờ xác nhận', '2025-03-04'),
-(5, N'Đã giao', '2025-03-05'),
-(6, N'Chờ xác nhận', '2025-03-06'),
-(7, N'Đã giao', '2025-03-07'),
-(8, N'Chờ xác nhận', '2025-03-08'),
-(9, N'Đã giao', '2025-03-09'),
-(10, N'Chờ xác nhận', '2025-03-10');
+(1, N'Chờ xác nhận', '2025-02-02'),
+(2, N'Chờ xác nhận', '2025-02-03'),
+(3, N'Chờ xác nhận', '2025-02-04');
+
 
 -- 25. Bảng yeu_cau_doi_hang
 INSERT INTO yeu_cau_doi_hang (ma_yeu_cau, id_hoa_don, id_san_pham_moi, trang_thai_san_pham, ngay_yeu_cau, ngay_xu_ly, ly_do_doi) VALUES
-('YC001', 1, 2, N'Mới', '2025-03-02', '2025-03-03', N'Lỗi sản phẩm'),
-('YC002', 2, 3, N'Mới', '2025-03-03', '2025-03-04', N'Sai kích thước'),
-('YC003', 3, 4, N'Mới', '2025-03-04', '2025-03-05', N'Hư hỏng'),
-('YC004', 4, 5, N'Mới', '2025-03-05', '2025-03-06', N'Lỗi sản phẩm'),
-('YC005', 5, 6, N'Mới', '2025-03-06', '2025-03-07', N'Sai màu'),
-('YC006', 6, 7, N'Mới', '2025-03-07', '2025-03-08', N'Lỗi sản phẩm'),
-('YC007', 7, 8, N'Mới', '2025-03-08', '2025-03-09', N'Hư hỏng'),
-('YC008', 8, 9, N'Mới', '2025-03-09', '2025-03-10', N'Sai kích thước'),
-('YC009', 9, 10, N'Mới', '2025-03-10', '2025-03-11', N'Lỗi sản phẩm'),
-('YC010', 10, 1, N'Mới', '2025-03-11', '2025-03-12', N'Sai màu');
+('YC001', 1, 1, N'Mới', '2025-02-03', '2025-02-04', N'Lỗi sản phẩm'),
+('YC002', 2, 2, N'Mới', '2025-02-04', '2025-02-05', N'Lỗi sản phẩm'),
+('YC003', 3, 3, N'Mới', '2025-02-05', '2025-02-06', N'Lỗi sản phẩm');
 
 -- 26. Bảng hinh_anh_doi_hang
 INSERT INTO hinh_anh_doi_hang (id_yeu_cau, hinh_anh) VALUES
 (1, 'doi_img1.jpg'),
 (2, 'doi_img2.jpg'),
-(3, 'doi_img3.jpg'),
-(4, 'doi_img4.jpg'),
-(5, 'doi_img5.jpg'),
-(6, 'doi_img6.jpg'),
-(7, 'doi_img7.jpg'),
-(8, 'doi_img8.jpg'),
-(9, 'doi_img9.jpg'),
-(10, 'doi_img10.jpg');
+(3, 'doi_img3.jpg');
+
 
 -- 27. Bảng phieu_doi_hang
 INSERT INTO phieu_doi_hang (id_yeu_cau, ma_phieu_doi, phuong_thuc_thanh_toan, ngay_xuat_phieu, trang_thai, gia_tri_chenh_lech) VALUES
-(1, 'PDH001', N'Tiền mặt', '2025-03-03', N'Đã xuất', 10000),
-(2, 'PDH002', N'Chuyển khoản', '2025-03-04', N'Đã xuất', 20000),
-(3, 'PDH003', N'Tiền mặt', '2025-03-05', N'Đã xuất', 30000),
-(4, 'PDH004', N'Chuyển khoản', '2025-03-06', N'Đã xuất', 40000),
-(5, 'PDH005', N'Tiền mặt', '2025-03-07', N'Đã xuất', 50000),
-(6, 'PDH006', N'Chuyển khoản', '2025-03-08', N'Đã xuất', 60000),
-(7, 'PDH007', N'Tiền mặt', '2025-03-09', N'Đã xuất', 70000),
-(8, 'PDH008', N'Chuyển khoản', '2025-03-10', N'Đã xuất', 80000),
-(9, 'PDH009', N'Tiền mặt', '2025-03-11', N'Đã xuất', 90000),
-(10, 'PDH010', N'Chuyển khoản', '2025-03-12', N'Đã xuất', 100000);
+(1, 'PDH001', N'Tiền mặt', '2025-02-05', N'Đã xuất', 10000),
+(2, 'PDH002', N'Chuyển khoản', '2025-02-06', N'Đã xuất', 20000),
+(3, 'PDH003', N'Tiền mặt', '2025-02-07', N'Đã xuất', 30000);
