@@ -359,14 +359,14 @@ public class BanHangController {
                 return "redirect:/admin/ban-hang/view";
             }
             hdct.setSo_luong(newSoLuong);
-            hdct.setDon_gia(BigDecimal.valueOf(newSoLuong).multiply(BigDecimal.valueOf(chiTietSanPham.getGia_ban())));
+            hdct.setDon_gia(BigDecimal.valueOf(newSoLuong).multiply(chiTietSanPham.getGia_ban()));
             hoaDonChiTietRepo.save(hdct);
         } else {
             HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
             hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
             hoaDonChiTiet.setHoaDon(hoaDon);
             hoaDonChiTiet.setSo_luong(soLuong);
-            hoaDonChiTiet.setDon_gia(BigDecimal.valueOf(soLuong).multiply(BigDecimal.valueOf(chiTietSanPham.getGia_ban())));
+            hoaDonChiTiet.setDon_gia(BigDecimal.valueOf(soLuong).multiply(chiTietSanPham.getGia_ban()));
             hoaDonChiTietRepo.save(hoaDonChiTiet);
         }
 
