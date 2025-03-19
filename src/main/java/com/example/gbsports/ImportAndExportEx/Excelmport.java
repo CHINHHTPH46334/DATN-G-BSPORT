@@ -4,6 +4,7 @@ import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
+import com.example.gbsports.service.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
@@ -21,19 +22,19 @@ import java.util.Date;
 @Service
 public class Excelmport {
     @Autowired
-    SanPhamRepo sanPhamRepo;
+    SanPhamService sanPhamService;
     @Autowired
     ChiTietSanPhamRepo chiTietSanPhamRepo;
     @Autowired
-    ChatLieuRepo chatLieuRepo;
+    ChatLieuService chatLieuService;
     @Autowired
-    DanhMucRepo danhMucRepo;
+    DanhMucService danhMucService;
     @Autowired
-    KichThuocRepo kichThuocRepo;
+    KichThuocService kichThuocService;
     @Autowired
-    MauSacRepo mauSacRepo;
+    MauSacService mauSacService;
     @Autowired
-    ThuongHieuRepo thuongHieuRepo;
+    ThuongHieuService thuongHieuService;
 
     public static Integer getIntegerValueFromCell(Cell cell) {
         if (cell == null) return null;
@@ -117,6 +118,10 @@ public class Excelmport {
         }
         return false;
     }
+    private BigDecimal getBigDecimalValue(Cell cell) {
+        if (cell == null) return BigDecimal.ZERO;
+        return BigDecimal.valueOf(cell.getNumericCellValue());
+    }
     public ArrayList<ChiTietSanPham> readExcel(MultipartFile file) throws IOException {
         ArrayList<ChiTietSanPham> list = new ArrayList<>();
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
@@ -129,66 +134,37 @@ public class Excelmport {
                 if (row.getRowNum() == 0) continue; // Bỏ qua dòng tiêu đề
 
                 // ✅ Đọc dữ liệu cho Sản Phẩm
-                SanPham sanPham = new SanPham();
-                sanPham.setId_san_pham(getIntegerValueFromCell(row.getCell(0)));
-                sanPham.setMa_san_pham(row.getCell(1).getStringCellValue());
-                sanPham.setTen_san_pham(row.getCell(2).getStringCellValue());
-                sanPham.setMo_ta(row.getCell(3).getStringCellValue());
-                sanPham.setTrang_thai(row.getCell(4).getStringCellValue());
-                sanPham.setGioi_tinh(getBooleanValueFromCell(row.getCell(5)));
+                String tenSanPham = getStringValueFromCell(row.getCell(0));
+                Boolean gioiTinh = getBooleanValueFromCell(row.getCell(1));
+                BigDecimal giaNhap = getBigDecimalValue(row.getCell(2));
+                BigDecimal giaBan = getBigDecimalValue(row.getCell(3));
+                Integer soLuong = getIntegerValueFromCell(row.getCell(4));
+                String giaTriKichThuoc = getStringValueFromCell(row.getCell(5));
+                String donViKichThuoc = getStringValueFromCell(row.getCell(6));
+                String tenChatLieu = getStringValueFromCell(row.getCell(7));
+                String tenDanhMuc = getStringValueFromCell(row.getCell(8));
+                String tenThuongHieu = getStringValueFromCell(row.getCell(9));
+                String mauSacInfo = getStringValueFromCell(row.getCell(10));
 
                 // ✅ Đọc các đối tượng liên quan (Danh m    ục, Thương hiệu, Chất liệu)
-                DanhMuc danhMuc = danhMucRepo.findById(getIntegerValueFromCell(row.getCell(6)))
-                        .orElseGet(() -> new DanhMuc(null,
-                                getStringValueFromCell(row.getCell(7)),
-                                getStringValueFromCell(row.getCell(8)),
-                                getStringValueFromCell(row.getCell(9)),
-                                getDateValueFromCell(row.getCell(10)),
-                                getDateValueFromCell(row.getCell(11))));
-                sanPham.setDanhMuc(danhMuc);
-                ThuongHieu thuongHieu = thuongHieuRepo.findById(getIntegerValueFromCell(row.getCell(12)))
-                        .orElseGet(() -> new ThuongHieu(null,
-                                getStringValueFromCell(row.getCell(13)),
-                                getStringValueFromCell(row.getCell(14)),
-                                getStringValueFromCell(row.getCell(15)),
-                                getDateValueFromCell(row.getCell(16)),
-                                getDateValueFromCell(row.getCell(17))));
-                sanPham.setThuongHieu(thuongHieu);
-                ChatLieu chatLieu = chatLieuRepo.findById(getIntegerValueFromCell(row.getCell(18)))
-                        .orElseGet(() -> new ChatLieu(null,
-                                getStringValueFromCell(row.getCell(19)),
-                                getStringValueFromCell(row.getCell(20))));
-                sanPham.setChatLieu(chatLieu);
-
+                DanhMuc danhMuc = danhMucService.getDanhMucOrCreateDanhMuc(tenDanhMuc);
+                ThuongHieu thuongHieu = thuongHieuService.getThuongHieuOrCreateThuongHieu(tenThuongHieu);
+                ChatLieu chatLieu = chatLieuService.getChatLieuOrCreateChatLieu(tenChatLieu);
+                SanPham sanPham = sanPhamService.getSanPhamOrCreateSanPham(tenSanPham,gioiTinh,thuongHieu,danhMuc,chatLieu);
+                KichThuoc kichThuoc = kichThuocService.getKichThuocOrCreateKichThuoc(giaTriKichThuoc,donViKichThuoc);
+                MauSac mauSac = mauSacService.getMauSacOrCreateMauSac(mauSacInfo);
                 // ✅ Đọc dữ liệu cho Chi Tiết Sản Phẩm
-                SanPham sp = new SanPham();
-                BeanUtils.copyProperties(sanPham, sp);
                 ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-                chiTietSanPham.setSanPham(sp);
-                chiTietSanPham.setQr_code(row.getCell(21).getStringCellValue());
-                chiTietSanPham.setGia_ban(BigDecimal.valueOf(row.getCell(22).getNumericCellValue()));
-                chiTietSanPham.setGia_nhap( BigDecimal.valueOf(row.getCell(23).getNumericCellValue()));
-                chiTietSanPham.setSo_luong((int) row.getCell(24).getNumericCellValue());
-                chiTietSanPham.setTrang_thai(row.getCell(25).getStringCellValue());
-                chiTietSanPham.setNgay_tao(getDateValueFromCell(row.getCell(26)));
-                chiTietSanPham.setNgay_sua(getDateValueFromCell(row.getCell(27)));
-
-                // ✅ Đọc dữ liệu cho Màu sắc & Kích thước
-                MauSac mauSac = mauSacRepo.findById(getIntegerValueFromCell(row.getCell(28)))
-                        .orElseGet(() -> new MauSac(null,
-                                getStringValueFromCell(row.getCell(29)),
-                                getStringValueFromCell(row.getCell(30))
-                        ));
+                chiTietSanPham.setSanPham(sanPham);
+                chiTietSanPham.setGia_ban(giaBan);
+                chiTietSanPham.setGia_nhap( giaNhap);
+                chiTietSanPham.setSo_luong(soLuong);
+                chiTietSanPham.setTrang_thai("Hoạt động");
+                chiTietSanPham.setNgay_tao(new Date());
+                chiTietSanPham.setNgay_sua(new Date());
                 chiTietSanPham.setMauSac(mauSac);
-                KichThuoc kichThuoc = kichThuocRepo.findById(getIntegerValueFromCell(row.getCell(31)))
-                        .orElseGet(() -> new KichThuoc(null,
-                                getStringValueFromCell(row.getCell(32)),
-                                getStringValueFromCell(row.getCell(33)),
-                                getStringValueFromCell(row.getCell(34))
-                        ));
-                chiTietSanPham.setKichThuoc(kichThuoc); // Cột 14: Kích thước
+                chiTietSanPham.setKichThuoc(kichThuoc);
 
-                // ✅ Thêm vào danh sách kết quả
                 list.add(chiTietSanPham);
             }
         }

@@ -17,4 +17,5 @@ public class KichThuoc {
     private String ma_kich_thuoc;
     private String gia_tri;
     private String don_vi;
+    private String trang_thai;
 }
