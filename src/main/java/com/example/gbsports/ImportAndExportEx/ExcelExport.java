@@ -17,9 +17,9 @@ public class ExcelExport {
             Row headerRow = sheet.createRow(0);
 
             String[] headers = {"ID CTSP","Tên sản phẩm",
-                    "QR Code","Giá nhập", "Giá Bán",
+                    "QR Code","Giá nhập", "Giá bán",
                     "Ngày tạo","Ngày sửa","Số Lượng",
-                    "Trạng Thái", "Kích thước","Đơn vị",
+                    "Trạng thái", "Kích thước","Đơn vị",
                     "Chất liệu","Danh mục","Thương hiệu",
                     "Màu"};
             for (int i = 0; i < headers.length; i++) {

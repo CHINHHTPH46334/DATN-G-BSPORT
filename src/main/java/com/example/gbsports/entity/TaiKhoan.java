@@ -17,7 +17,7 @@ public class TaiKhoan {
 //    @NotBlank(message = "Không được để trống mật khẩu")
     private String mat_khau;
 
-    @ManyToOne
-    @JoinColumn(name = "id_roles")
-    private Roles roles;
+//    @ManyToOne
+//    @JoinColumn(name = "id_roles")
+//    private Roles roles;
 }
