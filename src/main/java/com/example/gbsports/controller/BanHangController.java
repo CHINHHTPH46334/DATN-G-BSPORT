@@ -4,6 +4,7 @@ import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.service.ZaloPayService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +40,9 @@ public class BanHangController {
 
     @Autowired
     private HoaDonChiTietRepo hoaDonChiTietRepo;
+
+    @Autowired
+    private ZaloPayService zaloPayService;
 
     Integer idHD = null;
     Integer idCTSP = null;
@@ -263,14 +267,66 @@ public class BanHangController {
                 return "redirect:/admin/ban-hang/view";
             }
         } else if ("Chuyển khoản".equals(hinhThucThanhToan)) {
-            hoaDon.setTrang_thai("Đang chờ thanh toán");
-            hoaDonRepo.save(hoaDon);
-            model.addAttribute("message", "Đang chuyển hướng đến trang thanh toán ZaloPay...");
-            return "redirect:/api/zalopay/create-order?idHoaDon=" + idHoaDon;
+            try {
+                // Lấy mã QR từ ZaloPay
+                Map<String, Object> qrCodeResponse = zaloPayService.createQRCode(
+                        hoaDon.getTong_tien_sau_giam().longValue(),
+                        idHoaDon.longValue()
+                );
+                String qrCodeUrl = (String) qrCodeResponse.get("qr_code_url");
+
+                if (qrCodeUrl != null && !qrCodeUrl.isEmpty()) {
+                    model.addAttribute("qrCodeUrl", qrCodeUrl);
+                    model.addAttribute("message", "Vui lòng quét mã QR để thanh toán.");
+                    hoaDon.setTrang_thai("Đang chờ thanh toán");
+                    hoaDonRepo.save(hoaDon);
+                    return "payment-qr"; // Trả về view hiển thị mã QR
+                } else {
+                    model.addAttribute("error", "Không thể tạo mã QR. Vui lòng thử lại.");
+                    return "redirect:/admin/ban-hang/view";
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                model.addAttribute("error", "Có lỗi xảy ra khi tạo mã QR. Vui lòng thử lại.");
+                return "redirect:/admin/ban-hang/view";
+            }
         } else {
             model.addAttribute("error", "Hình thức thanh toán không hợp lệ!");
             return "redirect:/admin/ban-hang/view";
         }
+    }
+
+    @PostMapping("/zalopay/callback")
+    public ResponseEntity<String> handleZaloPayCallback(@RequestBody Map<String, Object> callbackData) {
+        try {
+            // Kiểm tra tính hợp lệ của callback
+            if (isValidCallback(callbackData)) {
+                // Lấy thông tin từ callback
+                Long appTransId = Long.parseLong(callbackData.get("app_trans_id").toString());
+                String status = callbackData.get("status").toString();
+
+                if ("1".equals(status)) { // Thanh toán thành công
+                    // Cập nhật trạng thái hóa đơn
+                    Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(appTransId.intValue());
+                    if (hoaDonOpt.isPresent()) {
+                        HoaDon hoaDon = hoaDonOpt.get();
+                        hoaDon.setTrang_thai("Đã thanh toán");
+                        hoaDonRepo.save(hoaDon);
+                    }
+                }
+                return ResponseEntity.ok("Callback processed successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid callback data");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing callback");
+        }
+    }
+
+    private boolean isValidCallback(Map<String, Object> callbackData) {
+        // Kiểm tra tính hợp lệ của callback (ví dụ: chữ ký HMAC)
+        return true; // Thay thế bằng logic thực tế
     }
 
     @GetMapping("/check-so-luong")

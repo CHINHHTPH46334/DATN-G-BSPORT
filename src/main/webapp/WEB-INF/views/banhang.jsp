@@ -462,11 +462,14 @@
                     if (inHoaDon) {
                         window.print();
                     }
-                    this.submit();
+                    // Gửi yêu cầu cập nhật trạng thái hóa đơn
+                    updateInvoiceStatus(idHoaDon, 'Đã thanh toán').then(() => {
+                        window.location = 'view';
+                    });
                 }
             } else if (hinhThucThanhToanValue === 'Chuyển khoản') {
                 if (!idHoaDon || !idKhachHang || !tongTienSauGiam) {
-                    console.log(idHoaDon + ":" + idKhachHang + ":" + tongTienSauGiam)
+                    console.log(idHoaDon + ":" + idKhachHang + ":" + tongTienSauGiam);
                     alert('Thiếu thông tin cần thiết để thanh toán!');
                     return;
                 }
@@ -498,6 +501,27 @@
                 form.submit();
             }
         });
+
+        function updateInvoiceStatus(idHoaDon, status) {
+            return fetch('/api/hoa-don/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idHoaDon, status }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Cập nhật trạng thái hóa đơn thành công!');
+                    } else {
+                        console.error('Lỗi khi cập nhật trạng thái hóa đơn:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi gửi yêu cầu cập nhật trạng thái:', error);
+                });
+        }
 
         const modal = document.getElementById('themSPGH');
         if (modal) {
