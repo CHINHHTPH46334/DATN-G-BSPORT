@@ -55,7 +55,10 @@ public class SanPhamController {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
-
+    @GetMapping("/sanPhamDetail")
+    public SanPham spDetail(@RequestParam ("id") Integer id){
+        return sanPhamService.detailSP(id);
+    }
     @PostMapping("/saveSanPham2")
     public ResponseEntity<?> addSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult bindingResult) {
         return sanPhamService.saveSanPham2(sanPhamRequest, bindingResult);
@@ -72,7 +75,7 @@ public class SanPhamController {
     }
 
     @GetMapping("/timKiemSanPham")
-    public List<SanPham> searchSanPham(@RequestParam("id") String search) {
+    public List<SanPham> searchSanPham(@RequestParam("search") String search) {
         return sanPhamService.listTimKiem(search);
     }
 
@@ -130,6 +133,6 @@ public class SanPhamController {
     @PostMapping("/save")
     public ResponseEntity<?> saveToDB(@RequestBody List<ChiTietSanPham> list) {
         excelSaveDB.saveToDB(list);
-        return ResponseEntity.ok("Dữ liệu đã lưu");
+        return ResponseEntity.ok("ok");
     }
 }

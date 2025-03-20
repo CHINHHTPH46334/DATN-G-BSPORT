@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class Excelmport {
@@ -118,12 +120,15 @@ public class Excelmport {
         }
         return false;
     }
+
     private BigDecimal getBigDecimalValue(Cell cell) {
         if (cell == null) return BigDecimal.ZERO;
         return BigDecimal.valueOf(cell.getNumericCellValue());
     }
+
     public ArrayList<ChiTietSanPham> readExcel(MultipartFile file) throws IOException {
         ArrayList<ChiTietSanPham> list = new ArrayList<>();
+        Map<String, ChiTietSanPham> mapChiTietSanPham = new HashMap<>();
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
             throw new IllegalArgumentException("File không hợp lệ. Vui lòng chọn file excel khác");
         }
@@ -135,37 +140,51 @@ public class Excelmport {
 
                 // ✅ Đọc dữ liệu cho Sản Phẩm
                 String tenSanPham = getStringValueFromCell(row.getCell(0));
-                Boolean gioiTinh = getBooleanValueFromCell(row.getCell(1));
-                BigDecimal giaNhap = getBigDecimalValue(row.getCell(2));
-                BigDecimal giaBan = getBigDecimalValue(row.getCell(3));
-                Integer soLuong = getIntegerValueFromCell(row.getCell(4));
-                String giaTriKichThuoc = getStringValueFromCell(row.getCell(5));
-                String donViKichThuoc = getStringValueFromCell(row.getCell(6));
-                String tenChatLieu = getStringValueFromCell(row.getCell(7));
-                String tenDanhMuc = getStringValueFromCell(row.getCell(8));
-                String tenThuongHieu = getStringValueFromCell(row.getCell(9));
-                String mauSacInfo = getStringValueFromCell(row.getCell(10));
+//                Boolean gioiTinh = getBooleanValueFromCell(row.getCell(1));
+                BigDecimal giaNhap = getBigDecimalValue(row.getCell(1));
+                BigDecimal giaBan = getBigDecimalValue(row.getCell(2));
+                Integer soLuong = getIntegerValueFromCell(row.getCell(3));
+                String giaTriKichThuoc = getStringValueFromCell(row.getCell(4));
+                String donViKichThuoc = getStringValueFromCell(row.getCell(5));
+                String tenChatLieu = getStringValueFromCell(row.getCell(6));
+                String tenDanhMuc = getStringValueFromCell(row.getCell(7));
+                String tenThuongHieu = getStringValueFromCell(row.getCell(8));
+                String mauSacInfo = getStringValueFromCell(row.getCell(9));
 
                 // ✅ Đọc các đối tượng liên quan (Danh m    ục, Thương hiệu, Chất liệu)
                 DanhMuc danhMuc = danhMucService.getDanhMucOrCreateDanhMuc(tenDanhMuc);
                 ThuongHieu thuongHieu = thuongHieuService.getThuongHieuOrCreateThuongHieu(tenThuongHieu);
                 ChatLieu chatLieu = chatLieuService.getChatLieuOrCreateChatLieu(tenChatLieu);
-                SanPham sanPham = sanPhamService.getSanPhamOrCreateSanPham(tenSanPham,gioiTinh,thuongHieu,danhMuc,chatLieu);
-                KichThuoc kichThuoc = kichThuocService.getKichThuocOrCreateKichThuoc(giaTriKichThuoc,donViKichThuoc);
+                SanPham sanPham = sanPhamService.getSanPhamOrCreateSanPham(tenSanPham, thuongHieu, danhMuc, chatLieu);
+                KichThuoc kichThuoc = kichThuocService.getKichThuocOrCreateKichThuoc(giaTriKichThuoc, donViKichThuoc);
                 MauSac mauSac = mauSacService.getMauSacOrCreateMauSac(mauSacInfo);
                 // ✅ Đọc dữ liệu cho Chi Tiết Sản Phẩm
-                ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-                chiTietSanPham.setSanPham(sanPham);
-                chiTietSanPham.setGia_ban(giaBan);
-                chiTietSanPham.setGia_nhap( giaNhap);
-                chiTietSanPham.setSo_luong(soLuong);
-                chiTietSanPham.setTrang_thai("Hoạt động");
-                chiTietSanPham.setNgay_tao(new Date());
-                chiTietSanPham.setNgay_sua(new Date());
-                chiTietSanPham.setMauSac(mauSac);
-                chiTietSanPham.setKichThuoc(kichThuoc);
+                String key = sanPham.getId_san_pham() + "-"
+                        + mauSac.getId_mau_sac() + "-"
+                        + kichThuoc.getId_kich_thuoc() + "-";
 
-                list.add(chiTietSanPham);
+
+                // ✅ Kiểm tra xem biến thể đã tồn tại chưa
+                if (mapChiTietSanPham.containsKey(key)) {
+                    // Nếu đã tồn tại, cập nhật số lượng
+                    ChiTietSanPham existingCtsp = mapChiTietSanPham.get(key);
+                    existingCtsp.setSo_luong(existingCtsp.getSo_luong() + soLuong);
+                } else {
+                    // Nếu chưa tồn tại, thêm mới vào danh sách
+                    ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+                    chiTietSanPham.setSanPham(sanPham);
+                    chiTietSanPham.setGia_ban(giaBan);
+                    chiTietSanPham.setGia_nhap(giaNhap);
+                    chiTietSanPham.setSo_luong(soLuong);
+                    chiTietSanPham.setTrang_thai("Hoạt động");
+                    chiTietSanPham.setNgay_tao(new Date());
+                    chiTietSanPham.setNgay_sua(new Date());
+                    chiTietSanPham.setMauSac(mauSac);
+                    chiTietSanPham.setKichThuoc(kichThuoc);
+
+                    mapChiTietSanPham.put(key, chiTietSanPham);
+                    list.add(chiTietSanPham);
+                }
             }
         }
         return list;

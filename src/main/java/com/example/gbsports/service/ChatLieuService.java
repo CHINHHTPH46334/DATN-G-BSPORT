@@ -42,6 +42,7 @@ public class ChatLieuService {
         newChatLieu.setTrang_thai("Hoạt động");
         newChatLieu.setNgay_tao(new Date());
         newChatLieu.setNgay_sua(new Date());
+        chatLieuRepo.save(newChatLieu);
         return newChatLieu;
     }
 }

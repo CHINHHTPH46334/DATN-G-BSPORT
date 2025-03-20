@@ -44,6 +44,7 @@ public class KichThuocService {
         newKichThuoc.setDon_vi(donVi);
 //        newKichThuoc.setNgay_tao(LocalDateTime.now());
         newKichThuoc.setTrang_thai("Hoạt động");
+        kichThuocRepo.save(newKichThuoc);
         return newKichThuoc;
     }
 }
