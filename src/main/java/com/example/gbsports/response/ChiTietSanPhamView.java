@@ -29,4 +29,6 @@ public interface ChiTietSanPhamView {
      String getTen_thuong_hieu();
      String getTen_chat_lieu();
      Boolean getGioi_tinh();
+     Integer getId_kich_thuoc();
+     Integer getId_mau_sac();
 }

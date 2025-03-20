@@ -45,6 +45,7 @@ public class DanhMucService {
         newDanhMuc.setTrang_thai("Hoạt động");
         newDanhMuc.setNgay_tao(new Date());
         newDanhMuc.setNgay_sua(new Date());
+        danhMucRepo.save(newDanhMuc);
         return newDanhMuc;
     }
 }
