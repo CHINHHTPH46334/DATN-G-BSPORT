@@ -24,9 +24,6 @@ public class BanHangController {
     private HoaDonRepo hoaDonRepo;
 
     @Autowired
-    private GioHangRepo gioHangRepo;
-
-    @Autowired
     private ChiTietSanPhamRepo chiTietSanPhamRepo;
 
     @Autowired
@@ -58,7 +55,7 @@ public class BanHangController {
             model.addAttribute("hdbh", null);
         } else {
             model.addAttribute("hdbh", hoaDonRepo.findHoaDonById(idHD).get(0));
-            model.addAttribute("listGH", gioHangRepo.getSPGH(idHD));
+            model.addAttribute("listGH", hoaDonChiTietRepo.getSPGH(idHD));
         }
         if (idCTSP == null) {
             model.addAttribute("slgh", null);

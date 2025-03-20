@@ -1,5 +1,6 @@
 package com.example.gbsports.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class ChiTietGioHang {
     @ManyToOne
     @MapsId("idGioHang")
     @JoinColumn(name = "id_gio_hang", nullable = false)
+    @JsonIgnore // Ngắt vòng lặp
     private GioHang gioHang;
 
     @ManyToOne
