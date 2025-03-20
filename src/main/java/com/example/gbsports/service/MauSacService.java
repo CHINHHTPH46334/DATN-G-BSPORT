@@ -42,6 +42,8 @@ public class MauSacService {
         MauSac newMauSac = new MauSac();
         newMauSac.setMa_mau_sac("MS0" + (maxNumber + 1));
         newMauSac.setTen_mau_sac(tenMauSac);
+        newMauSac.setTrang_thai("Hoạt động");
+        mauSacRepo.save(newMauSac);
         return newMauSac;
     }
 }
