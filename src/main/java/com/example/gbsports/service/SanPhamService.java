@@ -16,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -200,6 +201,36 @@ public class SanPhamService {
     public Page<SanPhamView> sapXep(Pageable pageable) {
         return sanPhamRepo.getAllSanPhamPhanTrang(pageable);
     }
+    public SanPham getSanPhamOrCreateSanPham(String tenSanPham, Boolean gioiTinh, ThuongHieu thuongHieu, DanhMuc danhMuc, ChatLieu chatLieu){
+        Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
+                .filter(sanPham -> sanPham.getTen_san_pham().equalsIgnoreCase(tenSanPham))
+                .findFirst();
 
+        if (exitingSanPham.isPresent()) {
+            return exitingSanPham.get();
+        }
+
+        // Nếu không tìm thấy, tạo mã mới
+        int maxNumber = sanPhamRepo.findAll().stream()
+                .map(SanPham::getMa_san_pham)
+                .filter(ma -> ma.startsWith("SP0"))
+                .map(ma -> ma.substring(3))
+                .filter(num -> num.matches("\\d+"))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+
+        // Tạo đối tượng mới
+        SanPham newSanPham = new SanPham();
+        newSanPham.setMa_san_pham("SP0" + (maxNumber + 1));
+        newSanPham.setTen_san_pham(tenSanPham);
+        newSanPham.setTrang_thai("Hoạt động");
+        newSanPham.setGioi_tinh(gioiTinh);
+        newSanPham.setThuongHieu(thuongHieu);
+        newSanPham.setDanhMuc(danhMuc);
+        newSanPham.setChatLieu(chatLieu);
+        //Còn có thể thêm hình ảnh và mô tả
+        return newSanPham;
+    }
 
 }

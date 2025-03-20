@@ -19,4 +19,5 @@ public class MauSac {
     private String ma_mau_sac;
     @NotBlank(message = "Không để trống nên màu")
     private String ten_mau_sac;
+    private String trang_thai;
 }

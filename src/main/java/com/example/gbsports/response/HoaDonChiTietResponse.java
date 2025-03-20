@@ -36,6 +36,7 @@ public interface HoaDonChiTietResponse {
     String getTen_voucher();
     String getMa_voucher();
     String getTrang_thai();
+    BigDecimal getGia_ban();
 
 
 }

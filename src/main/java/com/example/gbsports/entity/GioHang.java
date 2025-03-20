@@ -3,6 +3,9 @@ package com.example.gbsports.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,5 +20,8 @@ public class GioHang {
     @ManyToOne
     @JoinColumn(name = "id_khach_hang")
     private KhachHang khachHang;
+
+    @OneToMany(mappedBy = "gioHang", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChiTietGioHang> chiTietGioHangs = new ArrayList<>();
 
 }
