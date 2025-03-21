@@ -9,8 +9,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Integer> {
+    @Query("SELECT c FROM ChiTietSanPham c WHERE c.sanPham.id_san_pham = :idSanPham")
+    List<ChiTietSanPham> findBySanPhamIdSanPham(@Param("idSanPham") Integer idSanPham);
+
+    @Query("SELECT c FROM ChiTietSanPham c WHERE LOWER(c.sanPham.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.sanPham.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<ChiTietSanPham> findBySanPham_MaSanPhamContainingIgnoreCaseOrSanPham_TenSanPhamContainingIgnoreCase(String keyword);
+    Optional<ChiTietSanPham> findById(Integer id);
+
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +

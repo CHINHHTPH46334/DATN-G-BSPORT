@@ -13,7 +13,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -153,4 +155,44 @@ public class ZaloPayService {
         kq.put("zptransid", result.get("zptransid"));
         return kq;
     }
+
+    public Map<String, Object> createQRCode(Long amount, Long orderId) throws Exception {
+        // Tạo request body theo yêu cầu của ZaloPay API
+        Map<String, String> params = new HashMap<>();
+        params.put("app_id", zaloPayConfig.getAPP_ID());
+        params.put("app_user", "GBSports"); // Tên người dùng hoặc đơn vị thanh toán
+        params.put("amount", amount.toString()); // Số tiền thanh toán
+        params.put("app_trans_id", getCurrentTimeString("yyMMdd") + "_" + orderId); // Mã đơn hàng
+        params.put("description", "Thanh toán đơn hàng #" + orderId); // Mô tả đơn hàng
+        params.put("item", "[]"); // Danh sách sản phẩm (nếu có)
+        params.put("bank_code", "zalopayapp"); // Mã ngân hàng hoặc phương thức thanh toán
+
+        // Tạo chữ ký (mac) để xác thực request
+        String data = params.get("app_id") + "|" + params.get("app_trans_id") + "|" + params.get("app_user") + "|"
+                + params.get("amount") + "|" + params.get("description") + "|" + params.get("item");
+        String mac = HMACUtil.calculateHmac(data, zaloPayConfig.getKEY1()); // Sử dụng key1 từ ZaloPayConfig
+        params.put("mac", mac);
+
+        // Gọi API ZaloPay để tạo mã QR
+        String url = zaloPayConfig.getEndpoint() + "/v2/qrcode/create";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+        // Xử lý kết quả trả về
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Map<String, Object> result = response.getBody();
+            if (result != null && "1".equals(result.get("return_code"))) { // Thành công
+                return result;
+            } else {
+                throw new Exception("Không thể tạo mã QR: " + result.get("return_message"));
+            }
+        } else {
+            throw new Exception("Lỗi khi gọi API ZaloPay: " + response.getStatusCode());
+        }
+    }
+
 }

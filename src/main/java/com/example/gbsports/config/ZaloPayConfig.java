@@ -1,10 +1,11 @@
 package com.example.gbsports.config;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-
+@Data
 public class ZaloPayConfig {
 	@Value("${zalopay.app_id}")
 	public String APP_ID;
@@ -23,6 +24,8 @@ public class ZaloPayConfig {
 
 	@Value("${zalopay.redirect_url}")
 	public String REDIRECT_URL;
+
+	private String endpoint = "https://sandbox.zalopay.com.vn";
 
 //	APP_ID=15555
 //	PAYMENT_ID=CASHIN
