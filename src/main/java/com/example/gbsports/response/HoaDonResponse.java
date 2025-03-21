@@ -27,4 +27,5 @@ public interface HoaDonResponse {
     BigDecimal getTong_tien_sau_giam();
     String getHinh_thuc_thanh_toan();
     String getPhuong_thuc_nhan_hang();
+    String getTen_nhan_vien();
 }

@@ -20,9 +20,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-
 @RestController
-@RequestMapping("/hoa_don")
+@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
+@RequestMapping("/qlhd")
 public class HoaDonController {
 
     @Autowired
@@ -79,7 +79,7 @@ public class HoaDonController {
         Pageable pageable = PageRequest.of(page, size);
         LocalDateTime tuNgay = null;
         LocalDateTime denNgay = null;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         if (tuNgayStr != null && !tuNgayStr.isEmpty()) {
             tuNgay = LocalDateTime.parse(tuNgayStr, formatter);
