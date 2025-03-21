@@ -123,11 +123,7 @@
             <form action="/admin/ban-hang/view/add-hoa-don" method="post">
                 <button type="submit" class="btn btn-primary">Tạo hoá đơn</button>
             </form>
-            <br><br>
-            <div class="input-group mb-6" style="width: 30%">
-                <input type="text" class="form-control">
-                <button class="btn btn-outline-primary" type="button" id="button-addon2">Button</button>
-            </div>
+            <br>
             <br>
             <div class="table-responsive">
                 <table class="table table-bordered" style="width: 95%">
@@ -224,26 +220,17 @@
 
                 <div class="mb-3">
                     <label for="idKhachHang" class="form-label">Khách hàng</label>
-                    <button onclick="window.location.href = '/admin/khach-hang/view'" class="btn btn-primary">Tạo khách
-                        hàng mới
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#themKhachHangModal">
+                        Thêm khách hàng mới
                     </button>
                     <select class="form-select" id="idKhachHang" name="idKhachHang" required>
                         <option value="">Chọn khách hàng</option>
-                        <c:choose>
-                            <c:when test="${not empty hdbh}">
-                                <c:forEach var="kh" items="${listKH}">
-                                    <option value="${kh.idKhachHang}"
-                                            <c:if test="${kh.idKhachHang == hdbh.id_khach_hang}">selected</c:if>>
-                                            ${kh.tenKhachHang}
-                                    </option>
-                                </c:forEach>
-                            </c:when>
-                            <c:otherwise>
-                                <c:forEach var="kh" items="${listKH}">
-                                    <option value="${kh.idKhachHang}">${kh.tenKhachHang}</option>
-                                </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
+                        <c:forEach var="kh" items="${listKH}">
+                            <option value="${kh.idKhachHang}"
+                                    <c:if test="${hdbh != null && kh.idKhachHang == hdbh.id_khach_hang}">selected</c:if>>
+                                    ${kh.tenKhachHang}
+                            </option>
+                        </c:forEach>
                     </select>
                 </div>
 
@@ -329,6 +316,10 @@
                 </button>
             </form>
         </div>
+        <div class="input-group mb-6" style="width: 30%">
+            <input type="text" class="form-control">
+            <button class="btn btn-outline-primary" type="button" id="button-addon2">Button</button>
+        </div>
         <div class="table-responsive">
             <table class="table table_bordered">
                 <thead>
@@ -406,6 +397,41 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="themKhachHangModal" tabindex="-1" aria-labelledby="themKhachHangModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="themKhachHangModalLabel">Thêm khách hàng mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="themKhachHangForm">
+                            <div class="mb-3">
+                                <label for="tenKhachHang" class="form-label">Tên khách hàng</label>
+                                <input type="text" class="form-control" id="tenKhachHang" name="tenKhachHang" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="sdt" class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="sdt" name="sdt" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="diaChi" class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="diaChi" name="diaChi">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-primary" onclick="themKhachHang()">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <footer class="co">
             <small style="margin-left: 15px;">Release 1.0</small>
         </footer>
@@ -446,7 +472,7 @@
             event.preventDefault();
 
             const hinhThucThanhToanValue = hinhThucThanhToan.value;
-            const idHoaDon = document.querySelector('input[name="idHoaDon"]')?.value;
+            const idHoaDon = document.getElementById("idHoaDon").value;
             const idKhachHang = document.getElementById('idKhachHang').value;
             const tongTienSauGiam = document.getElementById('tongTienSG')?.value;
 
@@ -462,10 +488,28 @@
                     if (inHoaDon) {
                         window.print();
                     }
+                    fetch('/admin/ban-hang/thanh-toan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `id_hoa_don=${idHoaDon}&tienKhachDua=${tienKhachDua}&tongTienSauGiam=${tongTienSauGiamValue}&hinhThucThanhToan=${hinhThucThanhToanValue}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Thanh toán thành công!');
+                                window.location = 'view';
+                            } else {
+                                alert('Lỗi khi thanh toán: ' + data.message);
+                            }
+                        })
+                        .catch(error => console.error('Lỗi khi thanh toán:', error));
+
                     // Gửi yêu cầu cập nhật trạng thái hóa đơn
-                    updateInvoiceStatus(idHoaDon, 'Đã thanh toán').then(() => {
-                        window.location = 'view';
-                    });
+                    // updateInvoiceStatus(idHoaDon, 'Đã thanh toán').then(() => {
+                    //     window.location = 'view';
+                    // });
                 }
             } else if (hinhThucThanhToanValue === 'Chuyển khoản') {
                 if (!idHoaDon || !idKhachHang || !tongTienSauGiam) {
@@ -502,26 +546,28 @@
             }
         });
 
-        function updateInvoiceStatus(idHoaDon, status) {
-            return fetch('/api/hoa-don/update-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ idHoaDon, status }),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Cập nhật trạng thái hóa đơn thành công!');
-                    } else {
-                        console.error('Lỗi khi cập nhật trạng thái hóa đơn:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi gửi yêu cầu cập nhật trạng thái:', error);
-                });
-        }
+        // function updateInvoiceStatus(idHoaDon, status) {
+        //     console.log("phương thức status")
+        //     return fetch('/api/hoa-don/update-status', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //         },
+        //         body: JSON.stringify({ idHoaDon, status })
+        //
+        //     })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.success) {
+        //                 console.log('Cập nhật trạng thái hóa đơn thành công!');
+        //             } else {
+        //                 console.error('Lỗi khi cập nhật trạng thái hóa đơn:', data.message);
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error('Lỗi khi gửi yêu cầu cập nhật trạng thái:', error);
+        //         });
+        // }
 
         const modal = document.getElementById('themSPGH');
         if (modal) {
@@ -592,32 +638,73 @@
                 const idKhachHang = this.value;
                 const idHoaDon = document.getElementById("idHoaDon").value;
 
-                if (idHoaDon && idKhachHang) {
-                    fetch('/admin/ban-hang/update-khach-hang', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `idHoaDon=${idHoaDon}&idKhachHang=${idKhachHang}`
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data.success) {
-                                alert('Không thể cập nhật khách hàng: ' + data.message);
-                            } else {
-                                if (data.tongTienSauGiam) {
-                                    document.getElementById('tongTienSG').value = data.tongTienSauGiam;
-                                }
-                                if (data.tongTienTruocGiam) {
-                                    document.getElementById('tongTienTG').value = data.tongTienTruocGiam;
-                                }
-                            }
-                        })
-                        .catch(error => console.error('Lỗi khi cập nhật khách hàng:', error));
+                if (!idHoaDon || !idKhachHang) {
+                    alert("Vui lòng chọn hóa đơn và khách hàng!");
+                    return;
                 }
+
+                fetch('/admin/ban-hang/update-khach-hang', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `idHoaDonUDKH=${idHoaDon}&idKhachHangUDKH=${idKhachHang}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Cập nhật khách hàng thành công!');
+                        } else {
+                            alert('Không thể cập nhật khách hàng: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi cập nhật khách hàng:', error));
             });
         }
     });
+
+    function themKhachHang() {
+        const tenKhachHang = document.getElementById('tenKhachHang').value;
+        const sdt = document.getElementById('sdt').value;
+        const email = document.getElementById('email').value;
+        const diaChi = document.getElementById('diaChi').value;
+
+        if (!tenKhachHang || !sdt) {
+            alert("Vui lòng nhập tên khách hàng và số điện thoại!");
+            return;
+        }
+
+        fetch('/admin/khach-hang/them-moi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                tenKhachHang: tenKhachHang,
+                sdt: sdt,
+                email: email,
+                diaChi: diaChi
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Thêm khách hàng mới thành công!");
+                    // Đóng modal
+                    $('#themKhachHangModal').modal('hide');
+                    // Cập nhật combobox với khách hàng mới
+                    const option = document.createElement('option');
+                    option.value = data.idKhachHang;
+                    option.text = tenKhachHang;
+                    document.getElementById('idKhachHang').appendChild(option);
+                    // Chọn khách hàng mới
+                    document.getElementById('idKhachHang').value = data.idKhachHang;
+                } else {
+                    alert("Lỗi khi thêm khách hàng: " + data.message);
+                }
+            })
+            .catch(error => console.error('Lỗi khi thêm khách hàng:', error));
+    }
 
     function updateVoucher() {
         const idVoucher = document.getElementById('idVoucher').value;
