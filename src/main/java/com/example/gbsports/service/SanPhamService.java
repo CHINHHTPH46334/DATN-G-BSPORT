@@ -193,8 +193,19 @@ public class SanPhamService {
                     sp.getThuongHieu().getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT))) {
                 listTam.add(sp);
             }
+            Integer tongsoluong = tongSoLuongSanPham(sp.getId_san_pham());
+            sp.setTong_so_luong(tongsoluong);
         }
         return listTam;
+    }
+    public Integer tongSoLuongSanPham(Integer idSanPham){
+        Integer soLuong = 0;
+        for (ChiTietSanPham ctsp: chiTietSanPhamRepo.findAll()) {
+            if (ctsp.getSanPham().getId_san_pham()==idSanPham){
+                soLuong+=ctsp.getSo_luong();
+            }
+        }
+        return soLuong;
     }
 
     public List<SanPhamView> locSanPham(String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {

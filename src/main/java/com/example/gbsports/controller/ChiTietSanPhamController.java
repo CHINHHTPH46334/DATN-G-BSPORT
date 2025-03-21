@@ -57,7 +57,7 @@ public class ChiTietSanPhamController {
     }
 
     @GetMapping("/searchCTSP")
-    public ArrayList<ChiTietSanPhamView> search(@RequestParam(name = "keywork") String keyword) {
+    public ArrayList<ChiTietSanPhamView> search(@RequestParam(name = "keyword") String keyword) {
         return chiTietSanPhamService.listTimKiem(keyword);
     }
 

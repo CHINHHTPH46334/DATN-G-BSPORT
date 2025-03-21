@@ -101,14 +101,38 @@ public class BanHangController {
         return "redirect:/admin/ban-hang/view";
     }
 
-    @PostMapping("/update-khach-hang")
+    @RequestMapping(value = "/update-khach-hang", method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody
-    public ResponseEntity<?> updateKhachHang(
-            @RequestParam("idHoaDon") Integer idHoaDon,
-            @RequestParam("idKhachHang") Integer idKhachHang) {
-        System.out.println(idHoaDon + "----------------------------------");
-        if (idHoaDon == null) {
-            return ResponseEntity.badRequest().body("ID hóa đơn không hợp lệ");
+    public Map<String, Object> updateKhachHang(
+            @RequestParam("idHoaDonUDKH") String idHoaDonStr,
+            @RequestParam("idKhachHangUDKH") String idKhachHangStr) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        System.out.println("idHoaDon: " + idHoaDonStr);
+        System.out.println("idKhachHang: " + idKhachHangStr);
+
+        Integer idHoaDon = null;
+        Integer idKhachHang = null;
+
+        try {
+            if (idHoaDonStr != null && !idHoaDonStr.trim().isEmpty()) {
+                idHoaDon = Integer.parseInt(idHoaDonStr);
+            }
+
+            if (idKhachHangStr != null && !idKhachHangStr.trim().isEmpty()) {
+                idKhachHang = Integer.parseInt(idKhachHangStr);
+            }
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "ID không phải là số hợp lệ");
+            return response;
+        }
+
+        if (idHoaDon == null || idKhachHang == null) {
+            response.put("success", false);
+            response.put("message", "ID hóa đơn hoặc ID khách hàng không hợp lệ");
+            return response;
         }
 
         try {
@@ -117,15 +141,69 @@ public class BanHangController {
 
             if (hoaDonOpt.isPresent() && khachHangOpt.isPresent()) {
                 HoaDon hoaDon = hoaDonOpt.get();
-                hoaDon.setKhachHang(khachHangOpt.get());
+                KhachHang khachHang = khachHangOpt.get();
+                hoaDon.setKhachHang(khachHang);
                 hoaDonRepo.save(hoaDon);
-                return ResponseEntity.ok().body("Cập nhật khách hàng thành công");
+
+                response.put("success", true);
+                response.put("message", "Cập nhật khách hàng thành công");
             } else {
-                return ResponseEntity.badRequest().body("Không tìm thấy hóa đơn hoặc khách hàng");
+                response.put("success", false);
+                response.put("message", "Không tìm thấy hóa đơn hoặc khách hàng");
             }
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
         }
+
+        return response;
+    }
+
+    @PostMapping("/admin/khach-hang/them-moi")
+    @ResponseBody
+    public Map<String, Object> themKhachHang(
+            @RequestBody KhachHang khachHang) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            KhachHang newKhachHang = khachHangRepo.save(khachHang);
+            response.put("success", true);
+            response.put("idKhachHang", newKhachHang.getIdKhachHang());
+            response.put("message", "Thêm khách hàng thành công");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi thêm khách hàng: " + e.getMessage());
+        }
+        return response;
+    }
+
+    @PostMapping("/admin/ban-hang/update-khach-hang")
+    @ResponseBody
+    public Map<String, Object> updateKhachHang(
+            @RequestParam("idHoaDonUDKH") Integer idHoaDon,
+            @RequestParam("idKhachHangUDKH") Integer idKhachHang) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findById(idKhachHang);
+
+            if (hoaDonOpt.isPresent() && khachHangOpt.isPresent()) {
+                HoaDon hoaDon = hoaDonOpt.get();
+                KhachHang khachHang = khachHangOpt.get();
+                hoaDon.setKhachHang(khachHang);
+                hoaDonRepo.save(hoaDon);
+
+                response.put("success", true);
+                response.put("message", "Cập nhật khách hàng thành công");
+            } else {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy hóa đơn hoặc khách hàng");
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi: " + e.getMessage());
+        }
+        return response;
     }
 
     @PostMapping("/update-voucher")
@@ -245,7 +323,7 @@ public class BanHangController {
         hoaDon.setPhuong_thuc_nhan_hang(phuongThucNhanHang);
         hoaDon.setHinh_thuc_thanh_toan(hinhThucThanhToan);
         hoaDon.setPhi_van_chuyen(phiVanChuyen);
-
+        hoaDon.setTrang_thai("Đã thanh toán");
         updateTongTienHoaDon(idHoaDon);
 
         hoaDon = hoaDonRepo.findById(idHoaDon).get();
@@ -255,6 +333,7 @@ public class BanHangController {
                 model.addAttribute("error", "Vui lòng nhập số tiền khách đưa!");
                 return "redirect:/admin/ban-hang/view";
             } else if (tienKhachDua.compareTo(hoaDon.getTong_tien_sau_giam()) >= 0) {
+                System.out.println("nhảy vào thanh toán ----------------------------------------");
                 hoaDon.setTrang_thai("Đã thanh toán");
                 hoaDonRepo.save(hoaDon);
                 model.addAttribute("message", "Thanh toán thành công!");
@@ -275,7 +354,7 @@ public class BanHangController {
                 if (qrCodeUrl != null && !qrCodeUrl.isEmpty()) {
                     model.addAttribute("qrCodeUrl", qrCodeUrl);
                     model.addAttribute("message", "Vui lòng quét mã QR để thanh toán.");
-                    hoaDon.setTrang_thai("Đang chờ thanh toán");
+                    hoaDon.setTrang_thai("Đã thanh toán");
                     hoaDonRepo.save(hoaDon);
                     return "payment-qr"; // Trả về view hiển thị mã QR
                 } else {
