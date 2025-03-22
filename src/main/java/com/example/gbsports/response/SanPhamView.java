@@ -12,7 +12,6 @@ public interface SanPhamView {
      String getTen_san_pham();
      String getMo_ta();
      String getTrang_thai();
-     Boolean getGioi_tinh();
      String getTen_danh_muc();
      String getTen_thuong_hieu();
      String getTen_chat_lieu();
