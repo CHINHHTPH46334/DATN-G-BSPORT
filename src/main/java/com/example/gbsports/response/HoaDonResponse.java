@@ -34,8 +34,5 @@ public interface HoaDonResponse {
     String getTen_khach_hang();
     Integer getId_voucher();
     String getTen_voucher();
-    String getMa_voucher();
-    LocalDateTime getNgay_chuyen();
-
 
 }
