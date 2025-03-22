@@ -39,11 +39,11 @@ public class HoaDonController {
             @RequestBody Map<String, Object> request) {
         Integer idHoaDon = (Integer) request.get("idHoaDon");
         String status = (String) request.get("status");
-
+        System.out.println(status + "hhhhhhhhhhhhhhhhhhhhhhhhhh");
         Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
         if (hoaDonOpt.isPresent()) {
             HoaDon hoaDon = hoaDonOpt.get();
-            hoaDon.setTrang_thai(status);
+            hoaDon.setTrang_thai("Đã thanh toán");
             hoaDonRepo.save(hoaDon);
 
             Map<String, Object> response = new HashMap<>();
