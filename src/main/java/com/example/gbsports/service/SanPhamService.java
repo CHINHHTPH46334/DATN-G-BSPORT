@@ -48,6 +48,7 @@ public class SanPhamService {
     public SanPham detailSP(@RequestParam("id") Integer id){
         return sanPhamRepo.findById(id).get();
     }
+    public ArrayList<SanPhamView> getAllSPNgaySua(){return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();}
     public ResponseEntity<?> saveSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult result) {
         Map<String, Object> response = new HashMap<>();
 

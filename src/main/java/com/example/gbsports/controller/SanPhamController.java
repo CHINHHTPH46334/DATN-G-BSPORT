@@ -48,7 +48,10 @@ public class SanPhamController {
     public List<SanPham> getAllfindAll() {
         return sanPhamService.getAllFindAll();
     }
-
+    @GetMapping("/sanPhamTheoNgaySua")
+    public List<SanPhamView> getAllSPTheoNgay(){
+        return sanPhamService.getAllSPNgaySua();
+    }
     @GetMapping("/allSanPham")
     public List<SanPhamView> getAll(@RequestParam(name = "page", defaultValue = "0") Integer page,
                                     @RequestParam(name = "size", defaultValue = "5") Integer size) {
