@@ -21,7 +21,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     Optional<ChiTietSanPham> findById(Integer id);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -32,7 +32,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     ArrayList<ChiTietSanPhamView> listCTSP();
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -43,7 +43,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     Page<ChiTietSanPhamView> listPhanTrangChiTietSanPham(Pageable pageable);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -73,7 +73,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                                               @Param("tenChatLieu") String tenChatLieu);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_nhap, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +

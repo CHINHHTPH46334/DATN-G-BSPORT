@@ -39,6 +39,7 @@ public class ChiTietSanPhamService {
     KichThuocRepo kichThuocRepo;
     @Autowired
     SanPhamRepo sanPhamRepo;
+
     public List<ChiTietSanPhamView> getAllCTSP() {
         return chiTietSanPhamRepo.listCTSP();
     }
@@ -52,25 +53,84 @@ public class ChiTietSanPhamService {
     }
 
     public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
+        int count = 0;
+        Integer slCu = 0;
+        Integer id = 0;
+        Integer count2 = 0;
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
             return ResponseEntity.badRequest().body(errors);
         } else {
-            ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-            Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
-            Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
-            Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-            BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
-            KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
-            MauSac mauSac = mauSacOptional.orElse(new MauSac());
-            SanPham sanPham = sanPhamOptional.orElse(new SanPham());
-            chiTietSanPham.setMauSac(mauSac);
-            chiTietSanPham.setKichThuoc(kichThuoc);
-            chiTietSanPham.setSanPham(sanPham);
-            chiTietSanPhamRepo.save(chiTietSanPham);
-            return ResponseEntity.ok("Lưu thành công");
+            for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
+                if (ctspCheckTrung.getId_chi_tiet_san_pham() == chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
+                    count++;
+                }
+            }
+            if (count > 0) {
+                ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+                chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
+                Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
+                Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
+                Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
+
+                KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
+                MauSac mauSac = mauSacOptional.orElse(new MauSac());
+                SanPham sanPham = sanPhamOptional.orElse(new SanPham());
+                BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+                chiTietSanPham.setMauSac(mauSac);
+                chiTietSanPham.setKichThuoc(kichThuoc);
+                chiTietSanPham.setSanPham(sanPham);
+                chiTietSanPhamRepo.save(chiTietSanPham);
+                return ResponseEntity.ok("Lưu thành công");
+            } else {
+                for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+                    if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
+                            && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
+                            && ctsp.getSanPham().getId_san_pham() == chiTietSanPhamRequest.getId_san_pham()
+                            && ctsp.getId_chi_tiet_san_pham() != chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
+                        count2++;
+                        id = ctsp.getId_chi_tiet_san_pham();
+                    }
+                }
+                if (count2 > 0) {
+                    ChiTietSanPham ctspSua = chiTietSanPhamRepo.findById(id).get();
+                    slCu = ctspSua.getSo_luong();
+                    ctspSua.setId_chi_tiet_san_pham(id);
+                    ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
+                    if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
+                        chiTietSanPhamRepo.save(ctspSua);
+                        return ResponseEntity.ok("cập nhật số lượng");
+                    } else {
+                        return ResponseEntity.badRequest().body("KHông ổn");
+                    }
+                }else {
+                    ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+//                    chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
+                    Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
+                    Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
+                    Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
+
+                    KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
+                    MauSac mauSac = mauSacOptional.orElse(new MauSac());
+                    SanPham sanPham = sanPhamOptional.orElse(new SanPham());
+                    BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+                    chiTietSanPham.setMauSac(mauSac);
+                    chiTietSanPham.setKichThuoc(kichThuoc);
+                    chiTietSanPham.setSanPham(sanPham);
+                    chiTietSanPham.setTrang_thai("Hoạt động");
+                    chiTietSanPhamRepo.save(chiTietSanPham);
+                    return ResponseEntity.ok("Lưu thành công");
+                }
+            }
         }
+
+    }
+
+    public Integer trungMauSacKichThuoc(Integer idMauSac, Integer idKichThuoc, Integer soLuong) {
+        int cout = 0;
+
+        return soLuong;
     }
 
     public String deleteChiTietSanPham(@PathVariable Integer id) {

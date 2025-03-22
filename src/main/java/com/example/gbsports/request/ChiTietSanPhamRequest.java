@@ -35,8 +35,6 @@ public class ChiTietSanPhamRequest {
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
-    @NotNull(message = "Không để trống giá nhập")
-    private BigDecimal gia_nhap;
     @NotNull(message = "Không để trống kích thước")
     private Integer id_kich_thuoc;
     @NotNull(message = "Không để trống màu sắc")
