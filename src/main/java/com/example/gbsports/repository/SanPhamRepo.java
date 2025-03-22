@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.ArrayList;
 
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
-    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
+    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n" +
             "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong\n" +
             "            from san_pham sp\n" +
             "          full outer  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
@@ -22,7 +22,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh")
     ArrayList<SanPhamView> getAllSanPham();
 
-    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
+    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n" +
             "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong\n" +
             "            from san_pham sp\n" +
             "           full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
@@ -33,7 +33,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh")
     Page<SanPhamView> getAllSanPhamPhanTrang(Pageable pageable);
 
-    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, gioi_tinh, dm.ten_danh_muc as ten_danh_muc, \n" +
+    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n" +
             "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong\n" +
             "            from san_pham sp\n" +
             "          full outer  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
