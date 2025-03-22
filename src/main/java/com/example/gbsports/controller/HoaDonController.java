@@ -5,12 +5,13 @@ import com.example.gbsports.repository.HoaDonChiTietRepo;
 import com.example.gbsports.repository.HoaDonRepo;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
-//import com.example.gbsports.service.HoaDonService;
 import com.example.gbsports.response.TheoDoiDonHangResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,30 @@ public class HoaDonController {
     private HoaDonChiTietRepo hoaDonChiTietRepo;
 //    @Autowired
 //    private HoaDonService hoaDonService;
+
+    @PostMapping("/update-status")
+    public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
+            @RequestBody Map<String, Object> request) {
+        Integer idHoaDon = (Integer) request.get("idHoaDon");
+        String status = (String) request.get("status");
+        System.out.println(status + "hhhhhhhhhhhhhhhhhhhhhhhhhh");
+        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
+        if (hoaDonOpt.isPresent()) {
+            HoaDon hoaDon = hoaDonOpt.get();
+            hoaDon.setTrang_thai("Đã thanh toán");
+            hoaDonRepo.save(hoaDon);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Cập nhật trạng thái hóa đơn thành công!");
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không tìm thấy hóa đơn!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
 
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(

@@ -15,12 +15,7 @@ public class HoaDonRequest {
     private Integer id_hoa_don;
     private String ma_hoa_don;
     private NhanVien nhanVien;
-    private Integer id_nhan_vien;
     private KhachHang khachHang;
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime ngay_tao;
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime ngay_sua;
     private String trang_thai;
     private Voucher voucher;
     private String sdt_nguoi_nhan;
@@ -32,4 +27,10 @@ public class HoaDonRequest {
     private float tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
+
+    private Integer id_nhan_vien;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_tao;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime ngay_sua;
 }

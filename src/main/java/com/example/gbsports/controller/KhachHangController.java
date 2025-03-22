@@ -1,6 +1,8 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.entity.DiaChiKhachHang;
 import com.example.gbsports.entity.KhachHang;
+import com.example.gbsports.repository.DiaChiKhachHangRepo;
 import com.example.gbsports.repository.KhachHangRepo;
 import com.example.gbsports.request.KhachHangRequest;
 import jakarta.validation.Valid;
@@ -11,7 +13,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/khach-hang")
@@ -20,7 +29,9 @@ public class KhachHangController {
     @Autowired
     private KhachHangRepo khachHangRepo;
 
-    // Hiển thị danh sách khách hàng trên trang JSP
+    @Autowired
+    private DiaChiKhachHangRepo diaChiKhachHangRepo;
+
     @GetMapping("/view")
     public String hienThiKhachHang(Model model,
                                    @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -33,81 +44,169 @@ public class KhachHangController {
         if (trangThai != null && !trangThai.isEmpty()) {
             danhSachKhachHang = khachHangRepo.locKhachHangTheoTrangThai(trangThai, pageable);
         } else if (keyword != null && !keyword.isEmpty()) {
-            danhSachKhachHang = khachHangRepo.timKhachHang(keyword, pageable);
+            // Loại bỏ khoảng trắng thừa trong keyword
+            String trimmedKeyword = keyword.trim();
+            danhSachKhachHang = khachHangRepo.timKhachHang(trimmedKeyword, pageable);
         } else {
-            danhSachKhachHang = khachHangRepo.findAll(pageable);
+            danhSachKhachHang = khachHangRepo.findAllSortedByIdDesc(pageable);
+        }
+
+        if (danhSachKhachHang.isEmpty() && (keyword != null || trangThai != null)) {
+            model.addAttribute("message", "Không tìm thấy khách hàng nào phù hợp!");
+        }
+
+        Map<Integer, String> diaChiMap = new HashMap<>();
+        for (KhachHang kh : danhSachKhachHang) {
+            var diaChiList = diaChiKhachHangRepo.findByKhachHangId(kh.getIdKhachHang());
+            String diaChiString = diaChiList.stream()
+                    .map(DiaChiKhachHang::getDiaChiKhachHang)
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            diaChiMap.put(kh.getIdKhachHang(), diaChiString);
         }
 
         model.addAttribute("danhSachKhachHang", danhSachKhachHang.getContent());
+        model.addAttribute("diaChiMap", diaChiMap);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", danhSachKhachHang.getTotalPages());
         model.addAttribute("trangThai", trangThai);
+        model.addAttribute("keyword", keyword); // Giữ nguyên keyword gốc để hiển thị trên giao diện
         return "khachhang";
     }
 
-    // Load trang thêm khách hàng
     @GetMapping("/add")
     public String hienThiFormThemKhachHang(Model model) {
         model.addAttribute("khachHang", new KhachHangRequest());
         return "khachhang-add";
     }
 
-    //  Xử lý thêm khách hàng
     @PostMapping("/add")
-    public String themKhachHang(@Valid @ModelAttribute("khachHang") KhachHangRequest khachHangRequest) {
-        KhachHang khachHang = new KhachHang();
-        BeanUtils.copyProperties(khachHangRequest, khachHang);
-        khachHangRepo.save(khachHang);
-        return "redirect:/admin/khach-hang/view"; // Quay lại danh sách sau khi thêm thành công
+    public String themKhachHang(@Valid @ModelAttribute("khachHang") KhachHangRequest khachHangRequest,
+                                BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+            }
+            model.addAttribute("fieldErrors", fieldErrors);
+            return "khachhang-add";
+        }
+
+        Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(khachHangRequest.getMaKhachHang());
+        if (existingKhachHang.isPresent()) {
+            model.addAttribute("error", "Mã khách hàng đã tồn tại!");
+            return "khachhang-add";
+        }
+
+        try {
+            KhachHang khachHang = new KhachHang();
+            BeanUtils.copyProperties(khachHangRequest, khachHang);
+            khachHang = khachHangRepo.save(khachHang);
+
+            if (khachHangRequest.getDiaChi() != null && !khachHangRequest.getDiaChi().isEmpty()) {
+                DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
+                diaChiKhachHang.setKhachHang(khachHang);
+                diaChiKhachHang.setDiaChiKhachHang(khachHangRequest.getDiaChi());
+                diaChiKhachHangRepo.save(diaChiKhachHang);
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Có lỗi xảy ra khi thêm khách hàng: " + e.getMessage());
+            return "khachhang-add";
+        }
+
+        return "redirect:/admin/khach-hang/view?page=0";
     }
 
-    //  Load trang cập nhật khách hàng
     @GetMapping("/edit/{id}")
     public String hienThiFormSuaKhachHang(@PathVariable("id") Integer id, Model model) {
         KhachHang khachHang = khachHangRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
-        model.addAttribute("khachHang", khachHang);
+        KhachHangRequest request = new KhachHangRequest();
+        BeanUtils.copyProperties(khachHang, request);
+
+        if (khachHang.getNgaySinh() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            model.addAttribute("ngaySinhFormatted", sdf.format(khachHang.getNgaySinh()));
+        }
+
+        var diaChiList = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
+        String diaChiString = diaChiList.stream()
+                .map(DiaChiKhachHang::getDiaChiKhachHang)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+        request.setDiaChi(diaChiString);
+
+        model.addAttribute("khachHang", request);
+        model.addAttribute("diaChi", diaChiString);
         return "khachhang-edit";
     }
 
-    //  Xử lý cập nhật khách hàng
     @PostMapping("/update")
-    public String capNhatKhachHang(@Valid @ModelAttribute("khachHang") KhachHangRequest khachHangRequest) {
+    public String capNhatKhachHang(@Valid @ModelAttribute("khachHang") KhachHangRequest khachHangRequest,
+                                   BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+            }
+            model.addAttribute("fieldErrors", fieldErrors);
+            return "khachhang-edit";
+        }
+
         KhachHang khachHang = khachHangRepo.findById(khachHangRequest.getIdKhachHang())
                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
 
-        BeanUtils.copyProperties(khachHangRequest, khachHang);
-        khachHangRepo.save(khachHang);
-        return "redirect:/admin/khach-hang/view"; // Quay lại danh sách sau khi cập nhật
+        khachHangRequest.setMaKhachHang(khachHang.getMaKhachHang());
+
+        try {
+            BeanUtils.copyProperties(khachHangRequest, khachHang);
+            khachHangRepo.save(khachHang);
+
+            var existingDiaChiList = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
+            diaChiKhachHangRepo.deleteAll(existingDiaChiList);
+            if (khachHangRequest.getDiaChi() != null && !khachHangRequest.getDiaChi().isEmpty()) {
+                DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
+                diaChiKhachHang.setKhachHang(khachHang);
+                diaChiKhachHang.setDiaChiKhachHang(khachHangRequest.getDiaChi());
+                diaChiKhachHangRepo.save(diaChiKhachHang);
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Có lỗi xảy ra khi cập nhật khách hàng: " + e.getMessage());
+            return "khachhang-edit";
+        }
+
+        return "redirect:/admin/khach-hang/view?page=0";
     }
 
-
-    //  Xem chi tiết khách hàng
     @GetMapping("/detail/{id}")
     public String xemChiTietKhachHang(@PathVariable("id") Integer id, Model model) {
         KhachHang khachHang = khachHangRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+
+        var diaChiList = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
+        String diaChiString = diaChiList.stream()
+                .map(DiaChiKhachHang::getDiaChiKhachHang)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Chưa có địa chỉ");
+
         model.addAttribute("khachHang", khachHang);
-        return "khachhang-detail"; // Trả về trang JSP hiển thị chi tiết
+        model.addAttribute("diaChi", diaChiString);
+        return "khachhang-detail";
     }
 
-    //  Chuyển trạng thái khách hàng
     @PostMapping("/chuyen-trang-thai")
     public String chuyenTrangThai(@RequestParam("idKhachHang") Integer idKhachHang) {
         KhachHang khachHang = khachHangRepo.findById(idKhachHang)
                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
-
         if ("Đang hoạt động".equals(khachHang.getTrangThai())) {
             khachHang.setTrangThai("Không hoạt động");
         } else {
             khachHang.setTrangThai("Đang hoạt động");
         }
-
         khachHangRepo.save(khachHang);
-        return "redirect:/admin/khach-hang/view"; // Quay lại danh sách sau khi đổi trạng thái
+        return "redirect:/admin/khach-hang/view?page=0";
     }
 
-    // Lọc khách hàng theo trạng thái
     @GetMapping("/locTrangThai")
     public String locKhachHang(@RequestParam(name = "trangThai", required = false) String trangThai,
                                @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -122,7 +221,22 @@ public class KhachHangController {
             danhSachKhachHang = khachHangRepo.findAll(pageable);
         }
 
+        if (danhSachKhachHang.isEmpty() && trangThai != null) {
+            model.addAttribute("message", "Không tìm thấy khách hàng nào phù hợp!");
+        }
+
+        Map<Integer, String> diaChiMap = new HashMap<>();
+        for (KhachHang kh : danhSachKhachHang) {
+            var diaChiList = diaChiKhachHangRepo.findByKhachHangId(kh.getIdKhachHang());
+            String diaChiString = diaChiList.stream()
+                    .map(DiaChiKhachHang::getDiaChiKhachHang)
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            diaChiMap.put(kh.getIdKhachHang(), diaChiString);
+        }
+
         model.addAttribute("danhSachKhachHang", danhSachKhachHang.getContent());
+        model.addAttribute("diaChiMap", diaChiMap);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", danhSachKhachHang.getTotalPages());
         model.addAttribute("trangThai", trangThai);

@@ -105,9 +105,9 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     );
 
     @Query(value = """
-            SELECT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, kh.email, hd.ho_ten, hd.sdt_nguoi_nhan,
-            hd.dia_chi, v.ma_voucher,hd.tong_tien_truoc_giam, hd.tong_tien_sau_giam, nv.ten_nhan_vien,
-            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, hd.phi_van_chuyen,
+            SELECT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam,
+            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang,
             (SELECT TOP 1 trang_thai FROM theo_doi_don_hang t
             WHERE t.id_hoa_don = hd.id_hoa_don
             ORDER BY t.ngay_chuyen DESC) as trang_thai,
@@ -116,8 +116,6 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             ORDER BY t.ngay_chuyen DESC) as ngay_chuyen
             FROM hoa_don hd
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-            JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
             WHERE hd.ma_hoa_don = :maHoaDon""", nativeQuery = true)
     Optional<HoaDonResponse> findByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
@@ -141,4 +139,19 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 ORDER BY ngay_chuyen DESC
             """, nativeQuery = true)
     List<TheoDoiDonHangResponse> findTrangThaiHistoryByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
+
+    @Query(value = "select * from hoa_don where trang_thai like N'Chưa thanh toán'", nativeQuery = true)
+    List<HoaDonResponse> getAllHoaDonCTT();
+
+    @Query(value = """
+            SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
+            ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
+            ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
+            from hoa_don hd
+            LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+            LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
+            LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
+            where hd.id_hoa_don = :idHd
+""", nativeQuery = true)
+    List<HoaDonResponse> findHoaDonById(@Param("idHd") Integer idHd);
 }

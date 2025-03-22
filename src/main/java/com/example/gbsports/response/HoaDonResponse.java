@@ -1,5 +1,6 @@
 package com.example.gbsports.response;
 
+import com.example.gbsports.entity.NhanVien;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -10,6 +11,8 @@ import java.time.LocalDateTime;
 public interface HoaDonResponse {
     Integer getId_hoa_don();
     String getMa_hoa_don();
+    Integer getId_nhan_vien();
+    String getTen_nhan_vien();
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_tao();
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -27,5 +30,12 @@ public interface HoaDonResponse {
     BigDecimal getTong_tien_sau_giam();
     String getHinh_thuc_thanh_toan();
     String getPhuong_thuc_nhan_hang();
-    String getTen_nhan_vien();
+    Integer getId_khach_hang();
+    String getTen_khach_hang();
+    Integer getId_voucher();
+    String getTen_voucher();
+    String getMa_voucher();
+    LocalDateTime getNgay_chuyen();
+
+
 }

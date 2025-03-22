@@ -11,9 +11,7 @@ public interface HoaDonChiTietResponse {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_tao();
     String getHo_ten();
-    String getTrang_thai();
     String getSdt_nguoi_nhan();
-    String getTen_nhan_vien();
     String getDia_chi();
     String getEmail();
     BigDecimal getTong_tien_truoc_giam();
@@ -32,4 +30,15 @@ public interface HoaDonChiTietResponse {
     String getTen_mau_sac();
     String getHinh_anh();
     Boolean getAnh_chinh();
+    Integer getId_nhan_vien();
+    String getTen_nhan_vien();
+    Integer getId_khach_hang();
+    String getTen_khach_hang();
+    Integer getId_voucher();
+    String getTen_voucher();
+    String getMa_voucher();
+    String getTrang_thai();
+    BigDecimal getGia_ban();
+
+
 }

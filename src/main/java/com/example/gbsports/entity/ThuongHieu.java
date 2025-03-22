@@ -1,11 +1,14 @@
 package com.example.gbsports.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Data
 @Table(name = "thuong_hieu")

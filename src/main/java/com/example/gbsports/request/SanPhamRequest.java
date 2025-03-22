@@ -3,6 +3,8 @@ package com.example.gbsports.request;
 import com.example.gbsports.entity.ChatLieu;
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.entity.ThuongHieu;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,13 +24,11 @@ public class SanPhamRequest {
     private String trang_thai;
     @NotNull(message = "Không để trống giới tính")
     private Boolean gioi_tinh;
-    @NotNull(message = "Danh mục không được để trống")
-    @Valid
-    DanhMuc danhMuc;
-    @NotNull(message = "Thương hiệu không được để trống")
-    @Valid
-    ThuongHieu thuongHieu;
-    @NotNull(message = "Chất liệu không được để trống")
-    @Valid
-    ChatLieu chatLieu;
+    private String hinh_anh;
+//    @NotNull(message = "Danh mục không được để trống")
+    private Integer id_danh_muc;
+//    @NotNull(message = "Thương hiệu không được để trống")
+    private Integer id_thuong_hieu;
+//    @NotNull(message = "Chất liệu không được để trống")
+    private Integer id_chat_lieu;
 }
