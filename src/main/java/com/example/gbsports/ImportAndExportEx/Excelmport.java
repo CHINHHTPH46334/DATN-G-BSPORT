@@ -141,15 +141,15 @@ public class Excelmport {
                 // ✅ Đọc dữ liệu cho Sản Phẩm
                 String tenSanPham = getStringValueFromCell(row.getCell(0));
 //                Boolean gioiTinh = getBooleanValueFromCell(row.getCell(1));
-                BigDecimal giaNhap = getBigDecimalValue(row.getCell(1));
-                BigDecimal giaBan = getBigDecimalValue(row.getCell(2));
-                Integer soLuong = getIntegerValueFromCell(row.getCell(3));
-                String giaTriKichThuoc = getStringValueFromCell(row.getCell(4));
-                String donViKichThuoc = getStringValueFromCell(row.getCell(5));
-                String tenChatLieu = getStringValueFromCell(row.getCell(6));
-                String tenDanhMuc = getStringValueFromCell(row.getCell(7));
-                String tenThuongHieu = getStringValueFromCell(row.getCell(8));
-                String mauSacInfo = getStringValueFromCell(row.getCell(9));
+//                BigDecimal giaNhap = getBigDecimalValue(row.getCell(1));
+                BigDecimal giaBan = getBigDecimalValue(row.getCell(1));
+                Integer soLuong = getIntegerValueFromCell(row.getCell(2));
+                String giaTriKichThuoc = getStringValueFromCell(row.getCell(3));
+                String donViKichThuoc = getStringValueFromCell(row.getCell(4));
+                String tenChatLieu = getStringValueFromCell(row.getCell(5));
+                String tenDanhMuc = getStringValueFromCell(row.getCell(6));
+                String tenThuongHieu = getStringValueFromCell(row.getCell(7));
+                String mauSacInfo = getStringValueFromCell(row.getCell(8));
 
                 // ✅ Đọc các đối tượng liên quan (Danh m    ục, Thương hiệu, Chất liệu)
                 DanhMuc danhMuc = danhMucService.getDanhMucOrCreateDanhMuc(tenDanhMuc);
@@ -174,7 +174,7 @@ public class Excelmport {
                     ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                     chiTietSanPham.setSanPham(sanPham);
                     chiTietSanPham.setGia_ban(giaBan);
-                    chiTietSanPham.setGia_nhap(giaNhap);
+
                     chiTietSanPham.setSo_luong(soLuong);
                     chiTietSanPham.setTrang_thai("Hoạt động");
                     chiTietSanPham.setNgay_tao(new Date());

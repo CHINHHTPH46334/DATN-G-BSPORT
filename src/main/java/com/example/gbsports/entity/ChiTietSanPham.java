@@ -31,7 +31,6 @@ public class ChiTietSanPham {
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date ngay_sua;
-    private BigDecimal gia_nhap;
     @ManyToOne
     @JoinColumn(name = "id_kich_thuoc")
     KichThuoc kichThuoc;
