@@ -6,6 +6,8 @@ import com.example.gbsports.entity.ThuongHieu;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import java.util.Date;
+
 public interface SanPhamView {
      Integer getId_san_pham();
      String getMa_san_pham();
@@ -18,4 +20,5 @@ public interface SanPhamView {
      String getTen_chat_lieu();
      Integer getTong_so_luong();
      String getHinh_anh();
+     Date getNgay_sua_moi();
 }
