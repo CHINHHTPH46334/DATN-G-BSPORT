@@ -30,7 +30,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
             "full outer  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "group by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, gioi_tinh, dm.ten_danh_muc,\n" +
+            "group by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc,\n" +
             "th.ten_thuong_hieu, ten_chat_lieu,hinh_anh\n" +
             "order by ngay_sua_moi desc\n"
     )
