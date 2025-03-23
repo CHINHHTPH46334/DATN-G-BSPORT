@@ -16,7 +16,7 @@ public class VoucherResponse {
     private Integer id;
     private String maVoucher;
     private String tenVoucher;
-    private LocalDateTime ngayTao;
+    private LocalDateTime ngayBatDau;
     private LocalDateTime ngayHetHan;
     private BigDecimal giaTriGiam;
     private BigDecimal giaTriToiThieu;

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n" +
@@ -44,5 +45,14 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh" +
             "where ten_danh_muc like CONCAT('%', :tenDanhMuc, '%') and ten_thuong_hieu like CONCAT('%', :tenThuongHieu, '%') and ten_chat_lieu like CONCAT('%', :tenChatLieu, '%')")
     ArrayList<SanPhamView> locSanPham(@Param("tenDanhMuc") String tenDanhMuc, @Param("tenThuongHieu") String tenThuongHieu, @Param("tenChatLieu") String tenChatLieu);
+
+    @Query("SELECT s FROM SanPham s WHERE LOWER(s.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(s.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "ORDER BY s.id_san_pham DESC")
+    List<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(@Param("keyword") String keyword);
+
+    @Query("SELECT s FROM SanPham s ORDER BY s.id_san_pham DESC")
+    List<SanPham> findAllSortedByIdSanPham();
+
 
 }
