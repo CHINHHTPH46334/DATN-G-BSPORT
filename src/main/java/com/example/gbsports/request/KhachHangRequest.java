@@ -4,14 +4,15 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class KhachHangRequest {
     private Integer idKhachHang;
 
     @NotBlank(message = "Mã khách hàng không được để trống")
-    @Size(min = 3, max = 10, message = "Mã khách hàng phải từ 3 đến 10 ký tự")
     private String maKhachHang;
 
     @NotBlank(message = "Tên khách hàng không được để trống")
@@ -37,7 +38,24 @@ public class KhachHangRequest {
     @NotBlank(message = "Trạng thái không được để trống")
     private String trangThai;
 
-    @NotBlank(message = "Địa chỉ không được để trống")
-    @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
-    private String diaChi;
+    // Loại bỏ @NotBlank để phù hợp với logic cập nhật
+    @Size(min = 6, max = 20, message = "Mật khẩu phải từ 6 đến 20 ký tự")
+    private String matKhau;
+
+    private List<DiaChiRequest> diaChiList = new ArrayList<>();
+
+    @Data
+    public static class DiaChiRequest {
+        @NotBlank(message = "Số nhà không được để trống")
+        private String soNha;
+
+        @NotBlank(message = "Xã/Phường không được để trống")
+        private String xaPhuong;
+
+        @NotBlank(message = "Quận/Huyện không được để trống")
+        private String quanHuyen;
+
+        @NotBlank(message = "Tỉnh/Thành phố không được để trống")
+        private String tinhThanhPho;
+    }
 }
