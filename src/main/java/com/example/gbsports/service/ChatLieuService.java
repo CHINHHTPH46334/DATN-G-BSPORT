@@ -17,8 +17,9 @@ public class ChatLieuService {
     }
 
     public ChatLieu getChatLieuOrCreateChatLieu(String tenChatLieu) {
+        System.out.println(tenChatLieu);
         Optional<ChatLieu> existingChatLieu = chatLieuRepo.findAll().stream()
-                .filter(chatLieu -> chatLieu.getTen_chat_lieu().equalsIgnoreCase(tenChatLieu))
+                .filter(chatLieu -> tenChatLieu.equalsIgnoreCase(Optional.ofNullable(chatLieu.getTen_chat_lieu()).orElse("")))
                 .findFirst();
 
         if (existingChatLieu.isPresent()) {

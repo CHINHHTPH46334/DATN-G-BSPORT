@@ -21,7 +21,7 @@ public class DanhMucService {
     }
     public DanhMuc getDanhMucOrCreateDanhMuc(String tenDanhMuc){
         Optional<DanhMuc> exitingDanhMuc = danhMucRepo.findAll().stream()
-                .filter(danhMuc -> danhMuc.getTen_danh_muc().equalsIgnoreCase(tenDanhMuc))
+                .filter(danhMuc -> tenDanhMuc.equalsIgnoreCase(Optional.ofNullable(danhMuc.getTen_danh_muc()).orElse("")))
                 .findFirst();
 
         if (exitingDanhMuc.isPresent()) {

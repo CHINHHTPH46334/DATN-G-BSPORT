@@ -21,10 +21,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,12 +52,23 @@ public class ChiTietSanPhamService {
     public Page<ChiTietSanPhamView> getAllCTSPPhanTrang(Pageable pageable) {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
+    public static String convertJsDateToUtc7(String jsDateString) {
+        // Chuyển chuỗi từ JS (ISO 8601) thành Instant (UTC)
+        Instant instant = Instant.parse(jsDateString);
 
+        // Chuyển từ UTC sang UTC+7 (Asia/Bangkok)
+        ZonedDateTime utc7Time = instant.atZone(ZoneId.of("Asia/Bangkok"));
+
+        // Định dạng kết quả theo "yyyy-MM-dd HH:mm:ss"
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return utc7Time.format(formatter);
+    }
     public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
         int count = 0;
         Integer slCu = 0;
         Integer id = 0;
         Integer count2 = 0;
+        Date ngay_sua_lo = null;
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
@@ -64,6 +76,8 @@ public class ChiTietSanPhamService {
         } else {
             for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
                 if (ctspCheckTrung.getId_chi_tiet_san_pham() == chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
+                    ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
+                    System.out.println("Ngày tạo này"+ngay_sua_lo);
                     count++;
                 }
             }
@@ -78,9 +92,14 @@ public class ChiTietSanPhamService {
                 MauSac mauSac = mauSacOptional.orElse(new MauSac());
                 SanPham sanPham = sanPhamOptional.orElse(new SanPham());
                 BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+                System.out.println("Đã vào đây");
+
                 chiTietSanPham.setMauSac(mauSac);
                 chiTietSanPham.setKichThuoc(kichThuoc);
                 chiTietSanPham.setSanPham(sanPham);
+                chiTietSanPham.setNgay_sua(new Date());
+                chiTietSanPham.setNgay_tao(ngay_sua_lo);
+                chiTietSanPham.toString();
                 chiTietSanPhamRepo.save(chiTietSanPham);
                 return ResponseEntity.ok("Lưu thành công");
             } else {
@@ -98,6 +117,7 @@ public class ChiTietSanPhamService {
                     slCu = ctspSua.getSo_luong();
                     ctspSua.setId_chi_tiet_san_pham(id);
                     ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
+                    ctspSua.setNgay_sua(new Date());
                     if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                         chiTietSanPhamRepo.save(ctspSua);
                         return ResponseEntity.ok("cập nhật số lượng");
@@ -119,6 +139,8 @@ public class ChiTietSanPhamService {
                     chiTietSanPham.setKichThuoc(kichThuoc);
                     chiTietSanPham.setSanPham(sanPham);
                     chiTietSanPham.setTrang_thai("Hoạt động");
+                    chiTietSanPham.setNgay_tao(new Date());
+                    chiTietSanPham.setNgay_sua(new Date());
                     chiTietSanPhamRepo.save(chiTietSanPham);
                     return ResponseEntity.ok("Lưu thành công");
                 }

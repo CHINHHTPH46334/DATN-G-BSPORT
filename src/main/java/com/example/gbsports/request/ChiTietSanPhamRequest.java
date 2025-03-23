@@ -28,12 +28,12 @@ public class ChiTietSanPhamRequest {
     private Integer so_luong;
     @NotBlank(message = "Không để trống trạng thái")
     private String trang_thai;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 //    @NotNull(message = "Không để trống ngày tạo")
     private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date ngay_sua;
     @NotNull(message = "Không để trống kích thước")
     private Integer id_kich_thuoc;

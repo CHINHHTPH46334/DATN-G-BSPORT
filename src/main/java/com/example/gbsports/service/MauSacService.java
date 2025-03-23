@@ -21,7 +21,7 @@ public class MauSacService {
 
     public MauSac getMauSacOrCreateMauSac(String tenMauSac) {
         Optional<MauSac> exitingMauSac = mauSacRepo.findAll().stream()
-                .filter(mauSac -> mauSac.getTen_mau_sac().equalsIgnoreCase(tenMauSac))
+                .filter(mauSac -> tenMauSac.equalsIgnoreCase(Optional.ofNullable(mauSac.getTen_mau_sac()).orElse("")))
                 .findFirst();
 
         if (exitingMauSac.isPresent()) {

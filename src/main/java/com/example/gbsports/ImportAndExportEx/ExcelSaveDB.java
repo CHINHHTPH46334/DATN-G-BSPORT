@@ -77,9 +77,11 @@ public class ExcelSaveDB {
                 // Nếu đã tồn tại, cộng dồn số lượng
                 ChiTietSanPham existingCtsp = mapChiTietSanPham.get(key);
                 existingCtsp.setSo_luong(existingCtsp.getSo_luong() + ctspss.getSo_luong()); // Cộng dồn số lượng
+                System.out.println("Chạy đến kiểm tra map rồi");
                 chiTietSanPhamRepo.save(existingCtsp);
             } else {
                 // Nếu chưa tồn tại, thêm mới vào cơ sở dữ liệu
+                System.out.println("Chạy vào phần else của kiểm tra map");
                 chiTietSanPhamRepo.save(ctspss);
             }
         }
