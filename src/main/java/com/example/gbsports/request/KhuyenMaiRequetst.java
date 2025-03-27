@@ -1,4 +1,4 @@
-package com.example.gbsports.response;
+package com.example.gbsports.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class KhuyenMaiResponse {
+public class KhuyenMaiRequetst {
     private Integer id;
     private String maKhuyenMai;
     private String tenKhuyenMai;

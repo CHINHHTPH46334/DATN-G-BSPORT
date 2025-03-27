@@ -11,11 +11,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "khuyen_mai")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "khuyen_mai")
+
 public class KhuyenMai {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +49,6 @@ public class KhuyenMai {
     @Column(name = "trang_thai")
     private String trangThai;
 
-    @Column(name = "gia_tri_toi_da", precision = 18, scale = 2)
+    @Column(name = "gia_tri_toi_da")
     private BigDecimal giaTriToiDa;
 }

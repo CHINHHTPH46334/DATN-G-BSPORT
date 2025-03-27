@@ -278,7 +278,7 @@ public class BanHangController {
 
     @PostMapping("/thanh-toan")
     public String thanhToan(
-            @RequestParam(value = "id_hoa_don", required = true) Integer idHoaDon,
+            @RequestParam(value = "id_hoa_don", required = true) String idHoaDonStr,
             @RequestParam("idKhachHang") Integer idKhachHang,
             @RequestParam("idNhanVien") Integer idNhanVien,
             @RequestParam("hinhThucThanhToan") String hinhThucThanhToan,
@@ -287,6 +287,7 @@ public class BanHangController {
             @RequestParam(value = "idVoucher", required = false) Integer idVoucher,
             @RequestParam(value = "tienKhachDua", required = false) BigDecimal tienKhachDua,
             Model model) {
+        Integer idHoaDon = (idHoaDonStr != null && !idHoaDonStr.isEmpty()) ? Integer.parseInt(idHoaDonStr) : null;
 
         if (idHoaDon == null) {
             model.addAttribute("error", "ID hóa đơn không hợp lệ!");

@@ -493,8 +493,14 @@
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                         },
-                        body: `id_hoa_don=${idHoaDon}&tienKhachDua=${tienKhachDua}&tongTienSauGiam=${tongTienSauGiamValue}&hinhThucThanhToan=${hinhThucThanhToanValue}`
+                        body: new URLSearchParams({
+                        id_hoa_don: idHoaDon,
+                        tienKhachDua: tienKhachDua,
+                        tongTienSauGiam: tongTienSauGiamValue,
+                        hinhThucThanhToan: hinhThucThanhToanValue
                     })
+
+                })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {

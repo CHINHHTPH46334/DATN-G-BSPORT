@@ -25,11 +25,11 @@ public class ChiTietSanPham {
     private BigDecimal gia_ban;
     private Integer so_luong;
     private String trang_thai;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date ngay_tao;
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date ngay_sua;
     @ManyToOne
     @JoinColumn(name = "id_kich_thuoc")
