@@ -27,6 +27,8 @@ public class HoaDonRequest {
     private float tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
+    private String loai_hoa_don;
+    private String ghi_chu;
 
     private Integer id_nhan_vien;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

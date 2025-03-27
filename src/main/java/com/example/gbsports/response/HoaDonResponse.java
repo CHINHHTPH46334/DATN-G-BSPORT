@@ -34,5 +34,8 @@ public interface HoaDonResponse {
     String getTen_khach_hang();
     Integer getId_voucher();
     String getTen_voucher();
+    String getLoai_hoa_don();
+    String getTrang_thai_thanh_toan();
+    String getGhi_chu();
 
 }

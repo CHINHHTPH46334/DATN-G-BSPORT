@@ -19,7 +19,7 @@ import java.util.Optional;
 
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(nativeQuery = true, value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
                             hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
                             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
@@ -36,7 +36,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     Page<HoaDonResponse> getAllHD(Pageable pageable);
 
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
                             hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
                             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
@@ -61,7 +61,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
 
     //Lọc theo khoảng ngày
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
                             hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
                             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
@@ -84,7 +84,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
 
     // Lọc theo trạng thái theo dõi đơn hàng
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
                             hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
                             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
@@ -105,9 +105,10 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     );
 
     @Query(value = """
-            SELECT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, kh.email, hd.ho_ten, hd.sdt_nguoi_nhan,
+            SELECT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.email, hd.ho_ten, hd.sdt_nguoi_nhan,
             hd.dia_chi, v.ma_voucher, hd.tong_tien_truoc_giam, hd.tong_tien_sau_giam, nv.ten_nhan_vien,
             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, hd.phi_van_chuyen,
+            hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
             (SELECT TOP 1 trang_thai FROM theo_doi_don_hang t
             WHERE t.id_hoa_don = hd.id_hoa_don
             ORDER BY t.ngay_chuyen DESC) as trang_thai,
@@ -117,7 +118,6 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             FROM hoa_don hd
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
             JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-            JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
             WHERE hd.ma_hoa_don = :maHoaDon""", nativeQuery = true)
     Optional<HoaDonResponse> findByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 

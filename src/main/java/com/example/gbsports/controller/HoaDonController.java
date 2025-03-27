@@ -146,7 +146,7 @@ public class HoaDonController {
         return response;
     }
 
-    @PostMapping("/chuyen-trang-thai")
+    @PostMapping("/chuyen_trang_thai")
     public String updateTrangThai(
             @RequestParam("maHoaDon") String maHoaDon,
             @RequestParam("newTrangThai") String newTrangThai) {
@@ -163,7 +163,7 @@ public class HoaDonController {
         return "Cập nhật trạng thái thành công: " + newTrangThai;
     }
 
-    @PostMapping("/cancel-order")
+    @PostMapping("/cancel_order")
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon) {
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
@@ -172,6 +172,99 @@ public class HoaDonController {
         LocalDateTime ngayChuyen = LocalDateTime.now();
         hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã hủy", ngayChuyen);
         return "Đơn hàng đã được hủy";
+    }
+
+    @PostMapping("/update_ttkh")
+    public ResponseEntity<Map<String, Object>> updateCustomerInfo(
+            @RequestBody Map<String, Object> request) {
+        String maHoaDon = (String) request.get("maHoaDon");
+        String hoTen = (String) request.get("hoTen");
+        String email = (String) request.get("email");
+        String sdtNguoiNhan = (String) request.get("sdtNguoiNhan");
+        String diaChi = (String) request.get("diaChi");
+
+        // Kiểm tra đầu vào
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Mã hóa đơn không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        // Tìm hóa đơn theo mã
+        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(hoaDonRepo.findByMaHoaDon(maHoaDon)
+                .map(HoaDonResponse::getId_hoa_don)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon)));
+
+        if (hoaDonOpt.isPresent()) {
+            HoaDon hoaDon = hoaDonOpt.get();
+            // Cập nhật thông tin khách hàng
+            if (hoTen != null && !hoTen.trim().isEmpty()) {
+                hoaDon.setHo_ten(hoTen);
+            }
+            if (email != null && !email.trim().isEmpty()) {
+                // Cập nhật email trong bảng khach_hang (nếu cần)
+                hoaDon.setEmail(email);
+                // Giả sử bảng khach_hang có liên kết với hoa_don qua id_khach_hang
+                // Bạn có thể cần thêm repository cho khach_hang để cập nhật email
+                // Ở đây tôi chỉ lưu email vào hoaDon để đơn giản hóa
+            }
+            if (sdtNguoiNhan != null && !sdtNguoiNhan.trim().isEmpty()) {
+                hoaDon.setSdt_nguoi_nhan(sdtNguoiNhan);
+            }
+            if (diaChi != null && !diaChi.trim().isEmpty()) {
+                hoaDon.setDia_chi(diaChi);
+            }
+
+            // Lưu vào database
+            hoaDonRepo.save(hoaDon);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Cập nhật thông tin khách hàng thành công!");
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không tìm thấy hóa đơn!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @PostMapping("/update_note")
+    public ResponseEntity<Map<String, Object>> updateNote(
+            @RequestBody Map<String, Object> request) {
+        String maHoaDon = (String) request.get("maHoaDon");
+        String ghiChu = (String) request.get("ghiChu");
+
+        // Kiểm tra đầu vào
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Mã hóa đơn không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Tìm hóa đơn theo mã
+        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(hoaDonRepo.findByMaHoaDon(maHoaDon)
+                .map(HoaDonResponse::getId_hoa_don)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon)));
+
+        if (hoaDonOpt.isPresent()) {
+            HoaDon hoaDon = hoaDonOpt.get();
+            // Cập nhật ghi chú
+            hoaDon.setGhi_chu(ghiChu != null ? ghiChu : ""); // Nếu ghiChu là null, đặt thành chuỗi rỗng
+            hoaDonRepo.save(hoaDon);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Cập nhật ghi chú thành công!");
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không tìm thấy hóa đơn!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
     }
 //    @GetMapping("/danh_sach_hoa_don")
 //    public String getAllHD(Model model,

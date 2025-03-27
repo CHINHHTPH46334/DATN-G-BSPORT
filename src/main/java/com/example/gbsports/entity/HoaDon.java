@@ -43,6 +43,9 @@ public class HoaDon {
     private BigDecimal tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
+    @Column(name = "loai_hoa_don")
+    private String loai_hoa_don;
+    private String ghi_chu;
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
 }

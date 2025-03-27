@@ -19,7 +19,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, 
                 tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia, 
                 sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien,
-                kt.gia_tri AS kich_thuoc, 
+                kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
                 ms.ten_mau_sac, 
                 ha.hinh_anh, ha.anh_chinh
             FROM hoa_don hd
