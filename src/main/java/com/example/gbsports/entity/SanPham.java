@@ -14,7 +14,6 @@ public class SanPham {
     private String ten_san_pham;
     private String mo_ta;
     private String trang_thai;
-    private Boolean gioi_tinh;
     private String hinh_anh;
     @Transient
     private Integer tong_so_luong;

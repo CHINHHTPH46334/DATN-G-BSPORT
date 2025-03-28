@@ -48,6 +48,7 @@ public class SanPhamService {
     public SanPham detailSP(@RequestParam("id") Integer id){
         return sanPhamRepo.findById(id).get();
     }
+    public ArrayList<SanPhamView> getAllSPNgaySua(){return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();}
     public ResponseEntity<?> saveSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult result) {
         Map<String, Object> response = new HashMap<>();
 
@@ -217,7 +218,7 @@ public class SanPhamService {
     }
     public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc, ChatLieu chatLieu){
         Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
-                .filter(sanPham -> sanPham.getTen_san_pham().equalsIgnoreCase(tenSanPham))
+                .filter(sanPham -> tenSanPham.equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
                 .findFirst();
 
         if (exitingSanPham.isPresent()) {

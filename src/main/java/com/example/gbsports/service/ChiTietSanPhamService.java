@@ -21,10 +21,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +40,7 @@ public class ChiTietSanPhamService {
     KichThuocRepo kichThuocRepo;
     @Autowired
     SanPhamRepo sanPhamRepo;
+
     public List<ChiTietSanPhamView> getAllCTSP() {
         return chiTietSanPhamRepo.listCTSP();
     }
@@ -50,27 +52,107 @@ public class ChiTietSanPhamService {
     public Page<ChiTietSanPhamView> getAllCTSPPhanTrang(Pageable pageable) {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
+    public static String convertJsDateToUtc7(String jsDateString) {
+        // Chuyển chuỗi từ JS (ISO 8601) thành Instant (UTC)
+        Instant instant = Instant.parse(jsDateString);
 
+        // Chuyển từ UTC sang UTC+7 (Asia/Bangkok)
+        ZonedDateTime utc7Time = instant.atZone(ZoneId.of("Asia/Bangkok"));
+
+        // Định dạng kết quả theo "yyyy-MM-dd HH:mm:ss"
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return utc7Time.format(formatter);
+    }
     public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
+        int count = 0;
+        Integer slCu = 0;
+        Integer id = 0;
+        Integer count2 = 0;
+        Date ngay_sua_lo = null;
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
             return ResponseEntity.badRequest().body(errors);
         } else {
-            ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-            Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
-            Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
-            Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-            BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
-            KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
-            MauSac mauSac = mauSacOptional.orElse(new MauSac());
-            SanPham sanPham = sanPhamOptional.orElse(new SanPham());
-            chiTietSanPham.setMauSac(mauSac);
-            chiTietSanPham.setKichThuoc(kichThuoc);
-            chiTietSanPham.setSanPham(sanPham);
-            chiTietSanPhamRepo.save(chiTietSanPham);
-            return ResponseEntity.ok("Lưu thành công");
+            for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
+                if (ctspCheckTrung.getId_chi_tiet_san_pham() == chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
+                    ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
+                    System.out.println("Ngày tạo này"+ngay_sua_lo);
+                    count++;
+                }
+            }
+            if (count > 0) {
+                ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+                chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
+                Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
+                Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
+                Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
+
+                KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
+                MauSac mauSac = mauSacOptional.orElse(new MauSac());
+                SanPham sanPham = sanPhamOptional.orElse(new SanPham());
+                BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+                System.out.println("Đã vào đây");
+
+                chiTietSanPham.setMauSac(mauSac);
+                chiTietSanPham.setKichThuoc(kichThuoc);
+                chiTietSanPham.setSanPham(sanPham);
+                chiTietSanPham.setNgay_sua(new Date());
+                chiTietSanPham.setNgay_tao(ngay_sua_lo);
+                chiTietSanPham.toString();
+                chiTietSanPhamRepo.save(chiTietSanPham);
+                return ResponseEntity.ok("Lưu thành công");
+            } else {
+                for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+                    if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
+                            && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
+                            && ctsp.getSanPham().getId_san_pham() == chiTietSanPhamRequest.getId_san_pham()
+                            && ctsp.getId_chi_tiet_san_pham() != chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
+                        count2++;
+                        id = ctsp.getId_chi_tiet_san_pham();
+                    }
+                }
+                if (count2 > 0) {
+                    ChiTietSanPham ctspSua = chiTietSanPhamRepo.findById(id).get();
+                    slCu = ctspSua.getSo_luong();
+                    ctspSua.setId_chi_tiet_san_pham(id);
+                    ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
+                    ctspSua.setNgay_sua(new Date());
+                    if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
+                        chiTietSanPhamRepo.save(ctspSua);
+                        return ResponseEntity.ok("cập nhật số lượng");
+                    } else {
+                        return ResponseEntity.badRequest().body("KHông ổn");
+                    }
+                }else {
+                    ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
+//                    chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
+                    Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
+                    Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
+                    Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
+
+                    KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
+                    MauSac mauSac = mauSacOptional.orElse(new MauSac());
+                    SanPham sanPham = sanPhamOptional.orElse(new SanPham());
+                    BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
+                    chiTietSanPham.setMauSac(mauSac);
+                    chiTietSanPham.setKichThuoc(kichThuoc);
+                    chiTietSanPham.setSanPham(sanPham);
+                    chiTietSanPham.setTrang_thai("Hoạt động");
+                    chiTietSanPham.setNgay_tao(new Date());
+                    chiTietSanPham.setNgay_sua(new Date());
+                    chiTietSanPhamRepo.save(chiTietSanPham);
+                    return ResponseEntity.ok("Lưu thành công");
+                }
+            }
         }
+
+    }
+
+    public Integer trungMauSacKichThuoc(Integer idMauSac, Integer idKichThuoc, Integer soLuong) {
+        int cout = 0;
+
+        return soLuong;
     }
 
     public String deleteChiTietSanPham(@PathVariable Integer id) {

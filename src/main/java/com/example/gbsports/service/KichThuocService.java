@@ -20,7 +20,7 @@ public class KichThuocService {
     }
     public KichThuoc getKichThuocOrCreateKichThuoc(String giaTri, String donVi){
         Optional<KichThuoc> exitingKichThuoc = kichThuocRepo.findAll().stream()
-                .filter(kichThuoc -> kichThuoc.getGia_tri().equalsIgnoreCase(giaTri))
+                .filter(kichThuoc -> giaTri.equalsIgnoreCase(Optional.ofNullable(kichThuoc.getGia_tri()).orElse("")))
                 .findFirst();
 
         if (exitingKichThuoc.isPresent()) {
