@@ -6,6 +6,7 @@ import com.example.gbsports.entity.ThuongHieu;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public interface SanPhamView {
@@ -21,4 +22,10 @@ public interface SanPhamView {
      Integer getTong_so_luong();
      String getHinh_anh();
      Date getNgay_sua_moi();
+     Float getDanh_gia();
+     Float getSo_luong_danh_gia();
+     BigDecimal getGia_max();
+     BigDecimal getGia_min();
+     BigDecimal getGia_tot_nhat();
+     BigDecimal getGia_khuyen_mai_cao_nhat();
 }
