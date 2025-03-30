@@ -138,4 +138,8 @@ public class SanPhamController {
         excelSaveDB.saveToDB(list);
         return ResponseEntity.ok("ok");
     }
+    @GetMapping("/getSanPhamByTenSanPham")
+    public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham")String tenSanPham){
+        return sanPhamService.getSanPhamTheoTen(tenSanPham);
+    }
 }

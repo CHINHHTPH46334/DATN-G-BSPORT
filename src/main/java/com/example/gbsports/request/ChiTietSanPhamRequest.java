@@ -14,6 +14,7 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Data
@@ -39,4 +40,5 @@ public class ChiTietSanPhamRequest {
     private Integer id_kich_thuoc;
     @NotNull(message = "Không để trống màu sắc")
     private Integer id_mau_sac;
+    private ArrayList<String> hinh_anh;
 }
