@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n" +
@@ -18,7 +19,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "           full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
             "          full outer  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "\t\t\t full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, gioi_tinh, dm.ten_danh_muc, \n" +
+            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc, \n" +
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh")
     ArrayList<SanPhamView> getAllSanPham();
 
@@ -29,7 +30,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
             "full outer  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "group by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, gioi_tinh, dm.ten_danh_muc,\n" +
+            "group by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc,\n" +
             "th.ten_thuong_hieu, ten_chat_lieu,hinh_anh\n" +
             "order by ngay_sua_moi desc\n"
     )
@@ -42,7 +43,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "           full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
             "            full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "\t\t\tfull outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, gioi_tinh, dm.ten_danh_muc, \n" +
+            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc, \n" +
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh")
     Page<SanPhamView> getAllSanPhamPhanTrang(Pageable pageable);
 
@@ -53,11 +54,12 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "           full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
             "           full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "\t\t\tfull outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, gioi_tinh, dm.ten_danh_muc, \n" +
+            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc, \n" +
             "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh" +
             "where ten_danh_muc like CONCAT('%', :tenDanhMuc, '%') and ten_thuong_hieu like CONCAT('%', :tenThuongHieu, '%') and ten_chat_lieu like CONCAT('%', :tenChatLieu, '%')")
     ArrayList<SanPhamView> locSanPham(@Param("tenDanhMuc") String tenDanhMuc, @Param("tenThuongHieu") String tenThuongHieu, @Param("tenChatLieu") String tenChatLieu);
 
+<<<<<<< HEAD
     @Query(nativeQuery = true,value = "WITH KhuyenMaiHieuLuc AS (\n" +
             "\t\t\t\t\t\tSELECT \n" +
             "\t\t\t\t\t\t\tctkm.id_chi_tiet_san_pham,\n" +
@@ -119,4 +121,15 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "\t\t\t\t\t\tsp.trang_thai = N'Hoạt động'\n" +
             "    AND sp.ten_san_pham LIKE CONCAT('%', :tenSanPham ,'%');")
     ArrayList<SanPhamView> listSanPhamBanHangWebTheoSP(@Param("tenSanPham") String tenSanPham);
+=======
+    @Query("SELECT s FROM SanPham s WHERE LOWER(s.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(s.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "ORDER BY s.id_san_pham DESC")
+    List<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(@Param("keyword") String keyword);
+
+    @Query("SELECT s FROM SanPham s ORDER BY s.id_san_pham DESC")
+    List<SanPham> findAllSortedByIdSanPham();
+
+
+>>>>>>> e5eec5e65f1bf4e7c3f8b0c18434304e76c75e61
 }
