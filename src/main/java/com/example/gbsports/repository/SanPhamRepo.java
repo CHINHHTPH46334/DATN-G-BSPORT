@@ -59,13 +59,13 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
             "where ten_danh_muc like CONCAT('%', :tenDanhMuc, '%') and ten_thuong_hieu like CONCAT('%', :tenThuongHieu, '%') and ten_chat_lieu like CONCAT('%', :tenChatLieu, '%')")
     ArrayList<SanPhamView> locSanPham(@Param("tenDanhMuc") String tenDanhMuc, @Param("tenThuongHieu") String tenThuongHieu, @Param("tenChatLieu") String tenChatLieu);
 
-    @Query("SELECT s FROM SanPham s WHERE LOWER(s.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(s.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "ORDER BY s.id_san_pham DESC")
-    List<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(@Param("keyword") String keyword);
+    // Tìm kiếm sản phẩm theo mã hoặc tên với phân trang
+    @Query("SELECT sp FROM SanPham sp WHERE LOWER(sp.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(sp.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    Page<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(String keyword, Pageable pageable);
 
-    @Query("SELECT s FROM SanPham s ORDER BY s.id_san_pham DESC")
-    List<SanPham> findAllSortedByIdSanPham();
+    // Lấy tất cả sản phẩm, sắp xếp theo ID với phân trang
+    @Query("SELECT sp FROM SanPham sp ORDER BY sp.id_san_pham")
+    Page<SanPham> findAllSortedByIdSanPham(Pageable pageable);
 
 
 }
