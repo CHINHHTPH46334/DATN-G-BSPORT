@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+
+        }
+        .sidebar {
+            background-color: #f8f9fa;
+            border-right: 1px solid #a1a1a1;
+        }
+        .sidebar a {
+            text-decoration: none;
+            display: block;
+            padding: 10px 20px;
+            color: #ffffff;
+        }
+        .sidebar a:hover {
+            border: 1px solid #a1a1a1;
+        }
+        .sidebar .active {
+            border: 1px solid #a1a1a1;
+        }
+        .content {
+            padding: 20px;
+        }
+        .backg {
+            background-color: dimgrey;
+        }
+        .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: nowrap
+        }
+
+        footer {
+            background-color: #f8f9fa;
+            padding: 10px 0;
+            position: relative;
+            width: 100%;
+        }
+        .co{
+            background-color: #a1a1a1;
+        }
+        .dropdown-menu {
+            background-color: dimgrey;
+            color: white;
+            padding: 10px;
+        }
+        .dropdown-item:hover {
+            background-color: dimgrey;
+            color: white;
+        }
+    </style>
+
+</head>
+<body class="container">
+<div style="background-color: rgb(240, 240, 240);">
+    <div>
+        <nav class="navbar text-bg-success d-flex align-items-center">
+            <div>
+                <h4 class="m-3">G&B SPORTS</h4>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    VTH
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="row mt-2">
+            <!-- Sidebar -->
+            <div class=" col-lg-2 backg sidebar pt-2">
+                <a href="/hien-thi-KM" >Quản lý khuyến mãi</a>
+                <a href="/hien-thi-voucher" class="active">Quản lý voucher</a>
+
+            </div>
+
+            <!-- Main content -->
+            <div class="col-lg-10">
+                <div th:if="${message != null}" class="alert alert-success" role="alert">
+                    <p th:text="${message}"></p>
+                </div>
+                <div th:if="${error != null}" class="alert alert-danger" role="alert">
+                    <p th:text="${error}"></p>
+                </div>
+
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 co" style="padding-right: 10px;">
+                        <h2 style="padding: 13px;">Quản lý voucher</h2>
+                        <form action="/add-voucher" method="get">
+                            <button type="submit" class="btn btn-primary">Thêm voucher</button>
+                        </form>
+                    </div>
+
+                    <div class="mb-3">
+                        <form th:action="@{/hien-thi-voucher}" method="get" class="d-flex gap-3 align-items-center">
+                            <input type="hidden" name="page" th:value="${currentPage}">
+                            <label for="trangThai" class="form-label me-2">Trạng thái:</label>
+                            <select class="form-select w-auto" id="trangThai" name="trangThai" onchange="this.form.submit()">
+                                <option value="Tất cả" th:selected="${selectedTrangThai == 'Tất cả'}">Tất cả</option>
+                                <option value="Sắp diễn ra" th:selected="${selectedTrangThai == 'Sắp diễn ra'}">Sắp diễn ra</option>
+                                <option value="Đang diễn ra" th:selected="${selectedTrangThai == 'Đang diễn ra'}">Đang diễn ra</option>
+                                <option value="Đã kết thúc" th:selected="${selectedTrangThai == 'Đã kết thúc'}">Đã kết thúc</option>
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Form tìm kiếm theo tên -->
+                    <form th:action="@{/tim-kiem-voucher}" method="get" id="searchByNameForm" class="d-flex gap-3 align-items-center mt-2">
+                        <input type="hidden" name="page" th:value="${currentPage}">
+                        <label for="keyword" class="form-label me-2">Tìm kiếm:</label>
+                        <input type="text" class="form-control w-25" id="keyword" name="keyword"
+                               th:value="${keyword}" placeholder="Nhập mã hoặc tên voucher">
+
+                    </form>
+
+                    <!-- Form tìm kiếm theo ngày -->
+                    <form th:action="@{/tim-kiem-voucher}" method="get" id="searchByDateForm" class="d-flex gap-3 align-items-center mt-2">
+                        <input type="hidden" name="page" th:value="${currentPage}">
+                        <label for="startDate" class="form-label me-2">Từ ngày:</label>
+                        <input type="datetime-local" class="form-control" style="width: 200px;"
+                               id="startDate" name="startDate" th:value="${startDate}">
+
+                        <label for="endDate" class="form-label me-2">Đến ngày:</label>
+                        <input type="datetime-local" class="form-control" style="width: 200px;"
+                               id="endDate" name="endDate" th:value="${endDate}">
+                        <button type="button" class="btn btn-primary" id="resetButton">Làm mới</button>
+                    </form>
+
+                    <!-- Lọc theo khoảng giá trị giảm -->
+                    <form id="searchByPriceForm" th:action="@{/tim-kiem-theo-gia}" method="get" class="d-flex gap-3 align-items-center mt-2">
+                        <label for="minPrice" class="form-label me-2">Giá trị tối đa từ:</label>
+                        <input type="number" class="form-control w-25" id="minPrice" name="minPrice"
+                               min="0" max="999999999" step="1"
+                               th:value="${minPrice != null ? minPrice : ''}" placeholder="Nhập giá trị nhỏ nhất">
+
+                        <label for="maxPrice" class="form-label me-2">đến:</label>
+                        <input type="number" class="form-control w-25" id="maxPrice" name="maxPrice"
+                               min="0" max="999999999" step="1"
+                               th:value="${maxPrice != null ? maxPrice : ''}" placeholder="Nhập giá trị lớn nhất">
+                    </form>
+                </div>
+                    <div class="table-responsive p-2">
+                        <table class="table table-bordered">
+                            <thead class="co">
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã voucher</th>
+                                <th>Tên voucher</th>
+                                <th>Giá trị giảm</th>
+                                <th>Giá trị tối thiểu</th>
+                                <th>Số lượng</th>
+                                <th>Kiểu giảm giá</th>
+                                <th>Giá trị tối đa</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="v, iterStat : ${dsVoucher}">
+                                <td th:text="${iterStat.count + (currentPage * 5)}"></td>
+                                <td th:text="${v.maVoucher}"></td>
+                                <td th:text="${v.tenVoucher}"></td>
+                                <td th:text="${#numbers.formatDecimal(v.giaTriGiam, 0, 0, 'POINT')}"></td>
+                                <td th:text="${#numbers.formatDecimal(v.giaTriToiThieu, 0, 0, 'POINT')}"></td>
+                                <td th:text="${v.soLuong}"></td>
+                                <td th:text="${v.kieuGiamGia}"></td>
+                                <td th:text="${#numbers.formatDecimal(v.giaTriToiDa, 0, 0, 'POINT')}"></td>
+                                <td th:text="${#temporals.format(v.ngayBatDau, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${#temporals.format(v.ngayHetHan, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${v.moTa}"></td>
+                                <td th:text="${v.trangThai}"></td>
+                                <td>
+                                    <form action="/update-voucher" method="get">
+                                        <input type="hidden" name="id" th:value="${v.id}">
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${dsVoucher.isEmpty()}">
+                                <td colspan="13" class="text-center">Không có voucher nào.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-center gap-3">
+                        <div>
+                            <a th:href="@{/hien-thi-voucher(trangThai=${selectedTrangThai}, page=${currentPage - 1})}"
+                               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+                               class="btn btn-secondary">Trang trước</a>
+                            <a th:href="@{/hien-thi-voucher(trangThai=${selectedTrangThai}, page=${currentPage + 1})}"
+                               th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}"
+                               class="btn btn-secondary">Trang sau</a>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end m-2">
+                        <span>Trang <span th:text="${currentPage + 1}"></span> / <span th:text="${totalPages}"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div></div>
+
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const nameForm = document.getElementById("searchByNameForm");
+        const dateForm = document.getElementById("searchByDateForm");
+        const keyword = document.getElementById("keyword");
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+        const resetButton = document.getElementById("resetButton");
+        let timer;
+
+        // Tìm kiếm theo tên (Debounce)
+        keyword.addEventListener("input", function () {
+            clearTimeout(timer);
+            if (keyword.value.length >= 2) {
+                timer = setTimeout(() => {
+                    nameForm.submit();
+                }, 1000);
+            }
+        });
+
+        // Tìm kiếm theo ngày
+        startDate.addEventListener("change", function () {
+            dateForm.submit();
+        });
+        endDate.addEventListener("change", function () {
+            dateForm.submit();
+        });
+
+        // Xử lý nút "Làm mới"
+        resetButton.addEventListener("click", function () {
+            window.location.href = "/tim-kiem-voucher"; // Load lại trang gốc
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const priceForm = document.getElementById("searchByPriceForm");
+        const minPriceInput = document.getElementById("minPrice");
+        const maxPriceInput = document.getElementById("maxPrice");
+        let timer;
+
+        function autoSubmit() {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                if (minPriceInput.value !== "" && maxPriceInput.value !== "" && parseInt(minPriceInput.value) <= parseInt(maxPriceInput.value)) {
+                    priceForm.submit();
+                }
+            }, 1000); // Gửi sau 1 giây nếu không nhập thêm
+        }
+
+        minPriceInput.addEventListener("input", autoSubmit);
+        maxPriceInput.addEventListener("input", autoSubmit);
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
