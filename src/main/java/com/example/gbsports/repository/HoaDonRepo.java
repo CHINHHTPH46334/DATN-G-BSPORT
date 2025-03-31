@@ -144,15 +144,20 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     List<HoaDonResponse> getAllHoaDonCTT();
 
     @Query(value = """
-            SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
-            ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
-            ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
-            from hoa_don hd
-            LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-            LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
-            LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
-            where hd.id_hoa_don = :idHd
-""", nativeQuery = true)
+                        SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
+                        ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
+                        ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
+                        from hoa_don hd
+                        LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+                        LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
+                        LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
+                        where hd.id_hoa_don = :idHd
+            """, nativeQuery = true)
     List<HoaDonResponse> findHoaDonById(@Param("idHd") Integer idHd);
+
+    @Query(value = """
+                SELECT * FROM hoa_don
+            """, nativeQuery = true)
+    List<HoaDonResponse> getListHD();
 
 }
