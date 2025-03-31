@@ -336,19 +336,5 @@ public class NhanVienController {
         return nhanVienRepo.locNhanVienTheoTrangThai(trangThai, pageable);
     }
 
-//    @PostMapping("addNhanVien")
-//    public ResponseEntity<?> saveNhanVien(@Valid @RequestBody NhanVienRequest nhanVienRequest, BindingResult result) {
-//        if (result.hasErrors()) {
-//            List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
-//                    .collect(Collectors.toList());
-//            return ResponseEntity.badRequest().body(errors);
-//        } else {
-//            NhanVien nv = new NhanVien();
-//            BeanUtils.copyProperties(nhanVienRequest, nv);
-//            nhanVienRepo.save(nv);
-//            return ResponseEntity.ok("Lưu thành công");
-//
-//        }
-//    }
 
 }
