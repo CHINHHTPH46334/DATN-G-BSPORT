@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -33,13 +34,10 @@ public class KhuyenMai {
     private String moTa;
 
     @Column(name = "ngay_bat_dau")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") // Định dạng datetime từ form
-    private LocalDateTime ngayBatDau;
+    private OffsetDateTime ngayBatDau;
 
-    @Column(name = "ngay_het_han")
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-    private LocalDateTime ngayHetHan;
-
+    @Column(name = "ngay_het_han" )
+    private OffsetDateTime ngayHetHan;
     @Column(name = "gia_tri_giam")
     private BigDecimal giaTriGiam;
 
