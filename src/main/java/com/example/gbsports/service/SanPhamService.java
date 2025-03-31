@@ -251,4 +251,8 @@ public class SanPhamService {
 
     }
 
+    public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham){
+        return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
+    }
+
 }

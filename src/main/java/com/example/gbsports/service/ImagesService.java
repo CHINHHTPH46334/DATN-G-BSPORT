@@ -24,7 +24,7 @@ public class ImagesService {
             Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
             String imageUrl = uploadResult.get("secure_url").toString();
             String publicId = uploadResult.get("public_id").toString();
-            System.out.println(imageUrl);
+            System.out.println("imageUrl"+imageUrl);
             System.out.println(publicId);
             return uploadResult.get("url").toString();
         } catch (IOException e) {

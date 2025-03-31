@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/api/khach-hang")
 public class KhachHangController {
 
@@ -47,7 +48,7 @@ public class KhachHangController {
     private EmailService emailService;
 
     @GetMapping("/view")
-    public ResponseEntity<Map<String, Object>> getKhachHang(
+    public ResponseEntity<Map<String, Object>>   getKhachHang(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "3") Integer size,
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -59,7 +60,7 @@ public class KhachHangController {
         if (trangThai != null && !trangThai.isEmpty()) {
             danhSachKhachHang = khachHangRepo.locKhachHangTheoTrangThai(trangThai, pageable);
         } else if (keyword != null && !keyword.isEmpty()) {
-            String trimmedKeyword = keyword.trim();
+            String trimmedKeyword = keyword.trim()+"";
             danhSachKhachHang = khachHangRepo.timKhachHang(trimmedKeyword, pageable);
         } else {
             danhSachKhachHang = khachHangRepo.findAllSortedByIdDesc(pageable);
