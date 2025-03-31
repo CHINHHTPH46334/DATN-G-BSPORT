@@ -103,4 +103,8 @@ public class ChiTietSanPhamController {
     public List<ChiTietSanPhamView> ctspTheoSanPham(@RequestParam(name = "id") Integer id) {
         return chiTietSanPhamService.listCTSPTheoSanPham(id);
     }
+    @GetMapping("/CTSPBySanPhamFullWeb")
+    public List<ChiTietSanPhamView> ctspBySanPhamFull(@RequestParam("idSanPham")Integer idSanPham){
+        return chiTietSanPhamService.getCTSPBySanPhamFull(idSanPham);
+    }
 }

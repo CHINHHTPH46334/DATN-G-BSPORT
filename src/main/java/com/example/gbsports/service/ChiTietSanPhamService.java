@@ -222,5 +222,7 @@ public class ChiTietSanPhamService {
         return chiTietSanPhamRepo.listCTSPFolowSanPham(id);
     }
 
-
+    public List<ChiTietSanPhamView> getCTSPBySanPhamFull(@RequestParam("idSanPham")Integer idSanPham){
+        return chiTietSanPhamRepo.getCTSPBySanPhamFull(idSanPham);
+    }
 }

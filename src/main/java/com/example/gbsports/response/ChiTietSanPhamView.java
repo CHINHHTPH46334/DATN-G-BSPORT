@@ -9,6 +9,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public interface ChiTietSanPhamView {
@@ -30,4 +31,11 @@ public interface ChiTietSanPhamView {
      Boolean getGioi_tinh();
      Integer getId_kich_thuoc();
      Integer getId_mau_sac();
+     Float getDanh_gia_trung_binh();
+     Integer getSo_luong_danh_gia();
+     BigDecimal getGiaGoc();
+     BigDecimal getGiaHienTai();
+     Float getGiaTriKhuyenMai();
+     String getKieuKhuyenMai();
+     String getHinh_anh();
 }
