@@ -225,11 +225,6 @@ public class NhanVienController {
     @PostMapping("/quan-ly-nhan-vien/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
-//
-//        String errorMessage = validateNhanVien(nhanVienRequest);
-//        if (!errorMessage.isEmpty()) {
-//            return errorMessage; // Trả về lỗi nếu có
-//        }
         NhanVien nhanVien = new NhanVien();
         BeanUtils.copyProperties(nhanVienRequest, nhanVien);
         TaiKhoan taiKhoan = new TaiKhoan();
