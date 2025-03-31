@@ -40,28 +40,14 @@ public class NhanVienRequest {
 
 private String maNhanVien;
 
-<<<<<<< HEAD
-    private String tenNhanVien;
-
-=======
 
     private String tenNhanVien;
 
 
->>>>>>> d4962f0821ddabcd00b5fd0db0f3d793bcc2dd66
     private Date ngaySinh;
 
     private String email;
 
-<<<<<<< HEAD
-    private String diaChiLienHe;
-
-    private Boolean gioiTinh;
-    private String anhNhanVien;
-    private Date ngayThamGia;
-    private String soDienThoai;
-
-=======
 
     private String diaChiLienHe;
 
@@ -75,7 +61,6 @@ private String maNhanVien;
     private String soDienThoai;
 
 
->>>>>>> d4962f0821ddabcd00b5fd0db0f3d793bcc2dd66
     private String trangThai;
 
 //    private Roles roles;
