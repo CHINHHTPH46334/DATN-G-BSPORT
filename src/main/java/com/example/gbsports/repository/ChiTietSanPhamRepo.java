@@ -18,6 +18,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
 
     @Query("SELECT c FROM ChiTietSanPham c WHERE LOWER(c.sanPham.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.sanPham.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<ChiTietSanPham> findBySanPham_MaSanPhamContainingIgnoreCaseOrSanPham_TenSanPhamContainingIgnoreCase(String keyword);
+
     Optional<ChiTietSanPham> findById(Integer id);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
@@ -84,4 +85,32 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "where ctsp.id_san_pham = :idSanPham ")
     ArrayList<ChiTietSanPhamView> listCTSPFolowSanPham(@Param("idSanPham") Integer idSanPham);
 
+    //=============================== Của Dũng====================================//
+    @Query(value = """
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
+    Page<ChiTietSanPhamView> getAllCTSP_HD(Pageable pageable);
+
+    @Query(value = """
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
+    Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
+    //=============================== Của Dũng====================================//
 }

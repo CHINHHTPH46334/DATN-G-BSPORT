@@ -1,8 +1,12 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.entity.HoaDon;
+import com.example.gbsports.entity.HoaDonChiTiet;
+import com.example.gbsports.repository.ChiTietSanPhamRepo;
 import com.example.gbsports.repository.HoaDonChiTietRepo;
 import com.example.gbsports.repository.HoaDonRepo;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.TheoDoiDonHangResponse;
@@ -17,6 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -30,8 +35,8 @@ public class HoaDonController {
     private HoaDonRepo hoaDonRepo;
     @Autowired
     private HoaDonChiTietRepo hoaDonChiTietRepo;
-//    @Autowired
-//    private HoaDonService hoaDonService;
+    @Autowired
+    private ChiTietSanPhamRepo chiTietSanPhamRepo;
 
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
@@ -266,6 +271,125 @@ public class HoaDonController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
+
+    @GetMapping("/ctsp_hd")
+    public Page<ChiTietSanPhamView> getAllCTSP_HD(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "5") Integer size,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        if (page < 0 || size <= 0) {
+            throw new IllegalArgumentException("Page hoặc size không hợp lệ");
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String searchKeyword = keyword.trim().replaceAll("[^\\p{L}\\p{N}\\s]", "");
+            return chiTietSanPhamRepo.searchCTSP_HD(searchKeyword, pageable);
+        }
+        return chiTietSanPhamRepo.getAllCTSP_HD(pageable);
+    }
+
+    @PostMapping("/addSP_HD")
+    public ResponseEntity<Map<String, Object>> addProductsToInvoice(
+            @RequestBody Map<String, Object> request) {
+        String maHoaDon = (String) request.get("maHoaDon");
+        List<Map<String, Object>> products = (List<Map<String, Object>>) request.get("products");
+
+        // Kiểm tra đầu vào
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Mã hóa đơn không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (products == null || products.isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Danh sách sản phẩm không được để trống!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Tìm hóa đơn
+        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
+        if (!hoaDonOpt.isPresent()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không tìm thấy hóa đơn với mã: " + maHoaDon);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        Integer idHoaDon = hoaDonOpt.get().getId_hoa_don();
+
+        try {
+            for (Map<String, Object> product : products) {
+                Integer idCTSP = (Integer) product.get("idCTSP");
+                Integer soLuongMua = (Integer) product.get("soLuongMua");
+
+                // Kiểm tra số lượng
+                Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idCTSP);
+                if (!chiTietSanPhamOpt.isPresent()) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Không tìm thấy sản phẩm với ID: " + idCTSP);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+
+                ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
+                if (soLuongMua > chiTietSanPham.getSo_luong()) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Số lượng mua vượt quá số lượng tồn kho của sản phẩm: " + chiTietSanPham.getSanPham().getTen_san_pham());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
+                // Kiểm tra xem sản phẩm đã có trong hóa đơn chưa
+                Optional<HoaDonChiTiet> existingItem = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHoaDon);
+                if (existingItem.isPresent()) {
+                    // Nếu đã có, cộng dồn số lượng
+                    Integer newSoLuong = existingItem.get().getSo_luong() + soLuongMua;
+                    if (newSoLuong > chiTietSanPham.getSo_luong()) {
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("success", false);
+                        response.put("message", "Tổng số lượng sau khi cộng dồn vượt quá số lượng tồn kho của sản phẩm: " + chiTietSanPham.getSanPham().getTen_san_pham());
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+                    hoaDonChiTietRepo.addSLGH(idCTSP, idHoaDon, soLuongMua);
+                } else {
+                    // Nếu chưa có, thêm mới vào hóa đơn
+                    HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+                    hoaDonChiTiet.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
+                    hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
+                    hoaDonChiTiet.setSo_luong(soLuongMua);
+                    hoaDonChiTiet.setDon_gia(chiTietSanPham.getGia_ban().multiply(BigDecimal.valueOf(soLuongMua)));
+                    hoaDonChiTietRepo.save(hoaDonChiTiet);
+
+                    // Cập nhật số lượng tồn kho
+                    chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuongMua);
+                    chiTietSanPhamRepo.save(chiTietSanPham);
+
+                    // Cập nhật tổng tiền hóa đơn
+                    BigDecimal tongTienTruocGiam = hoaDonChiTietRepo.sumDonGiaByHoaDonId(idHoaDon);
+                    HoaDon hoaDon = hoaDonRepo.findById(idHoaDon).get();
+                    hoaDon.setTong_tien_truoc_giam(tongTienTruocGiam.add(hoaDon.getPhi_van_chuyen()));
+                    // Cập nhật tổng tiền sau giảm (nếu có voucher)
+                    BigDecimal giamGia = BigDecimal.ZERO; // Giả sử không có voucher
+                    hoaDon.setTong_tien_sau_giam(tongTienTruocGiam.add(hoaDon.getPhi_van_chuyen()).subtract(giamGia));
+                    hoaDonRepo.save(hoaDon);
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Thêm sản phẩm vào hóa đơn thành công!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 //    @GetMapping("/danh_sach_hoa_don")
 //    public String getAllHD(Model model,
 //                           @RequestParam(value = "page", defaultValue = "0") Integer page,
