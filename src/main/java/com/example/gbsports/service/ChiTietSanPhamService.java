@@ -1,9 +1,6 @@
 package com.example.gbsports.service;
 
-import com.example.gbsports.entity.ChiTietSanPham;
-import com.example.gbsports.entity.KichThuoc;
-import com.example.gbsports.entity.MauSac;
-import com.example.gbsports.entity.SanPham;
+import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.request.SanPhamRequest;
@@ -52,6 +49,7 @@ public class ChiTietSanPhamService {
     public Page<ChiTietSanPhamView> getAllCTSPPhanTrang(Pageable pageable) {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
+
     public static String convertJsDateToUtc7(String jsDateString) {
         // Chuyển chuỗi từ JS (ISO 8601) thành Instant (UTC)
         Instant instant = Instant.parse(jsDateString);
@@ -63,6 +61,7 @@ public class ChiTietSanPhamService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return utc7Time.format(formatter);
     }
+
     public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
         int count = 0;
         Integer slCu = 0;
@@ -77,11 +76,12 @@ public class ChiTietSanPhamService {
             for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
                 if (ctspCheckTrung.getId_chi_tiet_san_pham() == chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
                     ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
-                    System.out.println("Ngày tạo này"+ngay_sua_lo);
+                    System.out.println("Ngày tạo này" + ngay_sua_lo);
                     count++;
                 }
             }
             if (count > 0) {
+                //Sửa
                 ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                 chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                 Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
@@ -103,6 +103,7 @@ public class ChiTietSanPhamService {
                 chiTietSanPhamRepo.save(chiTietSanPham);
                 return ResponseEntity.ok("Lưu thành công");
             } else {
+                //Trùng màu và kích thước và trùng sản phẩm ID ctsp khác nhau
                 for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
                     if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
                             && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
@@ -124,7 +125,8 @@ public class ChiTietSanPhamService {
                     } else {
                         return ResponseEntity.badRequest().body("KHông ổn");
                     }
-                }else {
+                } else {
+                    //Thêm mới
                     ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
 //                    chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                     Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
@@ -142,6 +144,13 @@ public class ChiTietSanPhamService {
                     chiTietSanPham.setNgay_tao(new Date());
                     chiTietSanPham.setNgay_sua(new Date());
                     chiTietSanPhamRepo.save(chiTietSanPham);
+                    for (String ha: chiTietSanPhamRequest.getHinh_anh()) {
+                        HinhAnhSanPham hinhAnhSanPham = new HinhAnhSanPham();
+                        hinhAnhSanPham.setChiTietSanPham(chiTietSanPham);
+                        hinhAnhSanPham.setHinh_anh(ha);
+                        hinhAnhSanPham.setAnh_chinh(true);
+                        hinhAnhSanPhamRepo.save(hinhAnhSanPham);
+                    }
                     return ResponseEntity.ok("Lưu thành công");
                 }
             }
