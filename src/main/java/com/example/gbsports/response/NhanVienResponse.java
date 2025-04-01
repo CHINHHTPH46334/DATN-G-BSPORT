@@ -12,7 +12,7 @@ public interface NhanVienResponse {
     Date getNgaySinh();
     String getEmail();
     String getDiaChiLienHe();
-    boolean getGioiTinh();
+    Boolean getGioiTinh();
     String getSoDienThoai();
     String getTrangThai();
     String getAnhNhanVien();
