@@ -1,5 +1,6 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.BCTKRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,7 +12,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RestController
 @RequestMapping("/admin")
@@ -75,6 +78,7 @@ public class BCTKController {
 
         return result;
     }
+
     @GetMapping("/baoCaoThongKe")
     public ResponseEntity<?> getThongKe(
             @RequestParam(required = false) String type,
@@ -84,10 +88,12 @@ public class BCTKController {
         Map<String, LocalDate> dates = getKhoangNgay(type, startDate, endDate);
         LocalDate start = dates.get("startDate");
         LocalDate end = dates.get("endDate");
-
         BigDecimal doanhThu = bctkRepo.getDoanhThu(start, end);
         Integer tongDonHang = bctkRepo.getTongDonHang(start, end);
         Integer tongSanPham = bctkRepo.getTongSanPham(start, end);
+// Thêm phần gọi topSanPhamBanChay và topSanPhamBanCham
+//        List<HoaDon> topSanPhamBanChay = bctkRepo.topSanPhamBanChay(start, end);
+//        List<HoaDon> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
 
         Map<String, Object> response = new HashMap<>();
         response.put("doanhThu", doanhThu);
