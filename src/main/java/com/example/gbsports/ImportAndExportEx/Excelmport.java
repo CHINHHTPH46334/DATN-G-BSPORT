@@ -63,9 +63,34 @@ public class Excelmport {
             case STRING:
                 return cell.getStringCellValue().trim();
             case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue()); // Chuyển số thành chuỗi
+                // Kiểm tra xem ô có phải là ngày tháng không
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    // Nếu là ngày tháng, chuyển đổi sang chuỗi theo định dạng mong muốn
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    return dateFormat.format(cell.getDateCellValue());
+                } else {
+                    // Nếu là số, chuyển đổi thành chuỗi mà không làm mất phần thập phân
+                    return String.valueOf(cell.getNumericCellValue());
+                }
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
+                // Xử lý ô công thức: lấy giá trị được tính toán
+                switch (cell.getCachedFormulaResultType()) {
+                    case STRING:
+                        return cell.getStringCellValue().trim();
+                    case NUMERIC:
+                        return String.valueOf(cell.getNumericCellValue());
+                    case BOOLEAN:
+                        return String.valueOf(cell.getBooleanCellValue());
+                    case ERROR:
+                        return "ERROR: " + cell.getErrorCellValue();
+                    default:
+                        return null;
+                }
+            case ERROR:
+                // Xử lý ô lỗi: trả về chuỗi biểu thị lỗi
+                return "ERROR: " + cell.getErrorCellValue();
             default:
                 return null;
         }
