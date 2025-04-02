@@ -1,5 +1,6 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.config.EmailSenderService;
 import com.example.gbsports.entity.DiaChiKhachHang;
 import com.example.gbsports.entity.KhachHang;
 import com.example.gbsports.entity.TaiKhoan;
@@ -45,7 +46,7 @@ public class KhachHangController {
     private TaiKhoanRepo taiKhoanRepo;
 
     @Autowired
-    private EmailService emailService;
+    private EmailSenderService emailService;
 
     @GetMapping("/view")
     public ResponseEntity<Map<String, Object>>   getKhachHang(
@@ -166,8 +167,8 @@ public class KhachHangController {
                     "<p>Vui lòng đăng nhập để sử dụng dịch vụ.</p>" +
                     "<p>Trân trọng,<br>Đội ngũ GB Sports</p>";
             try {
-                emailService.sendEmail(khachHang.getEmail(), subject, body);
-            } catch (MessagingException e) {
+                emailService.sendSimpleEmail(khachHang.getEmail(), subject, body);
+            } catch (Exception e) {
                 response.put("error", "Lưu khách hàng thành công nhưng gửi email thất bại: " + e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }

@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.BCTKRepo;
+import com.example.gbsports.response.HoaDonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -101,5 +102,15 @@ public class BCTKController {
         response.put("tongSanPham", tongSanPham);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/topSPBanChay")
+    public List<HoaDonResponse> topSanPhamBanChay() {
+        return bctkRepo.topSanPhamBanChay();
+    }
+
+    @GetMapping("/topSPBanCham")
+    public List<HoaDonResponse> topSanPhamBanCham() {
+        return bctkRepo.topSanPhamBanCham();
     }
 }
