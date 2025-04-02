@@ -107,7 +107,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(value = """
             SELECT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.email, hd.ho_ten, hd.sdt_nguoi_nhan,
             hd.dia_chi, v.ma_voucher, hd.tong_tien_truoc_giam, hd.tong_tien_sau_giam, nv.ten_nhan_vien,
-            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, hd.phi_van_chuyen,
+            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, hd.id_voucher, hd.phi_van_chuyen, v.mo_ta,
             hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
             (SELECT TOP 1 trang_thai FROM theo_doi_don_hang t
             WHERE t.id_hoa_don = hd.id_hoa_don
@@ -138,7 +138,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 SELECT trang_thai, ngay_chuyen 
                 FROM theo_doi_don_hang 
                 WHERE id_hoa_don = :idHoaDon 
-                ORDER BY ngay_chuyen DESC
+                ORDER BY ngay_chuyen ASC
             """, nativeQuery = true)
     List<TheoDoiDonHangResponse> findTrangThaiHistoryByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 

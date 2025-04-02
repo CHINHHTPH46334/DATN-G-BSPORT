@@ -22,7 +22,9 @@ public interface HoaDonChiTietResponse {
 
     // Chi tiết sản phẩm
     Integer getId_hoa_don_chi_tiet();
+    Integer getId_chi_tiet_san_pham();
     Integer getSo_luong();
+    Integer getSo_luong_con_lai();
     BigDecimal getDon_gia();
     String getTen_san_pham();
     String getMa_san_pham();

@@ -10,6 +10,7 @@ import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.TheoDoiDonHangResponse;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,8 +27,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+
 @RestController
-@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RequestMapping("/qlhd")
 public class HoaDonController {
 
@@ -168,6 +170,47 @@ public class HoaDonController {
         return "Cập nhật trạng thái thành công: " + newTrangThai;
     }
 
+    @PostMapping("/quay_lai_trang_thai")
+    public ResponseEntity<Map<String, Object>> revertToInitialStatus(@RequestParam("maHoaDon") String maHoaDon) {
+        // Kiểm tra mã hóa đơn
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Mã hóa đơn không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Tìm hóa đơn
+        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
+        if (!hoaDonOpt.isPresent()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không tìm thấy hóa đơn với mã: " + maHoaDon);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        // Lấy lịch sử trạng thái
+        Integer idHoaDon = hoaDonOpt.get().getId_hoa_don();
+        List<TheoDoiDonHangResponse> trangThaiHistory = hoaDonRepo.findTrangThaiHistoryByIdHoaDon(idHoaDon);
+
+        // Kiểm tra trạng thái đầu tiên
+        if (trangThaiHistory.isEmpty() || !trangThaiHistory.get(0).getTrang_thai().equals("Chờ xác nhận")) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Không thể quay lại vì trạng thái ban đầu không phải 'Chờ xác nhận'!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // Thêm bản ghi mới với trạng thái "Chờ xác nhận"
+        LocalDateTime ngayChuyen = LocalDateTime.now();
+        hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Chờ xác nhận", ngayChuyen);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Đã quay lại trạng thái 'Chờ xác nhận'!");
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/cancel_order")
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon) {
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
@@ -222,6 +265,9 @@ public class HoaDonController {
 
             // Lưu vào database
             hoaDonRepo.save(hoaDon);
+            // Insert trạng thái "Đã cập nhật"
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -259,6 +305,9 @@ public class HoaDonController {
             // Cập nhật ghi chú
             hoaDon.setGhi_chu(ghiChu != null ? ghiChu : ""); // Nếu ghiChu là null, đặt thành chuỗi rỗng
             hoaDonRepo.save(hoaDon);
+            // Insert trạng thái "Đã cập nhật"
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -325,7 +374,7 @@ public class HoaDonController {
                 Integer idCTSP = (Integer) product.get("idCTSP");
                 Integer soLuongMua = (Integer) product.get("soLuongMua");
 
-                // Kiểm tra số lượng
+                // Kiểm tra sản phẩm có tồn tại không
                 Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idCTSP);
                 if (!chiTietSanPhamOpt.isPresent()) {
                     Map<String, Object> response = new HashMap<>();
@@ -334,48 +383,11 @@ public class HoaDonController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                 }
 
-                ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
-                if (soLuongMua > chiTietSanPham.getSo_luong()) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("success", false);
-                    response.put("message", "Số lượng mua vượt quá số lượng tồn kho của sản phẩm: " + chiTietSanPham.getSanPham().getTen_san_pham());
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
-
-                // Kiểm tra xem sản phẩm đã có trong hóa đơn chưa
-                Optional<HoaDonChiTiet> existingItem = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHoaDon);
-                if (existingItem.isPresent()) {
-                    // Nếu đã có, cộng dồn số lượng
-                    Integer newSoLuong = existingItem.get().getSo_luong() + soLuongMua;
-                    if (newSoLuong > chiTietSanPham.getSo_luong()) {
-                        Map<String, Object> response = new HashMap<>();
-                        response.put("success", false);
-                        response.put("message", "Tổng số lượng sau khi cộng dồn vượt quá số lượng tồn kho của sản phẩm: " + chiTietSanPham.getSanPham().getTen_san_pham());
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-                    hoaDonChiTietRepo.addSLGH(idCTSP, idHoaDon, soLuongMua);
-                } else {
-                    // Nếu chưa có, thêm mới vào hóa đơn
-                    HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
-                    hoaDonChiTiet.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
-                    hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
-                    hoaDonChiTiet.setSo_luong(soLuongMua);
-                    hoaDonChiTiet.setDon_gia(chiTietSanPham.getGia_ban().multiply(BigDecimal.valueOf(soLuongMua)));
-                    hoaDonChiTietRepo.save(hoaDonChiTiet);
-
-                    // Cập nhật số lượng tồn kho
-                    chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuongMua);
-                    chiTietSanPhamRepo.save(chiTietSanPham);
-
-                    // Cập nhật tổng tiền hóa đơn
-                    BigDecimal tongTienTruocGiam = hoaDonChiTietRepo.sumDonGiaByHoaDonId(idHoaDon);
-                    HoaDon hoaDon = hoaDonRepo.findById(idHoaDon).get();
-                    hoaDon.setTong_tien_truoc_giam(tongTienTruocGiam.add(hoaDon.getPhi_van_chuyen()));
-                    // Cập nhật tổng tiền sau giảm (nếu có voucher)
-                    BigDecimal giamGia = BigDecimal.ZERO; // Giả sử không có voucher
-                    hoaDon.setTong_tien_sau_giam(tongTienTruocGiam.add(hoaDon.getPhi_van_chuyen()).subtract(giamGia));
-                    hoaDonRepo.save(hoaDon);
-                }
+                // Gọi addSLGH_HD để xử lý toàn bộ logic
+                hoaDonChiTietRepo.addSLGH_HD(idCTSP, idHoaDon, soLuongMua);
+                // Insert trạng thái "Đã cập nhật"
+                LocalDateTime ngayChuyen = LocalDateTime.now();
+                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
             }
 
             Map<String, Object> response = new HashMap<>();
@@ -387,6 +399,60 @@ public class HoaDonController {
             response.put("success", false);
             response.put("message", "Có lỗi xảy ra: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/removeSP_HD")
+    @Transactional
+    public ResponseEntity<?> removeProductFromInvoice(
+            @RequestParam("maHoaDon") String maHoaDon,
+            @RequestParam("idCTSP") Integer idCTSP,
+            @RequestParam("soLuong") Integer soLuong) {
+        try {
+            Optional<HoaDonResponse> hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon);
+            if (hoaDon == null) {
+                return ResponseEntity.badRequest().body("Hóa đơn không tồn tại");
+            }
+
+            Integer idHoaDon = hoaDon.get().getId_hoa_don();
+            hoaDonChiTietRepo.removeSPGHinHDCT(idCTSP, idHoaDon, soLuong);
+            // Insert trạng thái "Đã cập nhật"
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            return ResponseEntity.ok("Xóa sản phẩm thành công");
+//            if (hoaDon.get().getId_voucher() == null){
+//                return ResponseEntity.ok("Xóa sản phẩm thành công");
+//            } else {
+//                ResponseEntity.ok("Xóa sản phẩm thành công");
+//                return ResponseEntity.ok("Hóa đơn đã áp dụng voucher "+ hoaDon.get().getMo_ta());
+//            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi xóa sản phẩm: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/update_soLuong")
+    @Transactional
+    public ResponseEntity<?> updateProductQuantity(
+            @RequestParam("maHoaDon") String maHoaDon,
+            @RequestParam("idCTSP") Integer idCTSP,
+            @RequestParam("quantityChange") Integer quantityChange) {
+        try {
+            Optional<HoaDonResponse> hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon);
+            if (hoaDon == null) {
+                return ResponseEntity.badRequest().body("Hóa đơn không tồn tại");
+            }
+
+            Integer idHoaDon = hoaDon.get().getId_hoa_don();
+            hoaDonChiTietRepo.updateQuantity(idCTSP, idHoaDon, quantityChange);
+            // Insert trạng thái "Đã cập nhật"
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            return ResponseEntity.ok("Cập nhật số lượng thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật số lượng: " + e.getMessage());
         }
     }
 
