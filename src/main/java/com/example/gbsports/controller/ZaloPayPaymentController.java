@@ -16,6 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping(value = "/api/zalopay")
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 public class ZaloPayPaymentController {
     private final ZaloPayConfig zaloPayConfig;
     @Autowired

@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/gio-hang")
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 public class GioHangController {
     @Autowired
     private GioHangService gioHangService;
