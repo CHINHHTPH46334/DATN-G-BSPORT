@@ -34,6 +34,8 @@ public interface HoaDonResponse {
     String getTen_voucher();
     String getMa_voucher();
     LocalDateTime getNgay_chuyen();
-
+    String getMa_san_pham();
+    String getTen_san_pham();
+    Integer getSo_luong();
 
 }
