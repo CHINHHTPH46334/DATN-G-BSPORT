@@ -14,7 +14,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/khuyen-mai")
+@RequestMapping("/admin/khuyen-mai")
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequiredArgsConstructor
 public class KhuyenMaiController {
