@@ -92,7 +92,7 @@ public class ChiTietSanPhamService {
                 MauSac mauSac = mauSacOptional.orElse(new MauSac());
                 SanPham sanPham = sanPhamOptional.orElse(new SanPham());
                 BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
-                System.out.println("Da vao trung id");
+                System.out.println("Đã vào đây");
 
                 chiTietSanPham.setMauSac(mauSac);
                 chiTietSanPham.setKichThuoc(kichThuoc);
@@ -119,7 +119,6 @@ public class ChiTietSanPhamService {
                     ctspSua.setId_chi_tiet_san_pham(id);
                     ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
                     ctspSua.setNgay_sua(new Date());
-                    System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                     if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                         chiTietSanPhamRepo.save(ctspSua);
                         return ResponseEntity.ok("cập nhật số lượng");
@@ -133,7 +132,7 @@ public class ChiTietSanPhamService {
                     Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
                     Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
                     Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-                    System.out.println("Them moi");
+
                     KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
                     MauSac mauSac = mauSacOptional.orElse(new MauSac());
                     SanPham sanPham = sanPhamOptional.orElse(new SanPham());
