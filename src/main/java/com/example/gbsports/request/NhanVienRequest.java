@@ -37,30 +37,30 @@ public class NhanVienRequest {
 //
 ////    @NotBlank(message = "Không được để trống trạng thái")
 //    private String trangThai;
-@JsonProperty("ma_nhan_vien")
+
 private String maNhanVien;
 
-    @JsonProperty("ten_nhan_vien")
+
     private String tenNhanVien;
 
-    @JsonProperty("ngay_sinh")
+
     private Date ngaySinh;
 
     private String email;
 
-    @JsonProperty("dia_chi_lien_he")
+
     private String diaChiLienHe;
 
-    @JsonProperty("gioi_tinh")
+
     private Boolean gioiTinh;
-    @JsonProperty("anh_nhan_vien")
+
     private String anhNhanVien;
-    @JsonProperty("ngay_tham_gia")
+
     private Date ngayThamGia;
-    @JsonProperty("so_dien_thoai")
+
     private String soDienThoai;
 
-    @JsonProperty("trang_thai")
+
     private String trangThai;
 
 //    private Roles roles;

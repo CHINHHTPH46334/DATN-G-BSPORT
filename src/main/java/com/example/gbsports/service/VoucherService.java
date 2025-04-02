@@ -7,14 +7,16 @@ import com.example.gbsports.response.VoucherResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class VoucherService {
         response.setGiaTriToiDa(voucher.getGiaTriToiDa());
         response.setSoLuong(voucher.getSoLuong());
         response.setGiaTriToiThieu(voucher.getGiaTriToiThieu());
-        setVoucherStatus(voucher);
+        setVoucherStatus(voucher); // Cập nhật trạng thái trước khi trả về
         response.setTrangThai(voucher.getTrangThai());
         return response;
     }
@@ -65,24 +67,43 @@ public class VoucherService {
     // Set trạng thái voucher
     private void setVoucherStatus(Voucher voucher) {
         LocalDateTime now = LocalDateTime.now();
-        if (voucher.getNgayBatDau().isAfter(now)) {
+        if (voucher.getSoLuong() != null && voucher.getSoLuong() <= 0) {
+            voucher.setTrangThai("Đã kết thúc");
+        } else if (voucher.getNgayBatDau().isAfter(now)) {
             voucher.setTrangThai("Sắp diễn ra");
-            voucherRepository.save(voucher);
         } else if (voucher.getNgayBatDau().isBefore(now) && voucher.getNgayHetHan().isAfter(now)) {
             voucher.setTrangThai("Đang diễn ra");
-            voucherRepository.save(voucher);
         } else if (voucher.getNgayHetHan().isBefore(now)) {
             voucher.setTrangThai("Đã kết thúc");
-            voucherRepository.save(voucher);
         }
+        voucherRepository.save(voucher);
     }
 
-    // 1️⃣ Lấy danh sách tất cả voucher
-    public List<VoucherResponse> getAllVouchers() {
-        List<Voucher> vouchers = voucherRepository.findAll();
-        vouchers.forEach(this::setVoucherStatus);
+    // Thêm scheduled task để tự động cập nhật trạng thái
+    @Scheduled(fixedRate = 5000) // Chạy mỗi 1 phút
+    @Transactional
+    public void updateVoucherStatusAutomatically() {
+        int pageSize = 100; // Kích thước mỗi trang
+        Pageable pageable = PageRequest.of(0, pageSize);
+        Page<Voucher> voucherPage;
 
-        return vouchers.stream().map(this::toResponse).collect(Collectors.toList());
+        do {
+            voucherPage = voucherRepository.findAll(pageable);
+            voucherPage.getContent().forEach(voucher -> {
+                String oldStatus = voucher.getTrangThai();
+                setVoucherStatus(voucher);
+                if (!oldStatus.equals(voucher.getTrangThai())) {
+                    logger.info("Updated voucher status: {} from {} to {}",
+                            voucher.getMaVoucher(), oldStatus, voucher.getTrangThai());
+                }
+            });
+            pageable = voucherPage.nextPageable(); // Chuyển sang trang tiếp theo
+        } while (voucherPage.hasNext()); // Tiếp tục nếu còn trang tiếp theo
+    }
+
+    // 1️⃣ Lấy danh sách tất cả voucher (có phân trang)
+    public Page<VoucherResponse> getAllVouchers(Pageable pageable) {
+        return voucherRepository.findAll(pageable).map(this::toResponse);
     }
 
     // 2️⃣ Thêm voucher mới
@@ -98,8 +119,8 @@ public class VoucherService {
         if (request.getGiaTriGiam() == null || request.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0) {
             return "Thêm thất bại: Giá trị giảm phải lớn hơn 0!";
         }
-        if ("Phần trăm".equals(request.getKieuGiamGia()) && request.getGiaTriGiam().compareTo(new BigDecimal("95")) > 0) {
-            return "Thêm thất bại: Giá trị giảm không được vượt quá 95 khi chọn Phần trăm!";
+        if ("Phần trăm".equals(request.getKieuGiamGia()) && request.getGiaTriGiam().compareTo(new BigDecimal("100")) > 0) {
+            return "Thêm thất bại: Giá trị giảm không được vượt quá 100 khi chọn Phần trăm!";
         }
         if (request.getKieuGiamGia() == null || request.getKieuGiamGia().trim().isEmpty()) {
             return "Thêm thất bại: Kiểu giảm giá không được để trống!";
@@ -122,14 +143,12 @@ public class VoucherService {
             return "Thêm thất bại: Mã voucher đã tồn tại!";
         }
 
-        // Chuyển đổi request thành entity và lưu
         Voucher voucher = toEntity(request);
         if ("Tiền mặt".equals(voucher.getKieuGiamGia())) {
             voucher.setGiaTriToiDa(voucher.getGiaTriGiam());
         }
         setVoucherStatus(voucher);
         voucherRepository.save(voucher);
-
         return "Thêm voucher thành công!";
     }
 
@@ -163,8 +182,8 @@ public class VoucherService {
         if (voucher.getGiaTriGiam() == null || voucher.getGiaTriGiam().compareTo(BigDecimal.ZERO) <= 0) {
             return "Cập nhật thất bại: Giá trị giảm phải lớn hơn 0!";
         }
-        if ("Phần trăm".equals(voucher.getKieuGiamGia()) && voucher.getGiaTriGiam().compareTo(new BigDecimal("95")) > 0) {
-            return "Cập nhật thất bại: Giá trị giảm không được vượt quá 95 khi chọn Phần trăm!";
+        if ("Phần trăm".equals(voucher.getKieuGiamGia()) && voucher.getGiaTriGiam().compareTo(new BigDecimal("100")) > 0) {
+            return "Cập nhật thất bại: Giá trị giảm không được vượt quá 100 khi chọn Phần trăm!";
         }
         if (voucher.getKieuGiamGia() == null || voucher.getKieuGiamGia().trim().isEmpty()) {
             return "Cập nhật thất bại: Kiểu giảm giá không được để trống!";
@@ -188,13 +207,11 @@ public class VoucherService {
             return "Cập nhật thất bại: Mã voucher đã tồn tại!";
         }
 
-        // Set trạng thái và lưu
         if ("Tiền mặt".equals(voucher.getKieuGiamGia())) {
             voucher.setGiaTriToiDa(voucher.getGiaTriGiam());
         }
         setVoucherStatus(voucher);
         voucherRepository.save(voucher);
-
         return "Cập nhật voucher thành công!";
     }
 
@@ -205,55 +222,51 @@ public class VoucherService {
         return toResponse(voucher);
     }
 
-    // 5️⃣ Lọc voucher theo trạng thái
-    public List<VoucherResponse> locTheoTrangThai(String trangThai) {
-        List<Voucher> vouchers;
-        if (trangThai != null && !trangThai.equals("Tất cả")) {
-            vouchers = voucherRepository.findByTrangThai(trangThai);
+    // 5️⃣ Lọc voucher theo trạng thái (có phân trang)
+    public Page<VoucherResponse> locTheoTrangThai(String trangThai, Pageable pageable) {
+        if (trangThai == null || trangThai.equals("Tất cả")) {
+            return getAllVouchers(pageable);
+        }
+        return voucherRepository.findByTrangThai(trangThai, pageable).map(this::toResponse);
+    }
+
+    // 6️⃣ Tìm kiếm voucher theo từ khóa (có phân trang)
+    public Page<VoucherResponse> timKiemVoucher(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllVouchers(pageable);
+        }
+        return voucherRepository.searchByKeyword(keyword, pageable).map(this::toResponse);
+    }
+
+    // 7️⃣ Tìm kiếm voucher theo khoảng ngày (có phân trang)
+    public Page<VoucherResponse> timKiemVoucherByDate(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        if (startDate == null && endDate == null) {
+            return getAllVouchers(pageable);
+        } else if (startDate != null && endDate != null) {
+            return voucherRepository.searchByDateRange(startDate, endDate, pageable).map(this::toResponse);
+        } else if (startDate != null) {
+            return voucherRepository.findByNgayBatDauGreaterThanEqual(startDate, pageable).map(this::toResponse);
         } else {
-            vouchers = voucherRepository.findAll();
+            return voucherRepository.findByNgayHetHanLessThanEqual(endDate, pageable).map(this::toResponse);
         }
-        return vouchers.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // 6️⃣ Tìm kiếm voucher theo từ khóa
-    public List<VoucherResponse> timKiemVoucher(String keyword) {
-        List<Voucher> vouchers;
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            vouchers = voucherRepository.searchByKeyword(keyword);
-        } else {
-            vouchers = voucherRepository.findAll();
-        }
-        return vouchers.stream().map(this::toResponse).collect(Collectors.toList());
-    }
+    // 8️⃣ Tìm kiếm voucher theo khoảng giá trị giảm (có phân trang)
+    public Page<VoucherResponse> timKiemVoucherByPrice(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        BigDecimal min = minPrice != null ? minPrice : BigDecimal.ZERO;
+        BigDecimal max = maxPrice != null ? maxPrice : voucherRepository.findMaxPrice();
 
-    // 7️⃣ Tìm kiếm voucher theo khoảng ngày
-    public List<VoucherResponse> timKiemVoucherByDate(LocalDateTime startDate, LocalDateTime endDate) {
-        List<Voucher> vouchers = voucherRepository.searchByDateRange(startDate, endDate);
-        return vouchers.stream().map(this::toResponse).collect(Collectors.toList());
-    }
-
-    // 8️⃣ Tìm kiếm voucher theo khoảng giá trị giảm
-    public List<VoucherResponse> timKiemVoucherByPrice(Integer minPrice, Integer maxPrice) {
-        Integer min = minPrice != null ? minPrice : voucherRepository.findMinPrice();
-        Integer max = maxPrice != null ? maxPrice : voucherRepository.findMaxPrice();
-
-        if (min == null || max == null) {
-            min = 0;
-            max = Integer.MAX_VALUE;
-        }
-
-        if (min > max) {
-            Integer temp = min;
+        if (min.compareTo(max) > 0) {
+            BigDecimal temp = min;
             min = max;
             max = temp;
         }
 
-        List<Voucher> vouchers = voucherRepository.searchByPriceRange(min, max);
-        return vouchers.stream().map(this::toResponse).collect(Collectors.toList());
+        return voucherRepository.searchByPriceRange(min, max, pageable).map(this::toResponse);
     }
 
     // 9️⃣ Tắt voucher
+    @Transactional
     public String offVoucher(Integer id) {
         Optional<Voucher> optionalVoucher = voucherRepository.findById(id);
         if (optionalVoucher.isEmpty()) {
@@ -266,4 +279,5 @@ public class VoucherService {
         voucherRepository.save(voucher);
         return "Tắt voucher thành công!";
     }
+
 }

@@ -17,8 +17,8 @@ public class KhachHang {
     private Integer idKhachHang;
 
     @Column(name = "ma_khach_hang")
-    @NotBlank(message = "Mã khách hàng không được để trống")
-    @Size(min = 3, max = 10, message = "Mã khách hàng phải từ 3 đến 10 ký tự")
+//    @NotBlank(message = "Mã khách hàng không được để trống")
+//    @Size(min = 3, max = 10, message = "Mã khách hàng phải từ 3 đến 10 ký tự")
     private String maKhachHang;
 
     @Column(name = "ten_khach_hang")
