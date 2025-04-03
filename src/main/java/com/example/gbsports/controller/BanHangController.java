@@ -250,8 +250,8 @@ public class BanHangController {
             @RequestParam(value = "giaBan") Integer giaBan) {
         hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
         HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
-        VoucherBHResponse voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
-        hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.getId_voucher()));
+        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
+        hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.get(0).getId_voucher()));
         hoaDonRepo.save(hoaDon);
         return ResponseEntity.ok("Thêm sản phẩm mới vào hóa đơn thành công");
     }
@@ -264,8 +264,8 @@ public class BanHangController {
             @RequestParam(value = "giaBan") Integer giaBan) {
         hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
         HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
-        VoucherBHResponse voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
-        hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.getId_voucher()));
+        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
+        hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.get(0).getId_voucher()));
         hoaDonRepo.save(hoaDon);
         return ResponseEntity.ok("Thêm sản phẩm vào hóa đơn thành công");
     }
@@ -281,8 +281,8 @@ public class BanHangController {
         if (chiTietSanPham.getSo_luong() >= soLuong) {
             hoaDonChiTietRepo.giamSPHD(idHD, idCTSP, soLuong, giaBan);
             HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
-            VoucherBHResponse voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
-            hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.getId_voucher()));
+            List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
+            hoaDon.setVoucher(voucherRepository.getReferenceById(voucherBHResponse.get(0).getId_voucher()));
             hoaDonRepo.save(hoaDon);
             return ResponseEntity.ok("Giảm sản phẩm trong hóa đơn thành công");
         } else {

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
@@ -40,7 +41,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     BigDecimal findMaxPrice();
 
     @Query(value = """
-    SELECT TOP 1
+    SELECT
         hd.id_hoa_don,
         v.id_voucher,
         CASE\s
@@ -66,5 +67,5 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     AND hd.id_hoa_don = :idHD
     ORDER BY GiaTriGiamThucTe DESC
     """, nativeQuery = true)
-    VoucherBHResponse giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
+    List<VoucherBHResponse> giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
 }
