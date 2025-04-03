@@ -56,7 +56,6 @@ public class VoucherController {
     public ResponseEntity<String> offVoucher(@RequestParam(value = "id") Integer id) {
         return ResponseEntity.ok(voucherService.offVoucher(id));
     }
-
     @GetMapping("/tim-kiem-voucher-by-date")
     public ResponseEntity<List<VoucherResponse>> timKiemVoucherByDate(
             @RequestParam(required = false) String startDate,
