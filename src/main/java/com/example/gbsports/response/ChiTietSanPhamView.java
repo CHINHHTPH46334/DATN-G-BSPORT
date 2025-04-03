@@ -32,4 +32,11 @@ public interface ChiTietSanPhamView {
      Integer getId_kich_thuoc();
      Integer getId_mau_sac();
      BigDecimal getGia_sau_giam();
+     Float getDanh_gia_trung_binh();
+     Integer getSo_luong_danh_gia();
+     BigDecimal getGiaGoc();
+     BigDecimal getGiaHienTai();
+     Float getGiaTriKhuyenMai();
+     String getKieuKhuyenMai();
+     String getHinh_anh();
 }
