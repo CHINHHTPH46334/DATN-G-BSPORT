@@ -1,5 +1,6 @@
 package com.example.gbsports.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,9 +27,11 @@ public class HoaDon {
     private KhachHang khachHang;
     @Column(name = "ngay_tao")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngay_tao;
     @Column(name = "ngay_sua")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngay_sua;
     private String trang_thai;
     @ManyToOne
@@ -45,4 +48,6 @@ public class HoaDon {
     private String phuong_thuc_nhan_hang;
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
+    private String loai_hoa_don;
+    private String ghi_chu;
 }

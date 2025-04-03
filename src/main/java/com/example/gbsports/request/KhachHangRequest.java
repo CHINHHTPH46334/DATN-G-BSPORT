@@ -12,7 +12,7 @@ import java.util.List;
 public class KhachHangRequest {
     private Integer idKhachHang;
 
-    //@NotBlank(message = "Mã khách hàng không được để trống")
+    @NotBlank(message = "Mã khách hàng không được để trống")
     private String maKhachHang;
 
     @NotBlank(message = "Tên khách hàng không được để trống")

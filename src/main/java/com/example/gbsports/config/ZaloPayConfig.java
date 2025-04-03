@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Data
 public class ZaloPayConfig {
-	@Value("2554")
+	@Value("${zalopay.app_id}")
 	public String APP_ID;
 
 	@Value("${zalopay.key1}")

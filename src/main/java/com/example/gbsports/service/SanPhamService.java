@@ -3,6 +3,7 @@ package com.example.gbsports.service;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.SanPhamRequest;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -253,6 +254,10 @@ public class SanPhamService {
 
     public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham){
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
+    }
+
+    public List<ChiTietSanPhamView> getAllCTSPKM() {
+        return sanPhamRepo.getAllCTSPKM();
     }
 
 }
