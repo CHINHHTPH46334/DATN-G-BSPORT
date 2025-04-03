@@ -297,7 +297,7 @@ public class BanHangController {
         hoaDon.setTrang_thai("Đã thanh toán");
         hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now());
         hoaDonRepo.save(hoaDon);
-
+        System.out.println(hoaDon);
         return ResponseEntity.ok("Thanh toán hóa đơn thành công");
     }
 
