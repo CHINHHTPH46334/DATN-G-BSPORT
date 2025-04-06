@@ -147,69 +147,14 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     BigDecimal sumDonGiaByHoaDonId(@Param("idHoaDon") Integer idHoaDon);
 
     @Query(value = """
-            SELECT\s
-                hdct.id_hoa_don_chi_tiet,
-                hdct.id_hoa_don,
-                ctsp.id_chi_tiet_san_pham,
-                sp.ma_san_pham,
-                sp.ten_san_pham,
-                ha.hinh_anh,
-                hdct.so_luong,
-                ctsp.so_luong AS so_luong_ton,
-                COALESCE(
-                    (
-                        SELECT\s
-                            CASE\s
-                                WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN
-                                    IIF(
-                                        ctsp.gia_ban - IIF(
-                                            (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)
-                                        ) < 0,
-                                        0,
-                                        ctsp.gia_ban - IIF(
-                                            (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)
-                                        )
-                                    )
-                                WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN
-                                    IIF(
-                                        ctsp.gia_ban - IIF(
-                                            COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_giam, 0)
-                                        ) < 0,
-                                        0,
-                                        ctsp.gia_ban - IIF(
-                                            COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                            COALESCE(km.gia_tri_giam, 0)
-                                        )
-                                    )
-                                ELSE ctsp.gia_ban
-                            END
-                        FROM chi_tiet_khuyen_mai ctkm
-                        FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-                        WHERE ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                    ),
-                    ctsp.gia_ban
-                ) AS gia_ban,
-                hdct.don_gia,
-                ms.ten_mau_sac,
-                kt.gia_tri
-            FROM hoa_don_chi_tiet hdct
-            FULL OUTER JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
-            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            FULL OUTER JOIN hinh_anh ha ON ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-            FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-            FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
-            WHERE hdct.id_hoa_don = :idHD AND (ha.anh_chinh = 1 OR ha.anh_chinh IS NULL)
-            """, nativeQuery = true)
+    select hdct.id_hoa_don_chi_tiet, ctsp.id_chi_tiet_san_pham, sp.ma_san_pham, sp.ten_san_pham, ha.hinh_anh, hdct.so_luong, ctsp.gia_ban, hdct.don_gia
+    from hoa_don_chi_tiet hdct
+    left join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+    left join san_pham sp on sp.id_san_pham = ctsp.id_san_pham
+    left join hinh_anh ha on ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+    where hdct.id_hoa_don = :idHD
+    """, nativeQuery = true)
     List<HoaDonChiTietResponse> getSPGH(Integer idHD);
-
     @Modifying
     @Transactional
     @Query(value = """
@@ -425,5 +370,4 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                   @RequestParam(value = "idCTSP") Integer idCTSP,
                   @RequestParam(value = "soLuong") Integer soLuong,
                   @RequestParam(value = "giaBan") Integer giaBan);
-
 }

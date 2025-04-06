@@ -3,8 +3,6 @@ package com.example.gbsports.service;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
-import com.example.gbsports.request.SanPhamRequest;
-import com.example.gbsports.response.HinhAnhView;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -63,25 +61,29 @@ public class ChiTietSanPhamService {
     }
 
     public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
-        int count = 0;
+        Integer count = 0;
         Integer slCu = 0;
         Integer id = 0;
         Integer count2 = 0;
         Date ngay_sua_lo = null;
+        System.out.println("IDRESPONE"+chiTietSanPhamRequest.getId_chi_tiet_san_pham()/2+"chua chia 2 " +chiTietSanPhamRequest.getId_chi_tiet_san_pham() );
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
             return ResponseEntity.badRequest().body(errors);
         } else {
-            for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
-                if (ctspCheckTrung.getId_chi_tiet_san_pham() == chiTietSanPhamRequest.getId_chi_tiet_san_pham()) {
-                    ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
-                    System.out.println("Ngày tạo này" + ngay_sua_lo);
+            System.out.println("Khong co loi validate");
+            for (ChiTietSanPhamView ctspCheckTrung : chiTietSanPhamRepo.listCTSP()) {
+                if (ctspCheckTrung.getId_chi_tiet_san_pham().equals(chiTietSanPhamRequest.getId_chi_tiet_san_pham())) {
                     count++;
+                    ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
+                    System.out.println("ngay tao nay" + ngay_sua_lo);
+                    System.out.println("count=" + count);
                 }
             }
             if (count > 0) {
                 //Sửa
+                System.out.println("Da vao trung id_chi_tiet_san_pham");
                 ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                 chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                 Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
@@ -92,7 +94,7 @@ public class ChiTietSanPhamService {
                 MauSac mauSac = mauSacOptional.orElse(new MauSac());
                 SanPham sanPham = sanPhamOptional.orElse(new SanPham());
                 BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
-                System.out.println("Đã vào đây");
+
 
                 chiTietSanPham.setMauSac(mauSac);
                 chiTietSanPham.setKichThuoc(kichThuoc);
@@ -103,7 +105,8 @@ public class ChiTietSanPhamService {
                 chiTietSanPhamRepo.save(chiTietSanPham);
                 return ResponseEntity.ok("Lưu thành công");
             } else {
-                //Trùng màu và kích thước và trùng sản phẩm ID ctsp khác nhau
+                //Trùng màu và kích thước và trùng sản phẩm, ID ctsp khác nhau
+                System.out.println("Khong trung id ctsp ");
                 for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
                     if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
                             && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
@@ -119,6 +122,7 @@ public class ChiTietSanPhamService {
                     ctspSua.setId_chi_tiet_san_pham(id);
                     ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
                     ctspSua.setNgay_sua(new Date());
+                    System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                     if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                         chiTietSanPhamRepo.save(ctspSua);
                         return ResponseEntity.ok("cập nhật số lượng");
@@ -132,7 +136,7 @@ public class ChiTietSanPhamService {
                     Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
                     Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
                     Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-
+                    System.out.println("Them moi");
                     KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
                     MauSac mauSac = mauSacOptional.orElse(new MauSac());
                     SanPham sanPham = sanPhamOptional.orElse(new SanPham());

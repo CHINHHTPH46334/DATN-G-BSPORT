@@ -10,13 +10,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(nativeQuery = true, value = """
             SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
@@ -140,28 +141,24 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             """, nativeQuery = true)
     List<TheoDoiDonHangResponse> findTrangThaiHistoryByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 
-    @Query(value = """
-            select id_hoa_don, ma_hoa_don, hd.id_nhan_vien, ten_nhan_vien, hd.id_khach_hang, ten_khach_hang, hd.trang_thai,\s
-            hd.id_voucher, ten_voucher, sdt_nguoi_nhan, dia_chi, hd.email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten,
-            tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu
-            from hoa_don hd\s
-            full outer join khach_hang kh on kh.id_khach_hang = hd.id_khach_hang
-            full outer join nhan_vien nv on nv.id_nhan_vien = hd.id_nhan_vien
-            full outer join voucher vc on vc.id_voucher = hd.id_voucher
-            where hd.trang_thai = N'Chưa thanh toán'
-            """, nativeQuery = true)
+    @Query(value = "select * from hoa_don where trang_thai like N'Chưa thanh toán'", nativeQuery = true)
     List<HoaDonResponse> getAllHoaDonCTT();
 
     @Query(value = """
-            SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
-            ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
-            ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
-            from hoa_don hd
-            LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-            LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
-            LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
-            where hd.id_hoa_don = :idHd
-""", nativeQuery = true)
+                        SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
+                        ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
+                        ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
+                        from hoa_don hd
+                        LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+                        LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
+                        LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
+                        where hd.id_hoa_don = :idHd
+            """, nativeQuery = true)
     List<HoaDonResponse> findHoaDonById(@Param("idHd") Integer idHd);
+
+    @Query(value = """
+                SELECT * FROM hoa_don
+            """, nativeQuery = true)
+    List<HoaDonResponse> getListHD();
 
 }
