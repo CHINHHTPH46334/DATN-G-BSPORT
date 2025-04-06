@@ -24,7 +24,7 @@ public interface HoaDonChiTietResponse {
     BigDecimal getDon_gia();
     String getTen_san_pham();
     String getMa_san_pham();
-    String getKich_thuoc();
+    String getGia_tri();
     String getTen_mau_sac();
     String getHinh_anh();
     Boolean getAnh_chinh();
@@ -37,6 +37,7 @@ public interface HoaDonChiTietResponse {
     String getMa_voucher();
     String getTrang_thai();
     BigDecimal getGia_ban();
-
+    Integer getId_chi_tiet_san_pham();
+    Integer getSo_luong_ton();
 
 }

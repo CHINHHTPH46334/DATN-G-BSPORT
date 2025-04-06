@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -17,8 +18,8 @@ public class KhuyenMaiRequest {
     private String maKhuyenMai;
     private String tenKhuyenMai;
     private String moTa;
-    private LocalDateTime ngayBatDau;
-    private LocalDateTime ngayHetHan;
+    private OffsetDateTime ngayBatDau;
+    private OffsetDateTime ngayHetHan;
     private BigDecimal giaTriGiam;
     private String kieuGiamGia;
     private String trangThai;
