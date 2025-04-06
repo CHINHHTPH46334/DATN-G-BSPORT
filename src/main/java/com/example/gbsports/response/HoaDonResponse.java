@@ -37,5 +37,7 @@ public interface HoaDonResponse {
     String getMa_san_pham();
     String getTen_san_pham();
     Integer getSo_luong();
-
+    BigDecimal getGia_ban();
+    String getTrangThaiDonHang();
+    Float getTiLeTrangThaiDonHang();
 }
