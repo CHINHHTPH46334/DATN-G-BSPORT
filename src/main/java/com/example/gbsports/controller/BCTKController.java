@@ -103,17 +103,19 @@ public class BCTKController {
 
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/tiLeTrangThaiDonHang")
     public ResponseEntity<List<HoaDonResponse>> getOrderStatusRatio() {
         List<HoaDonResponse> ratios = bctkRepo.tiLeTrangThaiHoaDon();
         return ResponseEntity.ok(ratios);
     }
+
+    //    @GetMapping("/topSPBanChay")
+//    public List<HoaDonResponse> topSanPhamBanChay(){
+//        return bctkRepo.topSanPhamBanChay();
+//    }
     @GetMapping("/topSPBanChay")
-    public List<HoaDonResponse> topSanPhamBanChay(){
-        return bctkRepo.topSanPhamBanChay();
-    }
-    @GetMapping("/topSPBanChay1")
-    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay1(
+    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -124,13 +126,25 @@ public class BCTKController {
         LocalDate end = dates.get("endDate");
 
         // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
-        List<HoaDonResponse> topSanPhamBanChay1 = bctkRepo.topSanPhamBanChay1(start, end);
+        List<HoaDonResponse> topSanPhamBanChay = bctkRepo.topSanPhamBanChay(start, end);
 
-        return ResponseEntity.ok(topSanPhamBanChay1);
+        return ResponseEntity.ok(topSanPhamBanChay);
     }
 
     @GetMapping("/topSPBanCham")
-    public List<HoaDonResponse> topSanPhamBanCham() {
-        return bctkRepo.topSanPhamBanCham();
+    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanCham(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Lấy khoảng thời gian từ getKhoangNgay
+        Map<String, LocalDate> dates = getKhoangNgay(type, startDate, endDate);
+        LocalDate start = dates.get("startDate");
+        LocalDate end = dates.get("endDate");
+
+        // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
+        List<HoaDonResponse> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
+
+        return ResponseEntity.ok(topSanPhamBanCham);
     }
 }
