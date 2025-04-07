@@ -12,7 +12,7 @@ import java.util.List;
 public class KhachHangRequest {
     private Integer idKhachHang;
 
-    @NotBlank(message = "Mã khách hàng không được để trống")
+    // Không bắt buộc vì controller sẽ sinh mã tự động nếu trống
     private String maKhachHang;
 
     @NotBlank(message = "Tên khách hàng không được để trống")
@@ -28,7 +28,7 @@ public class KhachHangRequest {
 
     @NotNull(message = "Ngày sinh không được để trống")
     @PastOrPresent(message = "Ngày sinh không được là ngày trong tương lai")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) // Chấp nhận định dạng ISO từ frontend
     private Date ngaySinh;
 
     @NotBlank(message = "Email không được để trống")
@@ -38,7 +38,7 @@ public class KhachHangRequest {
     @NotBlank(message = "Trạng thái không được để trống")
     private String trangThai;
 
-    // Loại bỏ @NotBlank để phù hợp với logic cập nhật
+    // Bắt buộc khi thêm mới, nhưng không bắt buộc khi cập nhật
     @Size(min = 6, max = 20, message = "Mật khẩu phải từ 6 đến 20 ký tự")
     private String matKhau;
 
@@ -57,5 +57,7 @@ public class KhachHangRequest {
 
         @NotBlank(message = "Tỉnh/Thành phố không được để trống")
         private String tinhThanhPho;
+
+        private Boolean diaChiMacDinh; // Thêm trường này để khớp với logic trong controller
     }
 }

@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaiKhoanRepo extends JpaRepository<TaiKhoan, Integer> {
+    @Query("SELECT t FROM TaiKhoan t WHERE t.ten_dang_nhap = :tenDangNhap")
+    Optional<TaiKhoan> findByTen_dang_nhap(String tenDangNhap);
+
     @Query("SELECT tk FROM TaiKhoan tk WHERE tk.ten_dang_nhap = :tenDangNhap")
     List<TaiKhoan> findAllByTenDangNhap(String tenDangNhap);
 
