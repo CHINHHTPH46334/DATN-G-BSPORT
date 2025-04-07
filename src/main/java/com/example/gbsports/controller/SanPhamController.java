@@ -142,4 +142,8 @@ public class SanPhamController {
     public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham")String tenSanPham){
         return sanPhamService.getSanPhamTheoTen(tenSanPham);
     }
+    @GetMapping("/getAllCTSPKM")
+    public List<ChiTietSanPhamView> getAllCTSPKM() {
+        return sanPhamService.getAllCTSPKM();
+    }
 }

@@ -244,25 +244,62 @@ public class NhanVienController {
         nhanVien.setTrangThai("Đang hoạt động");
         nhanVien.setTaiKhoan(taiKhoan);
         nhanVienRepo.save(nhanVien);
-        sendEmail(nhanVien.getEmail(), nhanVien.getMaNhanVien(), generatedPassword, nhanVien.getEmail());
+        String tenDN = nhanVien.getEmail().split("@")[0];
+        String content =  "<h1>Chào mừng bạn đến với hệ thống G&B SPORTS</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h3>Chúc mừng bạn đã được tạo tài khoản nhân viên!</h3>" +
+                "<p>Dưới đây là thông tin đăng nhập của bạn:</p>" +
+                "<div class='info-box'>" +
+                "<p><strong>Mã Nhân Viên:</strong> " + nhanVien.getMaNhanVien() + "</p>" +
+                "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
+                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + taiKhoan.getMat_khau() + "</p>" +
+                "</div>" +
+                "<p><strong>Vui lòng đổi mật khẩu sau khi đăng nhập.</strong></p>";
+
+        sendEmail(nhanVien.getEmail(),content);
         return "Thêm thành công";
     }
 
-    private void sendEmail(String toEmail, String maNhanVien, String password, String email) {
+    private void sendEmail(String toEmail, String content) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            String tenDN = toEmail.split("@")[0];
+
             helper.setTo(toEmail);
             helper.setSubject("Thông tin đăng nhập hệ thống của bạn");
-            String body = "Chúc mừng bạn đã được tạo tài khoản trên hệ thống của chúng tôi! Dưới đây là thông tin đăng nhập của bạn <br><br>"
-                    + "<b> Mã Nhân Viên: " + maNhanVien + "</b><br>"
-                    + "<b> Tên tài khoản: " + tenDN + "</b><br>"
-                    + "<b> Mật khẩu đăng nhập tạm thời: " + password + "</b><br><br>"
-                    + "<b>Vui lòng đổi mật khẩu sau khi đăng nhập.<b>"
-                    + "<p>Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ bộ phận hỗ trợ.</p>"
-                    + "<p>Trân trọng,</p>"
-                    + "<p><b>[G&B Sport]</b></p>";
+            String body = "<!DOCTYPE html>" +
+                    "<html lang='vi'>" +
+                    "<head>" +
+                    "<meta charset='UTF-8'>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: rgb(217, 27, 27); color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".header h1 { margin: 0; font-size: 24px; color: white; }" +
+                    ".content { padding: 20px; }" +
+                    ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                    ".info-box { background-color: rgb(255, 239, 239); border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box p { margin: 5px 0; }" +
+                    ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                    ".footer a { color: rgb(232, 78, 78); text-decoration: none; }" +
+                    ".footer a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    content +
+                    "<p>Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ bộ phận hỗ trợ.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
             helper.setText(body, true);
 
             mailSender.send(message);
@@ -288,7 +325,17 @@ public class NhanVienController {
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
-                sendEmail(nhanVienRequest.getEmail(), nhanVienRequest.getMaNhanVien(), generatedPassword, nhanVienRequest.getEmail());
+                String tenDN = nhanVienRequest.getEmail().split("@")[0];
+                String content = "<h1>Cập nhật tài khoản thành công</h1>" +
+                        "</div>" +
+                        "<div class='content'>" +
+                        "<h3>Xin chào!</h3>" +
+                        "<p>Thông tin tài khoản của bạn trên hệ thống G&B SPORTS đã được cập nhật thành công.</p>" +
+                        "<div class='info-box'>" +
+                        "<p><strong>Mã nhân viên:</strong> " + nhanVienRequest.getMaNhanVien() + "</p>" +
+                        "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
+                        "</div>";
+                sendEmail(nhanVienRequest.getEmail(),content);
                 NhanVien nhanVien = new NhanVien();
                 BeanUtils.copyProperties(nhanVienRequest, nhanVien);
                 nhanVien.setIdNhanVien(nhanVienRequest.getIdNhanVien());
