@@ -1,13 +1,7 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.ChiTietSanPham;
-import com.example.gbsports.entity.HoaDon;
-import com.example.gbsports.entity.HoaDonChiTiet;
-import com.example.gbsports.entity.Voucher;
-import com.example.gbsports.repository.ChiTietSanPhamRepo;
-import com.example.gbsports.repository.HoaDonChiTietRepo;
-import com.example.gbsports.repository.HoaDonRepo;
-import com.example.gbsports.repository.VoucherRepository;
+import com.example.gbsports.entity.*;
+import com.example.gbsports.repository.*;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
@@ -43,6 +37,8 @@ public class HoaDonController {
     private ChiTietSanPhamRepo chiTietSanPhamRepo;
     @Autowired
     private VoucherRepository voucherRepo;
+    @Autowired
+    private TheoDoiDonHangRepo theoDoiDonHangRepo;
 
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
@@ -66,6 +62,11 @@ public class HoaDonController {
             response.put("message", "Không tìm thấy hóa đơn!");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+    }
+
+    @GetMapping("/all-hoa-don")
+    public List<HoaDonResponse> getListHD() {
+        return hoaDonRepo.getListHD();
     }
 
     @GetMapping("/danh_sach_hoa_don")
@@ -372,7 +373,16 @@ public class HoaDonController {
             hoaDonRepo.save(hoaDon);
             // Insert trạng thái "Đã cập nhật"
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            Optional<TheoDoiDonHang> tddhOpt = theoDoiDonHangRepo.findByMaHDAndTrangThai(maHoaDon);
+            if (tddhOpt.isPresent()){
+                // Nếu trạng thái đã tồn tại, chỉ cập nhật ngày chuyển
+                TheoDoiDonHang theoDoiDonHang = tddhOpt.get();
+                theoDoiDonHang.setNgay_chuyen(ngayChuyen);
+                theoDoiDonHangRepo.save(theoDoiDonHang); // Cập nhật bản ghi hiện có
+            } else {
+                // Nếu chưa có, insert mới
+                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            }
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -413,7 +423,16 @@ public class HoaDonController {
             hoaDonRepo.save(hoaDon);
             // Insert trạng thái "Đã cập nhật"
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            Optional<TheoDoiDonHang> tddhOpt = theoDoiDonHangRepo.findByMaHDAndTrangThai(maHoaDon);
+            if (tddhOpt.isPresent()){
+                // Nếu trạng thái đã tồn tại, chỉ cập nhật ngày chuyển
+                TheoDoiDonHang theoDoiDonHang = tddhOpt.get();
+                theoDoiDonHang.setNgay_chuyen(ngayChuyen);
+                theoDoiDonHangRepo.save(theoDoiDonHang); // Cập nhật bản ghi hiện có
+            } else {
+                // Nếu chưa có, insert mới
+                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            }
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -487,7 +506,16 @@ public class HoaDonController {
                 hoaDonChiTietRepo.addSLGH_HD(idCTSP, idHoaDon, soLuongMua);
                 // Insert trạng thái "Đã cập nhật"
                 LocalDateTime ngayChuyen = LocalDateTime.now();
-                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+                Optional<TheoDoiDonHang> tddhOpt = theoDoiDonHangRepo.findByMaHDAndTrangThai(maHoaDon);
+                if (tddhOpt.isPresent()){
+                    // Nếu trạng thái đã tồn tại, chỉ cập nhật ngày chuyển
+                    TheoDoiDonHang theoDoiDonHang = tddhOpt.get();
+                    theoDoiDonHang.setNgay_chuyen(ngayChuyen);
+                    theoDoiDonHangRepo.save(theoDoiDonHang); // Cập nhật bản ghi hiện có
+                } else {
+                    // Nếu chưa có, insert mới
+                    hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+                }
             }
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -516,7 +544,16 @@ public class HoaDonController {
             hoaDonChiTietRepo.removeSPGHinHDCT(idCTSP, idHoaDon, soLuong);
             // Insert trạng thái "Đã cập nhật"
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            Optional<TheoDoiDonHang> tddhOpt = theoDoiDonHangRepo.findByMaHDAndTrangThai(maHoaDon);
+            if (tddhOpt.isPresent()){
+                // Nếu trạng thái đã tồn tại, chỉ cập nhật ngày chuyển
+                TheoDoiDonHang theoDoiDonHang = tddhOpt.get();
+                theoDoiDonHang.setNgay_chuyen(ngayChuyen);
+                theoDoiDonHangRepo.save(theoDoiDonHang); // Cập nhật bản ghi hiện có
+            } else {
+                // Nếu chưa có, insert mới
+                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            }
             return ResponseEntity.ok("Xóa sản phẩm thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -539,7 +576,16 @@ public class HoaDonController {
             hoaDonChiTietRepo.updateQuantity(idCTSP, idHoaDon, quantityChange);
             // Insert trạng thái "Đã cập nhật"
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            Optional<TheoDoiDonHang> tddhOpt = theoDoiDonHangRepo.findByMaHDAndTrangThai(maHoaDon);
+            if (tddhOpt.isPresent()){
+                // Nếu trạng thái đã tồn tại, chỉ cập nhật ngày chuyển
+                TheoDoiDonHang theoDoiDonHang = tddhOpt.get();
+                theoDoiDonHang.setNgay_chuyen(ngayChuyen);
+                theoDoiDonHangRepo.save(theoDoiDonHang); // Cập nhật bản ghi hiện có
+            } else {
+                // Nếu chưa có, insert mới
+                hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen);
+            }
             return ResponseEntity.ok("Cập nhật số lượng thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

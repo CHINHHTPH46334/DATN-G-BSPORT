@@ -84,6 +84,11 @@ public class BanHangController {
         return hoaDonRepo.getAllHoaDonCTT();
     }
 
+    @GetMapping("/getHoaDonByIdHoaDon")
+    public HoaDon getHoaDonByIdHoaDon(@RequestParam("idHD") Integer idHD) {
+        return hoaDonRepo.findById(idHD).get();
+    }
+
     @GetMapping("/createHoaDon")
     public ResponseEntity<?> createHoaDon(@RequestParam(value = "idNhanVien") Integer idNhanVien) {
         try {
@@ -268,7 +273,7 @@ public class BanHangController {
             hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
 
             // Cập nhật voucher (nếu có)
-            capNhatVoucher(hoaDon);
+            capNhatVoucher(idHD);
 
             return ResponseEntity.ok("Thêm sản phẩm mới vào hóa đơn thành công");
         } catch (Exception e) {
@@ -288,7 +293,7 @@ public class BanHangController {
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
             hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
 
-            capNhatVoucher(hoaDon);
+            capNhatVoucher(idHD);
             return ResponseEntity.ok("Thêm sản phẩm vào hóa đơn thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -316,7 +321,7 @@ public class BanHangController {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
 
-            capNhatVoucher(hoaDon);
+            capNhatVoucher(idHD);
 
             return ResponseEntity.ok("Giảm sản phẩm trong hóa đơn thành công");
         } catch (Exception e) {
@@ -341,7 +346,7 @@ public class BanHangController {
 
             hoaDonChiTietRepo.xoaSPKhoiHD(idHoaDon, idChiTietSanPham);
 
-            capNhatVoucher(hoaDon);
+            capNhatVoucher(idHoaDon);
 
             hoaDon = hoaDonRepo.findById(idHoaDon).orElseThrow(); // Cập nhật lại hóa đơn sau thay đổi
             return ResponseEntity.ok(Map.of("success", true, "data", hoaDon));
@@ -351,12 +356,18 @@ public class BanHangController {
         }
     }
 
-    private void capNhatVoucher(HoaDon hoaDon) {
-        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(hoaDon.getId_hoa_don());
+    private void capNhatVoucher(Integer idHD) {
+        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
         if (!voucherBHResponse.isEmpty()) {
             Voucher voucher = voucherRepository.findById(voucherBHResponse.get(0).getId_voucher())
                     .orElseThrow(() -> new RuntimeException("Voucher không tồn tại!"));
+            HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+            hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
             hoaDon.setVoucher(voucher);
+            hoaDonRepo.save(hoaDon);
+        } else {
+            HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+            hoaDon.setVoucher(null);
             hoaDonRepo.save(hoaDon);
         }
     }

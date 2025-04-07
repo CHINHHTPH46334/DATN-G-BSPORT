@@ -28,8 +28,15 @@ public class DiaChiKhachHang {
     @Column(name = "tinh_thanh_pho")
     private String tinhThanhPho;
 
+    @Column(name = "dia_chi_mac_dinh")
+    private Boolean diaChiMacDinh;
+
     // Phương thức để lấy địa chỉ đầy đủ
     public String getDiaChiKhachHang() {
-        return String.format("%s, %s, %s, %s", soNha, xaPhuong, quanHuyen, tinhThanhPho);
+        String soNhaSafe = soNha != null ? soNha : "";
+        String xaPhuongSafe = xaPhuong != null ? xaPhuong : "";
+        String quanHuyenSafe = quanHuyen != null ? quanHuyen : "";
+        String tinhThanhPhoSafe = tinhThanhPho != null ? tinhThanhPho : "";
+        return String.format("%s, %s, %s, %s", soNhaSafe, xaPhuongSafe, quanHuyenSafe, tinhThanhPhoSafe);
     }
 }

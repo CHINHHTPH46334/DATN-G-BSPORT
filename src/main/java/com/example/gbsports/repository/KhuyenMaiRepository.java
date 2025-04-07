@@ -14,29 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
-
-//    boolean existsByMaKhuyenMai(String maKhuyenMai);
-//
-//    Page<KhuyenMai> findAll(Pageable pageable);
-//
-//    @Query("SELECT km FROM KhuyenMai km WHERE km.maKhuyenMai LIKE %:keyword% OR km.tenKhuyenMai LIKE %:keyword%")
-//    Page<KhuyenMai> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
-//
-//    Page<KhuyenMai> findByTrangThai(String trangThai, Pageable pageable);
-//
-//    @Query("SELECT km FROM KhuyenMai km WHERE (:start IS NULL OR km.ngayBatDau >= :start) AND (:end IS NULL OR km.ngayHetHan <= :end)")
-//    Page<KhuyenMai> searchByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
-//
-//    @Query("SELECT km FROM KhuyenMai km WHERE km.giaTriToiDa BETWEEN :minPrice AND :maxPrice")
-//    Page<KhuyenMai> searchByGiaTriToiDaRange(@Param("minPrice") Integer minPrice, @Param("maxPrice") Integer maxPrice, Pageable pageable);
-//
-//    @Query("SELECT MIN(km.giaTriToiDa) FROM KhuyenMai km")
-//    Integer findMinGiaTriToiDa();
-//
-//    @Query("SELECT MAX(km.giaTriToiDa) FROM KhuyenMai km")
-//    Integer findMaxGiaTriToiDa();
-//    Optional<KhuyenMai> findByMaKhuyenMai(String maKhuyenMai);
-boolean existsByMaKhuyenMai(String maKhuyenMai);
+    boolean existsByMaKhuyenMai(String maKhuyenMai);
 
     Optional<KhuyenMai> findByMaKhuyenMai(String maKhuyenMai);
 

@@ -44,7 +44,7 @@ public class NhanVien {
     @Column(name = "trang_thai")
     private String trangThai;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "id_tai_khoan")
     private TaiKhoan taiKhoan;
 
