@@ -68,6 +68,11 @@ public class HoaDonController {
         }
     }
 
+    @GetMapping("/all-hoa-don")
+    public List<HoaDonResponse> getListHD() {
+        return hoaDonRepo.getListHD();
+    }
+
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,

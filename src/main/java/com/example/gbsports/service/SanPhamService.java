@@ -46,10 +46,15 @@ public class SanPhamService {
     public Page<SanPhamView> getAllPhanTrang(Pageable pageable) {
         return sanPhamRepo.getAllSanPhamPhanTrang(pageable);
     }
-    public SanPham detailSP(@RequestParam("id") Integer id){
+
+    public SanPham detailSP(@RequestParam("id") Integer id) {
         return sanPhamRepo.findById(id).get();
     }
-    public ArrayList<SanPhamView> getAllSPNgaySua(){return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();}
+
+    public ArrayList<SanPhamView> getAllSPNgaySua() {
+        return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
+    }
+
     public ResponseEntity<?> saveSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult result) {
         Map<String, Object> response = new HashMap<>();
 
@@ -190,9 +195,13 @@ public class SanPhamService {
         for (SanPham sp : sanPhamRepo.findAll()) {
             if (sp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT)) ||
                     sp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT)) ||
-                    sp.getChatLieu().getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT)) ||
-                    sp.getDanhMuc().getTen_danh_muc().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT)) ||
-                    sp.getThuongHieu().getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT))) {
+                    sp.getChatLieu().getTen_chat_lieu().toLowerCase(Locale.ROOT)
+                            .contains(search.toLowerCase(Locale.ROOT))
+                    ||
+                    sp.getDanhMuc().getTen_danh_muc().toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT))
+                    ||
+                    sp.getThuongHieu().getTen_thuong_hieu().toLowerCase(Locale.ROOT)
+                            .contains(search.toLowerCase(Locale.ROOT))) {
                 listTam.add(sp);
             }
             Integer tongsoluong = tongSoLuongSanPham(sp.getId_san_pham());
@@ -200,11 +209,12 @@ public class SanPhamService {
         }
         return listTam;
     }
-    public Integer tongSoLuongSanPham(Integer idSanPham){
+
+    public Integer tongSoLuongSanPham(Integer idSanPham) {
         Integer soLuong = 0;
-        for (ChiTietSanPham ctsp: chiTietSanPhamRepo.findAll()) {
-            if (ctsp.getSanPham().getId_san_pham()==idSanPham){
-                soLuong+=ctsp.getSo_luong();
+        for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+            if (ctsp.getSanPham().getId_san_pham() == idSanPham) {
+                soLuong += ctsp.getSo_luong();
             }
         }
         return soLuong;
@@ -217,14 +227,17 @@ public class SanPhamService {
     public Page<SanPhamView> sapXep(Pageable pageable) {
         return sanPhamRepo.getAllSanPhamPhanTrang(pageable);
     }
-    public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc, ChatLieu chatLieu){
+
+    public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc,
+            ChatLieu chatLieu) {
         Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
-                .filter(sanPham -> tenSanPham.equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
+                .filter(sanPham -> tenSanPham
+                        .equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
                 .findFirst();
 
         if (exitingSanPham.isPresent()) {
             return exitingSanPham.get();
-        }else {
+        } else {
             int maxNumber = sanPhamRepo.findAll().stream()
                     .map(SanPham::getMa_san_pham)
                     .filter(ma -> ma.startsWith("SP0"))
@@ -239,11 +252,11 @@ public class SanPhamService {
             newSanPham.setMa_san_pham("SP0" + (maxNumber + 1));
             newSanPham.setTen_san_pham(tenSanPham);
             newSanPham.setTrang_thai("Hoạt động");
-//            newSanPham.setGioi_tinh(gioiTinh);
+            // newSanPham.setGioi_tinh(gioiTinh);
             newSanPham.setThuongHieu(thuongHieu);
             newSanPham.setDanhMuc(danhMuc);
             newSanPham.setChatLieu(chatLieu);
-            //Còn có thể thêm hình ảnh và mô tả
+            // Còn có thể thêm hình ảnh và mô tả
             sanPhamRepo.save(newSanPham);
             return newSanPham;
         }
@@ -252,7 +265,7 @@ public class SanPhamService {
 
     }
 
-    public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham){
+    public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
     }
 
