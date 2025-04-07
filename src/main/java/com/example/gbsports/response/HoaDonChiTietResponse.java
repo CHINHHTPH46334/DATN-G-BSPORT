@@ -19,8 +19,12 @@ public interface HoaDonChiTietResponse {
     BigDecimal getTong_tien_sau_giam();
     String getHinh_thuc_thanh_toan();
     String getPhuong_thuc_nhan_hang();
+
+    // Chi tiết sản phẩm
     Integer getId_hoa_don_chi_tiet();
+    Integer getId_chi_tiet_san_pham();
     Integer getSo_luong();
+    Integer getSo_luong_con_lai();
     BigDecimal getDon_gia();
     String getTen_san_pham();
     String getMa_san_pham();
@@ -37,7 +41,10 @@ public interface HoaDonChiTietResponse {
     String getMa_voucher();
     String getTrang_thai();
     BigDecimal getGia_ban();
-    Integer getId_chi_tiet_san_pham();
     Integer getSo_luong_ton();
+    String getLoai_hoa_don();
+    String getTrang_thai_thanh_toan();
+    String getGhi_chu();
+
 
 }

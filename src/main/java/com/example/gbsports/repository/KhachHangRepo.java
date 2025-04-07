@@ -38,4 +38,7 @@ public interface KhachHangRepo extends JpaRepository<KhachHang, Integer> {
     // Thêm phương thức để thay thế findAll với sắp xếp
     @Query(value = "SELECT * FROM khach_hang ORDER BY id_khach_hang DESC", nativeQuery = true)
     Page<KhachHang> findAllSortedByIdDesc(Pageable pageable);
+
+    @Query("SELECT kh FROM KhachHang kh WHERE kh.taiKhoan.id_tai_khoan = :idTaiKhoan")
+    Optional<KhachHang> findByTaiKhoanIdTaiKhoan(Integer idTaiKhoan);
 }
