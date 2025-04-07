@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailService {
@@ -38,7 +40,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("Email sent successfully to: {}", to);
         } catch (Exception e) {
-            logger.error("Failed to send email to {}: {}", to, e.getMessage(), e);
+            logger.error("Failed to send email to {}. Error: {}", to, e.getMessage(), e);
             throw new MessagingException("Failed to send email: " + e.getMessage(), e);
         }
     }
