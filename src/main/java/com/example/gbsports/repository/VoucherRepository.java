@@ -63,7 +63,8 @@ public interface VoucherRepository extends JpaRepository<Voucher,Integer> {
                     ELSE 0
                 END
             ELSE 0
-        END AS GiaTriGiamThucTe
+        END AS GiaTriGiamThucTe,
+        v.ten_voucher
     FROM hoa_don hd
     CROSS JOIN voucher v
     WHERE v.trang_thai = N'Đang diễn ra'

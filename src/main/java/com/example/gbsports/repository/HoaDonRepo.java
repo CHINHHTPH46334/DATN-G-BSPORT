@@ -143,7 +143,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(value = """
             select id_hoa_don, ma_hoa_don, hd.id_nhan_vien, ten_nhan_vien, hd.id_khach_hang, ten_khach_hang, hd.trang_thai,\s
             hd.id_voucher, ten_voucher, sdt_nguoi_nhan, dia_chi, hd.email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten,
-            tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu
+            tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu, hd.ngay_tao
             from hoa_don hd\s
             full outer join khach_hang kh on kh.id_khach_hang = hd.id_khach_hang
             full outer join nhan_vien nv on nv.id_nhan_vien = hd.id_nhan_vien

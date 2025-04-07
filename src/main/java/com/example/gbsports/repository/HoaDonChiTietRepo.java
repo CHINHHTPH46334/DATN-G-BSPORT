@@ -213,93 +213,84 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Modifying
     @Transactional
     @Query(value = """
-            BEGIN TRANSACTION;
-                
-            -- Khai báo các biến
-            DECLARE @SOLUONG INT = :soLuong; -- Số lượng sản phẩm cần thêm
-            DECLARE @IDCTSP INT = :idCTSP;  -- ID chi tiết sản phẩm
-            DECLARE @IDHD INT = :idHD;   -- ID hóa đơn
-                
-            -- Khai báo biến để tìm voucher tốt nhất và tổng tiền trước giảm
-            DECLARE @TongTienTruocGiam DECIMAL(12,2);
-            DECLARE @GiaTriGiamVoucher DECIMAL(12,2); -- Biến để lưu giá trị giảm từ voucher
-                
-            SELECT @GiaTriGiamVoucher = (
-            	select vc.gia_tri_giam from hoa_don hd
-            	full outer join voucher vc on vc.id_voucher = hd.id_voucher
-            	where hd.id_hoa_don = @IDHD
-            )
-                
-                
-            -- Kiểm tra xem hóa đơn có tồn tại không
-            IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
-            BEGIN
-                PRINT N'Hóa đơn không tồn tại!';
-                ROLLBACK;
-                RETURN;
-            END;
-                
-            -- Tính giá sau khi áp dụng khuyến mãi cho sản phẩm
-            DECLARE @GiaSauGiam DECIMAL(12,2);
-            SELECT @GiaSauGiam = :giaBan
-                
-            -- Kiểm tra xem sản phẩm đã tồn tại trong chi tiết hóa đơn chưa
-            IF EXISTS (
-                SELECT 1\s
-                FROM hoa_don_chi_tiet\s
-                WHERE id_hoa_don = @IDHD\s
-                AND id_chi_tiet_san_pham = @IDCTSP
-            )
-            BEGIN
-                -- Nếu đã tồn tại, cập nhật số lượng và đơn giá
-                UPDATE hoa_don_chi_tiet
-                SET
-                    so_luong = so_luong + @SOLUONG,
-                    don_gia = (so_luong + @SOLUONG) * @GiaSauGiam
-                WHERE id_chi_tiet_san_pham = @IDCTSP
-                AND id_hoa_don = @IDHD;
-            END
-            ELSE
-            BEGIN
-                -- Nếu chưa tồn tại, thêm mới chi tiết sản phẩm vào hóa đơn
-                INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
-                VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GiaSauGiam);
-            END;
-                
-            -- Cập nhật số lượng tồn kho
-            UPDATE chi_tiet_san_pham
-            SET so_luong = so_luong - @SOLUONG
-            WHERE id_chi_tiet_san_pham = @IDCTSP;
-                
-            -- Tính tổng tiền trước giảm sau khi thêm sản phẩm
-            SELECT @TongTienTruocGiam = hd.phi_van_chuyen + ISNULL(SUM(hdct.don_gia), 0)
-            FROM hoa_don hd
-            LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
-            WHERE hd.id_hoa_don = @IDHD
-            GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
-                
-            -- Cập nhật tổng tiền hóa đơn với áp dụng voucher
-            UPDATE hoa_don
-            SET
-                tong_tien_truoc_giam = @TongTienTruocGiam,
-                tong_tien_sau_giam = @TongTienTruocGiam - ISNULL(@GiaTriGiamVoucher, 0)
-            WHERE id_hoa_don = @IDHD;
-                
-            -- Kiểm tra kết quả
-            SELECT\s
-                hd.id_hoa_don,\s
-                hd.id_voucher,\s
-                hd.tong_tien_truoc_giam,\s
-                hd.tong_tien_sau_giam\s
-            FROM hoa_don hd\s
-            WHERE hd.id_hoa_don = @IDHD;
-                
-            COMMIT;
-            """, nativeQuery = true)
-    void addSPHD(@RequestParam(value = "idHoaDon") Integer idHD,
-                 @RequestParam(value = "idCTSP") Integer idCTSP,
-                 @RequestParam(value = "soLuong") Integer soLuong,
-                 @RequestParam(value = "giaBan") Integer giaBan);
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        DECLARE @SOLUONG INT = :soLuong;
+        DECLARE @IDCTSP INT = :idCTSP;
+        DECLARE @IDHD INT = :idHD;
+        DECLARE @TongTienTruocGiam DECIMAL(12,2);
+        DECLARE @GiaTriGiamVoucher DECIMAL(12,2);
+        DECLARE @SoLuongTon INT;
+
+        -- Kiểm tra hóa đơn tồn tại
+        IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
+            THROW 50001, N'Hóa đơn không tồn tại!', 1;
+
+        -- Kiểm tra số lượng tồn kho
+        SELECT @SoLuongTon = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+        IF @SoLuongTon IS NULL
+            THROW 50002, N'Sản phẩm không tồn tại!', 1;
+        IF @SoLuongTon < @SOLUONG
+            THROW 50003, N'Số lượng tồn kho không đủ!', 1;
+
+        -- Lấy giá trị giảm từ voucher
+        SELECT @GiaTriGiamVoucher = ISNULL(vc.gia_tri_giam, 0)
+        FROM hoa_don hd
+        LEFT JOIN voucher vc ON vc.id_voucher = hd.id_voucher
+        WHERE hd.id_hoa_don = @IDHD;
+
+        DECLARE @GiaSauGiam DECIMAL(12,2) = :giaBan;
+
+        -- Cập nhật hoặc thêm mới chi tiết hóa đơn
+        IF EXISTS (
+            SELECT 1
+            FROM hoa_don_chi_tiet
+            WHERE id_hoa_don = @IDHD
+            AND id_chi_tiet_san_pham = @IDCTSP
+        )
+        BEGIN
+            UPDATE hoa_don_chi_tiet
+            SET so_luong = so_luong + @SOLUONG,
+                don_gia = (so_luong + @SOLUONG) * @GiaSauGiam
+            WHERE id_chi_tiet_san_pham = @IDCTSP
+            AND id_hoa_don = @IDHD;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
+            VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GiaSauGiam);
+        END;
+
+        -- Cập nhật số lượng tồn kho
+        UPDATE chi_tiet_san_pham
+        SET so_luong = so_luong - @SOLUONG
+        WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+        -- Tính tổng tiền trước giảm
+        SELECT @TongTienTruocGiam = hd.phi_van_chuyen + ISNULL(SUM(hdct.don_gia), 0)
+        FROM hoa_don hd
+        LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
+        WHERE hd.id_hoa_don = @IDHD
+        GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
+
+        -- Cập nhật tổng tiền hóa đơn
+        UPDATE hoa_don
+        SET tong_tien_truoc_giam = @TongTienTruocGiam,
+            tong_tien_sau_giam = @TongTienTruocGiam - @GiaTriGiamVoucher
+        WHERE id_hoa_don = @IDHD;
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        THROW;
+    END CATCH;
+    """, nativeQuery = true)
+    void addSPHD(@RequestParam("idHoaDon") Integer idHD,
+                 @RequestParam("idCTSP") Integer idCTSP,
+                 @RequestParam("soLuong") Integer soLuong,
+                 @RequestParam("giaBan") Integer giaBan);
 
     @Modifying
     @Transactional
@@ -426,4 +417,73 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                   @RequestParam(value = "soLuong") Integer soLuong,
                   @RequestParam(value = "giaBan") Integer giaBan);
 
+    @Modifying
+    @Transactional
+    @Query(value = """
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        DECLARE @IDCTSP INT = :idCTSP;
+        DECLARE @IDHD INT = :idHD;
+        DECLARE @TongTienTruocGiam DECIMAL(18,2);
+        DECLARE @PHIVANCHUYEN DECIMAL(18,2);
+        DECLARE @SoLuongXoa INT;
+
+        IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
+            THROW 50001, N'Hóa đơn không tồn tại!', 1;
+
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM hoa_don_chi_tiet 
+            WHERE id_hoa_don = @IDHD 
+            AND id_chi_tiet_san_pham = @IDCTSP
+        )
+            THROW 50002, N'Sản phẩm không tồn tại trong hóa đơn để xóa!', 1;
+
+        SELECT @SoLuongXoa = so_luong
+        FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD
+        AND id_chi_tiet_san_pham = @IDCTSP;
+
+        DELETE FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD
+        AND id_chi_tiet_san_pham = @IDCTSP;
+
+        SELECT @PHIVANCHUYEN = phi_van_chuyen 
+        FROM hoa_don 
+        WHERE id_hoa_don = @IDHD;
+
+        SELECT @TongTienTruocGiam = @PHIVANCHUYEN + ISNULL(SUM(don_gia), 0)
+        FROM hoa_don hd
+        LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
+        WHERE hd.id_hoa_don = @IDHD
+        GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
+
+        UPDATE hoa_don
+        SET tong_tien_truoc_giam = @TongTienTruocGiam,
+            tong_tien_sau_giam = @TongTienTruocGiam
+        WHERE id_hoa_don = @IDHD;
+
+        UPDATE chi_tiet_san_pham
+        SET so_luong = so_luong + @SoLuongXoa
+        WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK;
+        THROW;
+    END CATCH;
+    """, nativeQuery = true)
+    void xoaSPKhoiHD(@Param("idHD") Integer idHoaDon, @Param("idCTSP") Integer idChiTietSanPham);
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+            delete hoa_don_chi_tiet
+            where id_hoa_don = :idHD
+            """, nativeQuery = true)
+    void deleteHDCTById(@RequestParam("idHoaDon") Integer idHD);
+
+    @Query("SELECT h FROM HoaDonChiTiet h WHERE h.hoaDon.id_hoa_don = :idHoaDon")
+    List<HoaDonChiTiet> findByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 }

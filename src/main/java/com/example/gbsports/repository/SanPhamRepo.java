@@ -152,48 +152,6 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query("SELECT s FROM SanPham s ORDER BY s.id_san_pham DESC")
     List<SanPham> findAllSortedByIdSanPham();
 
-    @Query(value = """
-            SELECT\s
-                ctsp.id_chi_tiet_san_pham,
-                ma_san_pham,
-                ten_san_pham,
-                CASE\s
-                    WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,\s
-                            0,\s
-                            gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
-                    WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_giam, 0)) < 0,\s
-                            0,\s
-                            gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_giam, 0)))
-                    ELSE gia_ban
-                END AS gia_sau_giam,
-                so_luong,
-                ctsp.trang_thai AS trang_thai,
-                gia_tri,
-                ten_mau_sac AS ten_mau,
-                ten_danh_muc,
-                ten_thuong_hieu,
-                ten_chat_lieu
-            FROM chi_tiet_san_pham ctsp
-            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-            FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-            FULL OUTER JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
-            FULL OUTER JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
-            FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
-            FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-            WHERE ctsp.trang_thai like N'Hoạt động'
-            """, nativeQuery = true)
-    List<ChiTietSanPhamView> getAllCTSPKM();
+
 
 }

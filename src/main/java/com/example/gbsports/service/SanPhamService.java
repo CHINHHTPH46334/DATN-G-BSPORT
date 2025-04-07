@@ -257,7 +257,7 @@ public class SanPhamService {
     }
 
     public List<ChiTietSanPhamView> getAllCTSPKM() {
-        return sanPhamRepo.getAllCTSPKM();
+        return chiTietSanPhamRepo.getAllCTSPKM();
     }
 
 }
