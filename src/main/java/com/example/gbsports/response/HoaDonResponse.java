@@ -72,10 +72,4 @@ public interface HoaDonResponse {
 
     String getMo_ta();
 
-    BigDecimal getGia_ban();
-
-    String getTrangThaiDonHang();
-
-    Float getTiLeTrangThaiDonHang();
-
 }
