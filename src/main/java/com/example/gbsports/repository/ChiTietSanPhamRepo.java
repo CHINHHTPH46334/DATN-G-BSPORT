@@ -232,7 +232,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                                 COALESCE(km.gia_tri_toi_da, gia_ban),\s
                                 COALESCE(km.gia_tri_giam, 0)))
                     ELSE gia_ban
-                END AS gia_sau_giam,
+                END AS gia_ban,
                 so_luong,
                 ctsp.trang_thai AS trang_thai,
                 gia_tri,
