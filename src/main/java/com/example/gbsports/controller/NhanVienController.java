@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
@@ -56,8 +58,9 @@ public class NhanVienController {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.listPT(pageable);
     }
+
     @GetMapping("/quan-ly-nhan-vien/findById")
-    public NhanVien findById(@RequestParam("id") Integer id){
+    public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
 //    ArrayList<String> mangLoi = new ArrayList<>();
@@ -267,6 +270,7 @@ public class NhanVienController {
             e.printStackTrace();
         }
     }
+
     @PutMapping("/quan-ly-nhan-vien/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
@@ -284,13 +288,13 @@ public class NhanVienController {
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
-                sendEmail(nhanVienRequest.getEmail(),nhanVienRequest.getMaNhanVien(),generatedPassword,nhanVienRequest.getEmail());
+                sendEmail(nhanVienRequest.getEmail(), nhanVienRequest.getMaNhanVien(), generatedPassword, nhanVienRequest.getEmail());
                 NhanVien nhanVien = new NhanVien();
                 BeanUtils.copyProperties(nhanVienRequest, nhanVien);
                 nhanVien.setIdNhanVien(nhanVienRequest.getIdNhanVien());
                 nhanVien.setTaiKhoan(taiKhoan);
                 nhanVienRepo.save(nhanVien);
-            }else {
+            } else {
                 NhanVien nhanVien = new NhanVien();
                 BeanUtils.copyProperties(nhanVienRequest, nhanVien);
                 nhanVien.setIdNhanVien(nhanVienRequest.getIdNhanVien());
@@ -303,6 +307,7 @@ public class NhanVienController {
             return "Có lỗi xảy ra khi cập nhật: " + e.getMessage();
         }
     }
+
     @PostMapping("/quan-ly-nhan-vien/changeStatus")
     public String changeStatus(@RequestBody NhanVienRequest nhanVienRequest) {
         if (nhanVienRequest.getTrangThai().equals("Đang hoạt động")) {
@@ -336,7 +341,7 @@ public class NhanVienController {
         return nhanVienRepo.locNhanVienTheoTrangThai(trangThai, pageable);
     }
 
-//    @PostMapping("addNhanVien")
+    //    @PostMapping("addNhanVien")
 //    public ResponseEntity<?> saveNhanVien(@Valid @RequestBody NhanVienRequest nhanVienRequest, BindingResult result) {
 //        if (result.hasErrors()) {
 //            List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
@@ -350,5 +355,15 @@ public class NhanVienController {
 //
 //        }
 //    }
-
+    @GetMapping("/details")
+    public ResponseEntity<NhanVien> getNhanVienDetails(@RequestParam String tenDangNhap) {
+        Optional<NhanVien> nhanVien = taiKhoanRepo.findNhanVienByTenDangNhap(tenDangNhap);
+        if (nhanVien.isPresent()) {
+            System.out.println("Thông tin nhân viên tìm được: " + nhanVien.get());
+        } else {
+            System.out.println("Không tìm thấy nhân viên với ten_dang_nhap: " + tenDangNhap);
+        }
+        return nhanVien.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

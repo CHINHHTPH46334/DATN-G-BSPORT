@@ -51,7 +51,7 @@ public class KhachHang {
     @NotBlank(message = "Trạng thái không được để trống")
     private String trangThai;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "id_tai_khoan")
     private TaiKhoan taiKhoan;
 
