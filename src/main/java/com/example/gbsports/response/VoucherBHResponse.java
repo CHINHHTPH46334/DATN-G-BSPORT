@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public interface VoucherBHResponse {
+    Integer getId_hoa_don();
+
     Integer getId_voucher();
 
     String getMa_voucher();

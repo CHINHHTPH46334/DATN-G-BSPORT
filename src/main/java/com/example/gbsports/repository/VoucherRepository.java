@@ -63,7 +63,7 @@ public interface VoucherRepository extends JpaRepository<Voucher,Integer> {
                     ELSE 0
                 END
             ELSE 0
-        END AS GiaTriGiamThucTe,
+        END AS gia_tri_giam_thuc_te,
         v.ten_voucher
     FROM hoa_don hd
     CROSS JOIN voucher v
@@ -71,7 +71,7 @@ public interface VoucherRepository extends JpaRepository<Voucher,Integer> {
     AND hd.trang_thai = N'Chưa thanh toán'
     AND v.gia_tri_toi_thieu <= hd.tong_tien_truoc_giam
     AND hd.id_hoa_don = :idHD
-    ORDER BY GiaTriGiamThucTe DESC
+    ORDER BY gia_tri_giam_thuc_te DESC
     """, nativeQuery = true)
     List<VoucherBHResponse> giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
 
