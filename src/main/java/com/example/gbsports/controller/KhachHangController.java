@@ -658,4 +658,15 @@ public class KhachHangController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+    @GetMapping("/details")
+    public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
+        Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);
+        if (khachHang.isPresent()) {
+            System.out.println("Thông tin khách hàng tìm được: " + khachHang.get());
+        } else {
+            System.out.println("Không tìm thấy khách hàng với ten_dang_nhap: " + tenDangNhap);
+        }
+        return khachHang.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
