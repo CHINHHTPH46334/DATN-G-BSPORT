@@ -28,6 +28,18 @@ public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
         Integer getTongSanPham(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
         //
+        @Query(nativeQuery = true, value = "select top 3 hdct.id_chi_tiet_san_pham ,sp.ma_san_pham, sp.ten_san_pham, sum(hdct.so_luong) as so_luong, ctsp.gia_ban from hoa_don hd " +
+                "join hoa_don_chi_tiet hdct on hdct.id_hoa_don = hd.id_hoa_don\n" +
+                "join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham\n" +
+                "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
+                "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don\n" +
+                "where tddh.trang_thai = N'Hoàn thành'\n" +
+                "group by sp.ma_san_pham, sp.ten_san_pham, ctsp.gia_ban, hdct.id_chi_tiet_san_pham \n" +
+                "order by so_luong desc")
+//                and cast(tddh.ngay_chuyen as date) between :startDate and :endDate order by hdct.so_luong desc")
+        List<HoaDonResponse> topSanPhamBanChay();
+
+        //
 //        @Query(nativeQuery = true, value = "select top 3 hdct.id_chi_tiet_san_pham ,sp.ma_san_pham, sp.ten_san_pham, sum(hdct.so_luong) as so_luong, ctsp.gia_ban from hoa_don hd " +
 //                "join hoa_don_chi_tiet hdct on hdct.id_hoa_don = hd.id_hoa_don\n" +
 //                "join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham\n" +

@@ -92,9 +92,6 @@ public class BCTKController {
         BigDecimal doanhThu = bctkRepo.getDoanhThu(start, end);
         Integer tongDonHang = bctkRepo.getTongDonHang(start, end);
         Integer tongSanPham = bctkRepo.getTongSanPham(start, end);
-// Thêm phần gọi topSanPhamBanChay và topSanPhamBanCham
-//        List<HoaDon> topSanPhamBanChay = bctkRepo.topSanPhamBanChay(start, end);
-//        List<HoaDon> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
 
         Map<String, Object> response = new HashMap<>();
         response.put("doanhThu", doanhThu);
@@ -103,17 +100,12 @@ public class BCTKController {
 
         return ResponseEntity.ok(response);
     }
-
     @GetMapping("/tiLeTrangThaiDonHang")
     public ResponseEntity<List<HoaDonResponse>> getOrderStatusRatio() {
         List<HoaDonResponse> ratios = bctkRepo.tiLeTrangThaiHoaDon();
         return ResponseEntity.ok(ratios);
     }
 
-    //    @GetMapping("/topSPBanChay")
-//    public List<HoaDonResponse> topSanPhamBanChay(){
-//        return bctkRepo.topSanPhamBanChay();
-//    }
     @GetMapping("/topSPBanChay")
     public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay(
             @RequestParam(required = false) String type,
@@ -130,7 +122,6 @@ public class BCTKController {
 
         return ResponseEntity.ok(topSanPhamBanChay);
     }
-
     @GetMapping("/topSPBanCham")
     public ResponseEntity<List<HoaDonResponse>> topSanPhamBanCham(
             @RequestParam(required = false) String type,

@@ -1,6 +1,7 @@
 package com.example.gbsports.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,9 +22,11 @@ public class HoaDon {
     private String ma_hoa_don;
     @ManyToOne
     @JoinColumn(name = "id_nhan_vien")
+    @JsonIgnore
     private NhanVien nhanVien;
     @ManyToOne
     @JoinColumn(name = "id_khach_hang")
+    @JsonIgnore
     private KhachHang khachHang;
     @Column(name = "ngay_tao")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -36,6 +39,7 @@ public class HoaDon {
     private String trang_thai;
     @ManyToOne
     @JoinColumn(name = "id_voucher")
+    @JsonIgnore
     private Voucher voucher;
     private String sdt_nguoi_nhan;
     private String dia_chi;
@@ -46,8 +50,15 @@ public class HoaDon {
     private BigDecimal tong_tien_sau_giam;
     private String hinh_thuc_thanh_toan;
     private String phuong_thuc_nhan_hang;
-    @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
+    @Column(name = "loai_hoa_don")
     private String loai_hoa_don;
     private String ghi_chu;
+    @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
+
+    @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<HoaDonChiTiet> danhSachChiTiet = new ArrayList<>();
+
 }

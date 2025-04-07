@@ -27,7 +27,7 @@ public class KhachHang {
     private String tenKhachHang;
 
     @Column(name = "gioi_tinh")
-    @NotNull(message = "Giới tính không được để trống")
+//    @NotNull(message = "Giới tính không được để trống")
     private Boolean gioiTinh;
 
     @Column(name = "so_dien_thoai")
@@ -51,7 +51,7 @@ public class KhachHang {
     @NotBlank(message = "Trạng thái không được để trống")
     private String trangThai;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "id_tai_khoan")
     private TaiKhoan taiKhoan;
 

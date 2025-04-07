@@ -70,13 +70,14 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
         ArrayList<SanPhamView> locSanPham(@Param("tenDanhMuc") String tenDanhMuc,
                         @Param("tenThuongHieu") String tenThuongHieu, @Param("tenChatLieu") String tenChatLieu);
 
-    // Tìm kiếm sản phẩm theo mã hoặc tên với phân trang
-    @Query("SELECT sp FROM SanPham sp WHERE LOWER(sp.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(sp.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(String keyword, Pageable pageable);
+        // Tìm kiếm sản phẩm theo mã hoặc tên với phân trang
+        @Query("SELECT sp FROM SanPham sp WHERE LOWER(sp.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(sp.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+        Page<SanPham> findByMaSanPhamOrTenSanPhamContainingIgnoreCase(String keyword, Pageable pageable);
 
-    // Lấy tất cả sản phẩm, sắp xếp theo ID với phân trang
-    @Query("SELECT sp FROM SanPham sp ORDER BY sp.id_san_pham")
-    Page<SanPham> findAllSortedByIdSanPham(Pageable pageable);
+        // Lấy tất cả sản phẩm, sắp xếp theo ID với phân trang
+        @Query("SELECT sp FROM SanPham sp ORDER BY sp.id_san_pham")
+        Page<SanPham> findAllSortedByIdSanPham(Pageable pageable);
+
         @Query(nativeQuery = true, value = "WITH KhuyenMaiHieuLuc AS (\n" +
                         "\t\t\t\t\t\tSELECT \n" +
                         "\t\t\t\t\t\t\tctkm.id_chi_tiet_san_pham,\n" +
