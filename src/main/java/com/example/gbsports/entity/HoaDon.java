@@ -56,8 +56,6 @@ public class HoaDon {
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
-    private String loai_hoa_don;
-    private String ghi_chu;
 
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
