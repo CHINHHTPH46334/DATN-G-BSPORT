@@ -291,6 +291,15 @@ public class BanHangController {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
+            ChiTietSanPham chiTietSanPham = chiTietSanPhamRepo.findById(idCTSP)
+                    .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
+
+            if (chiTietSanPham.getSo_luong() < soLuong) {
+                return ResponseEntity.badRequest()
+                        .body("Số lượng không đủ để thêm sản phẩm!");
+            }
+
             hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
 
             capNhatVoucher(idHD);
@@ -358,19 +367,26 @@ public class BanHangController {
 
     private void capNhatVoucher(Integer idHD) {
         List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
+
+        HoaDon hoaDon = hoaDonRepo.findById(idHD)
+                .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
         if (!voucherBHResponse.isEmpty()) {
             Voucher voucher = voucherRepository.findById(voucherBHResponse.get(0).getId_voucher())
                     .orElseThrow(() -> new RuntimeException("Voucher không tồn tại!"));
-            HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
-            hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
+
+            hoaDon.setTong_tien_sau_giam(
+                    hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
             hoaDon.setVoucher(voucher);
             hoaDonRepo.save(hoaDon);
         } else {
-            HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+            // Nếu không có voucher thì giữ nguyên tong_tien_sau_giam = tong_tien_truoc_giam
             hoaDon.setVoucher(null);
+            hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam());
             hoaDonRepo.save(hoaDon);
         }
     }
+
 
 
     @GetMapping("/trangThaiDonHang")

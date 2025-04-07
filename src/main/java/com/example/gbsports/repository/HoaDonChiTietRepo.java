@@ -211,12 +211,6 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 IF @SoLuongTon < @SOLUONG
                     THROW 50003, N'Số lượng tồn kho không đủ!', 1;
 
-                -- Lấy giá trị giảm từ voucher
-                SELECT @GiaTriGiamVoucher = ISNULL(vc.gia_tri_giam, 0)
-                FROM hoa_don hd
-                LEFT JOIN voucher vc ON vc.id_voucher = hd.id_voucher
-                WHERE hd.id_hoa_don = @IDHD;
-
                 DECLARE @GiaSauGiam DECIMAL(12,2) = :giaBan;
 
                 -- Cập nhật hoặc thêm mới chi tiết hóa đơn
@@ -254,7 +248,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 -- Cập nhật tổng tiền hóa đơn
                 UPDATE hoa_don
                 SET tong_tien_truoc_giam = @TongTienTruocGiam,
-                    tong_tien_sau_giam = @TongTienTruocGiam - @GiaTriGiamVoucher
+                    tong_tien_sau_giam = @TongTienTruocGiam
                 WHERE id_hoa_don = @IDHD;
 
                 COMMIT;
@@ -277,7 +271,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             -- Khai báo các biến
             DECLARE @SOLUONG INT = :soLuong; -- Số lượng sản phẩm cần giảm
             DECLARE @IDCTSP INT = :idCTSP;  -- ID chi tiết sản phẩm
-            DECLARE @IDHD INT = :idHoaDon;   -- ID hóa đơn
+            DECLARE @IDHD INT = :idHD;   -- ID hóa đơn
 
             -- Khai báo biến để tìm voucher tốt nhất và tổng tiền trước giảm
             DECLARE @TongTienTruocGiam DECIMAL(18,2);

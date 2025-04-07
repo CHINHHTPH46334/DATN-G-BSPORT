@@ -113,6 +113,11 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/getAllKHHD")
+    public List<KhachHang> getAllKHHD() {
+        return khachHangRepo.findAll();
+    }
+
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addKhachHang(
             @Valid @RequestBody KhachHangRequest khachHangRequest,
