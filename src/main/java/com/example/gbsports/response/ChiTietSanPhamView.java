@@ -31,7 +31,6 @@ public interface ChiTietSanPhamView {
      Boolean getGioi_tinh();
      Integer getId_kich_thuoc();
      Integer getId_mau_sac();
-     BigDecimal getGia_sau_giam();
      Float getDanh_gia_trung_binh();
      Integer getSo_luong_danh_gia();
      BigDecimal getGiaGoc();
@@ -39,4 +38,8 @@ public interface ChiTietSanPhamView {
      Float getGiaTriKhuyenMai();
      String getKieuKhuyenMai();
      String getHinh_anh();
+     Integer getId_san_pham();
+     Integer getId_danh_muc();
+     Integer getId_thuong_hieu();
+     Integer getId_chat_lieu();
 }

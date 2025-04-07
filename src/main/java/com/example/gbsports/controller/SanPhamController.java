@@ -116,8 +116,8 @@ public class SanPhamController {
     }
 
     @PostMapping("/listImport")
-    public ResponseEntity<?> getListImport(@RequestParam MultipartFile file) throws IOException {
-        List<ChiTietSanPham> list = excelmport.readExcel(file);
+    public ResponseEntity<?> getListImport(@RequestParam("file") MultipartFile file) throws IOException {
+        ArrayList<ChiTietSanPham> list = excelmport.readExcel(file);
         return ResponseEntity.ok(list);
     }
 
@@ -141,9 +141,5 @@ public class SanPhamController {
     @GetMapping("/getSanPhamByTenSanPham")
     public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham")String tenSanPham){
         return sanPhamService.getSanPhamTheoTen(tenSanPham);
-    }
-    @GetMapping("/getAllCTSPKM")
-    public List<ChiTietSanPhamView> getAllCTSPKM() {
-        return sanPhamService.getAllCTSPKM();
     }
 }

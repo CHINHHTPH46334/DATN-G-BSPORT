@@ -14,9 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-
-public interface VoucherRepository extends JpaRepository<Voucher,Integer> {
-
+public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     boolean existsByMaVoucher(String maVoucher);
 
     Optional<Voucher> findByMaVoucher(String maVoucher);
@@ -41,10 +39,6 @@ public interface VoucherRepository extends JpaRepository<Voucher,Integer> {
 
     @Query("SELECT COALESCE(MAX(v.giaTriToiDa), 0) FROM Voucher v")
     BigDecimal findMaxPrice();
-
-    // @Query("SELECT COALESCE(MAX(v.giaTriToiDa), 0) FROM Voucher v")
-    // BigDecimal findMaxPrice();
-
     @Query(value = """
     SELECT
         hd.id_hoa_don,

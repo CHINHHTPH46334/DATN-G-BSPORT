@@ -42,4 +42,5 @@ public interface HoaDonResponse {
     BigDecimal getGia_ban();
     String getTrangThaiDonHang();
     Float getTiLeTrangThaiDonHang();
+
 }
