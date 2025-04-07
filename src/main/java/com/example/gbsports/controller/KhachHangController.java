@@ -458,11 +458,6 @@ public class KhachHangController {
                 diaChi.getXaPhuong() != null && !diaChi.getXaPhuong().trim().isEmpty();
     }
 
-    private String generateMaKhachHang() {
-        long count = khachHangRepo.count();
-        return String.format("KH%03d", count + 1); // Ví dụ: KH011, KH012,...
-    }
-
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerKhachHang(
             @Valid @RequestBody RegisterRequest registerRequest,
