@@ -19,14 +19,15 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     hd.dia_chi, hd.email, hd.tong_tien_truoc_giam, hd.phi_van_chuyen, 
                     hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang, 
                     tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia, 
-                    sp.ten_san_pham, sp.ma_san_pham, 
-                    kt.gia_tri AS kich_thuoc, 
-                    ms.ten_mau_sac, 
+                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, ctsp.so_luong AS so_luong_con_lai,
+                    kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
+                    ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham,
                     ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
                 JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
                 JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
                 JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+                JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
                 JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
                 JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
                 LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
@@ -486,4 +487,261 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
 
     @Query("SELECT h FROM HoaDonChiTiet h WHERE h.hoaDon.id_hoa_don = :idHoaDon")
     List<HoaDonChiTiet> findByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
+
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+    BEGIN TRANSACTION;
+        DECLARE @IDCTSP INT = :idCTSP;
+        DECLARE @IDHD INT = :idHoaDon;
+        DECLARE @SOLUONG INT = :soLuong;
+        DECLARE @GIABAN DECIMAL(18, 2);
+        SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+        DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
+        SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
+
+        -- Kiểm tra và cập nhật hoặc thêm sản phẩm
+        IF EXISTS (SELECT 1 FROM hoa_don_chi_tiet WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP)
+        BEGIN
+            UPDATE hoa_don_chi_tiet
+            SET so_luong = so_luong + @SOLUONG,
+                don_gia = (so_luong + @SOLUONG) * @GIABAN
+            WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
+            VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GIABAN);
+        END
+
+        -- Tính tổng tiền trước giảm
+        DECLARE @TONGTIENTRUOCGIAM DECIMAL(18, 2);
+        SELECT @TONGTIENTRUOCGIAM = COALESCE(SUM(don_gia), 0)
+        FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD;
+
+        -- Hoàn lại voucher cũ (nếu có)
+        DECLARE @OLDIDVOUCHER INT;
+        SELECT @OLDIDVOUCHER = id_voucher FROM hoa_don WHERE id_hoa_don = @IDHD;
+        IF @OLDIDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong + 1
+            WHERE id_voucher = @OLDIDVOUCHER;
+        END
+
+        -- Tìm voucher có tiền giảm lớn nhất
+        DECLARE @IDVOUCHER INT;
+        DECLARE @TIENGIAM DECIMAL(18, 2);
+        SELECT TOP 1 @IDVOUCHER = id_voucher,
+                     @TIENGIAM = CASE 
+                                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                                        CASE 
+                                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                                        END
+                                 END
+        FROM voucher
+        WHERE @TONGTIENTRUOCGIAM >= gia_tri_toi_thieu
+          AND ngay_het_han >= GETDATE()
+          AND trang_thai = N'Đang diễn ra'
+          AND so_luong > 0
+        ORDER BY CASE 
+                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                        CASE 
+                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                        END
+                 END DESC;
+
+        -- Cập nhật số lượng voucher nếu tìm thấy
+        IF @IDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong - 1
+            WHERE id_voucher = @IDVOUCHER;
+        END
+        ELSE
+        BEGIN
+            SET @TIENGIAM = 0;
+        END
+
+        -- Cập nhật hóa đơn
+        UPDATE hoa_don
+        SET tong_tien_truoc_giam = @TONGTIENTRUOCGIAM,
+            tong_tien_sau_giam = @TONGTIENTRUOCGIAM + @PHIVANCHUYEN - @TIENGIAM,
+            id_voucher = @IDVOUCHER
+        WHERE id_hoa_don = @IDHD;
+    COMMIT;
+    """, nativeQuery = true)
+    void addSLGH_HD(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon, @Param("soLuong") Integer soLuong);
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+    BEGIN TRANSACTION;
+        DECLARE @SOLUONG INT = :soLuong;
+        DECLARE @IDCTSP INT = :idCTSP;
+        DECLARE @IDHD INT = :idHoaDon;
+        DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
+        SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
+
+        -- Xóa sản phẩm
+        DELETE FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+        -- Tính tổng tiền trước giảm
+        DECLARE @TONGTIENTRUOCGIAM DECIMAL(18, 2);
+        SELECT @TONGTIENTRUOCGIAM = COALESCE(SUM(don_gia), 0)
+        FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD;
+
+        -- Hoàn lại voucher cũ
+        DECLARE @OLDIDVOUCHER INT;
+        SELECT @OLDIDVOUCHER = id_voucher FROM hoa_don WHERE id_hoa_don = @IDHD;
+        IF @OLDIDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong + 1
+            WHERE id_voucher = @OLDIDVOUCHER;
+        END
+
+        -- Tìm voucher có tiền giảm lớn nhất
+        DECLARE @IDVOUCHER INT;
+        DECLARE @TIENGIAM DECIMAL(18, 2);
+        SELECT TOP 1 @IDVOUCHER = id_voucher,
+                     @TIENGIAM = CASE 
+                                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                                        CASE 
+                                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                                        END
+                                 END
+        FROM voucher
+        WHERE @TONGTIENTRUOCGIAM >= gia_tri_toi_thieu
+          AND ngay_het_han >= GETDATE()
+          AND trang_thai = N'Đang diễn ra'
+          AND so_luong > 0
+        ORDER BY CASE 
+                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                        CASE 
+                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                        END
+                 END DESC;
+
+        -- Cập nhật số lượng voucher nếu tìm thấy
+        IF @IDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong - 1
+            WHERE id_voucher = @IDVOUCHER;
+        END
+        ELSE
+        BEGIN
+            SET @TIENGIAM = 0;
+        END
+
+        -- Cập nhật hóa đơn
+        UPDATE hoa_don
+        SET tong_tien_truoc_giam = @TONGTIENTRUOCGIAM,
+            tong_tien_sau_giam = @TONGTIENTRUOCGIAM + @PHIVANCHUYEN - @TIENGIAM,
+            id_voucher = @IDVOUCHER
+        WHERE id_hoa_don = @IDHD;
+    COMMIT;
+    """, nativeQuery = true)
+    void removeSPGHinHDCT(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon, @Param("soLuong") Integer soLuong);
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+    BEGIN TRANSACTION;
+        DECLARE @QUANTITYCHANGE INT = :quantityChange;
+        DECLARE @IDCTSP INT = :idCTSP;
+        DECLARE @IDHD INT = :idHoaDon;
+        DECLARE @GIABAN DECIMAL(18, 2);
+        SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+        DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
+        SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
+
+        -- Cập nhật số lượng
+        UPDATE hoa_don_chi_tiet
+        SET so_luong = so_luong + @QUANTITYCHANGE,
+            don_gia = (so_luong + @QUANTITYCHANGE) * @GIABAN
+        WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+        -- Tính tổng tiền trước giảm
+        DECLARE @TONGTIENTRUOCGIAM DECIMAL(18, 2);
+        SELECT @TONGTIENTRUOCGIAM = COALESCE(SUM(don_gia), 0)
+        FROM hoa_don_chi_tiet
+        WHERE id_hoa_don = @IDHD;
+
+        -- Hoàn lại voucher cũ
+        DECLARE @OLDIDVOUCHER INT;
+        SELECT @OLDIDVOUCHER = id_voucher FROM hoa_don WHERE id_hoa_don = @IDHD;
+        IF @OLDIDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong + 1
+            WHERE id_voucher = @OLDIDVOUCHER;
+        END
+
+        -- Tìm voucher có tiền giảm lớn nhất
+        DECLARE @IDVOUCHER INT;
+        DECLARE @TIENGIAM DECIMAL(18, 2);
+        SELECT TOP 1 @IDVOUCHER = id_voucher,
+                     @TIENGIAM = CASE 
+                                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                                        CASE 
+                                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                                        END
+                                 END
+        FROM voucher
+        WHERE @TONGTIENTRUOCGIAM >= gia_tri_toi_thieu
+          AND ngay_het_han >= GETDATE()
+          AND trang_thai = N'Đang diễn ra'
+          AND so_luong > 0
+        ORDER BY CASE 
+                    WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                    WHEN kieu_giam_gia = N'Phần trăm' THEN 
+                        CASE 
+                            WHEN @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0) > COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            THEN COALESCE(gia_tri_toi_da, @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0))
+                            ELSE @TONGTIENTRUOCGIAM * (gia_tri_giam / 100.0)
+                        END
+                 END DESC;
+
+        -- Cập nhật số lượng voucher nếu tìm thấy
+        IF @IDVOUCHER IS NOT NULL
+        BEGIN
+            UPDATE voucher
+            SET so_luong = so_luong - 1
+            WHERE id_voucher = @IDVOUCHER;
+        END
+        ELSE
+        BEGIN
+            SET @TIENGIAM = 0;
+        END
+
+        -- Cập nhật hóa đơn
+        UPDATE hoa_don
+        SET tong_tien_truoc_giam = @TONGTIENTRUOCGIAM,
+            tong_tien_sau_giam = @TONGTIENTRUOCGIAM + @PHIVANCHUYEN - @TIENGIAM,
+            id_voucher = @IDVOUCHER
+        WHERE id_hoa_don = @IDHD;
+    COMMIT;
+    """, nativeQuery = true)
+    void updateQuantity(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon, @Param("quantityChange") Integer quantityChange);
 }

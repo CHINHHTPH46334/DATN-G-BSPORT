@@ -3,11 +3,12 @@ package com.example.gbsports.controller;
 import com.example.gbsports.config.EmailSenderService;
 import com.example.gbsports.entity.DiaChiKhachHang;
 import com.example.gbsports.entity.KhachHang;
+import com.example.gbsports.entity.NhanVien;
 import com.example.gbsports.entity.TaiKhoan;
-import com.example.gbsports.repository.DiaChiKhachHangRepo;
-import com.example.gbsports.repository.KhachHangRepo;
-import com.example.gbsports.repository.TaiKhoanRepo;
+import com.example.gbsports.repository.*;
 import com.example.gbsports.request.KhachHangRequest;
+import com.example.gbsports.request.LoginRequest;
+import com.example.gbsports.request.RegisterRequest;
 import com.example.gbsports.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -48,8 +49,17 @@ public class KhachHangController {
     @Autowired
     private EmailSenderService emailService;
 
+    @Autowired
+    private RolesRepo rolesRepo;
+
+    @Autowired
+    private NhanVienRepo nhanVienRepo;
+
+    @Autowired
+    private EmailService emailServiceDK_DN;
+
     @GetMapping("/view")
-    public ResponseEntity<Map<String, Object>>   getKhachHang(
+    public ResponseEntity<Map<String, Object>> getKhachHang(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "3") Integer size,
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -61,7 +71,7 @@ public class KhachHangController {
         if (trangThai != null && !trangThai.isEmpty()) {
             danhSachKhachHang = khachHangRepo.locKhachHangTheoTrangThai(trangThai, pageable);
         } else if (keyword != null && !keyword.isEmpty()) {
-            String trimmedKeyword = keyword.trim()+"";
+            String trimmedKeyword = keyword.trim() + "";
             danhSachKhachHang = khachHangRepo.timKhachHang(trimmedKeyword, pageable);
         } else {
             danhSachKhachHang = khachHangRepo.findAllSortedByIdDesc(pageable);
@@ -335,5 +345,214 @@ public class KhachHangController {
                 diaChi.getTinhThanhPho() != null && !diaChi.getTinhThanhPho().trim().isEmpty() &&
                 diaChi.getQuanHuyen() != null && !diaChi.getQuanHuyen().trim().isEmpty() &&
                 diaChi.getXaPhuong() != null && !diaChi.getXaPhuong().trim().isEmpty();
+    }
+
+    private String generateMaKhachHang() {
+        long count = khachHangRepo.count();
+        return String.format("KH%03d", count + 1); // Ví dụ: KH011, KH012,...
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> registerKhachHang(
+            @Valid @RequestBody RegisterRequest registerRequest,
+            BindingResult result) {
+        Map<String, Object> response = new HashMap<>();
+        // Kiểm tra validation từ DTO
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.put(error.getField(), error.getDefaultMessage());
+            }
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        // Kiểm tra xác nhận mật khẩu
+        if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            fieldErrors.put("confirmPassword", "Mật khẩu xác nhận không khớp");
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        // Kiểm tra tuổi >= 14
+        LocalDate ngaySinh = registerRequest.getBirthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate now = LocalDate.now();
+        int tuoi = Period.between(ngaySinh, now).getYears();
+        if (tuoi < 14) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            fieldErrors.put("birthDate", "Bạn phải đủ 14 tuổi để đăng ký");
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        try {
+            // Kiểm tra email đã tồn tại
+            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(registerRequest.getEmail());
+            if (existingTaiKhoan.isPresent()) {
+                response.put("error", "Email đã được sử dụng!");
+                return ResponseEntity.badRequest().body(response);
+            }
+            // Tạo tài khoản
+            TaiKhoan taiKhoan = new TaiKhoan();
+            taiKhoan.setTen_dang_nhap(registerRequest.getEmail());
+            taiKhoan.setMat_khau(registerRequest.getPassword());
+            taiKhoan.setRoles(rolesRepo.findById(4).get()); // Gán id_roles = 4 cho khách hàng
+            taiKhoan = taiKhoanRepo.save(taiKhoan);
+
+            // Tạo mã khách hàng tự động
+            String maKhachHang = generateMaKhachHang();
+
+            // Tạo khách hàng
+            KhachHang khachHang = new KhachHang();
+            khachHang.setMaKhachHang(maKhachHang);
+            khachHang.setTenKhachHang(registerRequest.getFullName());
+            khachHang.setSoDienThoai(registerRequest.getPhone());
+            khachHang.setEmail(registerRequest.getEmail());
+            khachHang.setNgaySinh(registerRequest.getBirthDate());
+            khachHang.setTrangThai("Đang hoạt động");
+
+            // Xử lý giới tính
+            if ("Nam".equals(registerRequest.getGender())) {
+                khachHang.setGioiTinh(true);
+            } else if ("Nữ".equals(registerRequest.getGender())) {
+                khachHang.setGioiTinh(false);
+            } else {
+                khachHang.setGioiTinh(null); // "Khác" sẽ để null
+            }
+
+            khachHang.setTaiKhoan(taiKhoan);
+            khachHang = khachHangRepo.save(khachHang);
+
+            // Gửi email chào mừng
+            String subject = "Chào mừng bạn đến với G&B SPORTS 🎉";
+            String body = "<!DOCTYPE html>" +
+                    "<html>" +
+                    "<head>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                    ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f9f9f9; }" +
+                    ".header { background-color: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }" +
+                    ".content { padding: 20px; background-color: white; border-radius: 0 0 10px 10px; }" +
+                    ".highlight { color: #4CAF50; font-weight: bold; }" +
+                    ".info-box { background-color: #e8f5e9; padding: 15px; border-left: 5px solid #4CAF50; margin: 15px 0; }" +
+                    ".footer { text-align: center; margin-top: 20px; font-size: 14px; color: #777; }" +
+                    "a { color: #4CAF50; text-decoration: none; }" +
+                    "a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    "<h2>Chào mừng bạn đến với G&B SPORTS 🎉</h2>" +
+                    "</div>" +
+                    "<div class='content'>" +
+                    "<h3>Xin chào <span class='highlight'>" + khachHang.getTenKhachHang() + "</span>,</h3>" +
+                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>G&B SPORTS</strong>. Tài khoản của bạn đã được tạo thành công!</p>" +
+                    "<div class='info-box'>" +
+                    "<h4>Thông tin đăng nhập của bạn:</h4>" +
+                    "<ul>" +
+                    "<li>Tên đăng nhập: <strong>" + taiKhoan.getTen_dang_nhap() + "</strong></li>" +
+                    "<li>Mật khẩu: <strong>" + registerRequest.getPassword() + "</strong></li>" +
+                    "</ul>" +
+                    "</div>" +
+//                    "<p style='color: #d32f2f; font-weight: bold;'>🎁 ƯU ĐÃI ĐẶC BIỆT: GIẢM 20% CHO ĐƠN HÀNG ĐẦU TIÊN!</p>" +
+                    "<p>Vui lòng <a href='http://localhost:5173/login-register/login'>đăng nhập</a> để bắt đầu sử dụng dịch vụ và khám phá các ưu đãi hấp dẫn.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+            try {
+                emailServiceDK_DN.sendEmail(khachHang.getEmail(), subject, body);
+                response.put("emailMessage", "Email chào mừng đã được gửi thành công!");
+            } catch (MessagingException e) {
+                response.put("warning", "Đăng ký thành công nhưng gửi email thất bại: " + e.getMessage());
+            }
+
+            response.put("successMessage", "Đăng ký thành công!");
+            response.put("khachHang", khachHang);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("error", "Có lỗi xảy ra khi đăng ký: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            BindingResult result) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        // Kiểm tra validation từ Request
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.put(error.getField(), error.getDefaultMessage());
+            }
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            // Tìm tất cả tài khoản theo email (ten_dang_nhap)
+            List<TaiKhoan> taiKhoanList = taiKhoanRepo.findAllByTenDangNhap(loginRequest.getEmail());
+            if (taiKhoanList.isEmpty()) {
+                response.put("error", "Email không tồn tại!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Duyệt qua danh sách tài khoản để tìm tài khoản hợp lệ
+            TaiKhoan taiKhoanDangNhap = null;
+
+            for (TaiKhoan taiKhoan : taiKhoanList) {
+                // Kiểm tra mật khẩu
+                if (taiKhoan.getMat_khau().equals(loginRequest.getPassword())) {
+                    // Kiểm tra trạng thái tài khoản
+                    if (taiKhoan.getRoles().getId_roles() == 4) {
+                        // Tài khoản khách hàng
+                        Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+                        if (khachHangOpt.isPresent()) {
+                            KhachHang khachHang = khachHangOpt.get();
+                            if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
+                                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                                return ResponseEntity.badRequest().body(response);
+                            }
+                            taiKhoanDangNhap = taiKhoan; // Tài khoản hợp lệ
+                            break;
+                        }
+                    } else {
+                        // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
+                        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+                        if (nhanVienOpt.isPresent()) {
+                            NhanVien nhanVien = nhanVienOpt.get();
+                            if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
+                                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                                return ResponseEntity.badRequest().body(response);
+                            }
+                            taiKhoanDangNhap = taiKhoan; // Tài khoản hợp lệ
+                            break;
+                        }
+                    }
+                }
+            }
+            // Kiểm tra nếu không tìm thấy tài khoản hợp lệ
+            if (taiKhoanDangNhap == null) {
+                response.put("error", "Mật khẩu không đúng !");
+                return ResponseEntity.badRequest().body(response);
+            }
+            // Đăng nhập thành công, trả về thông tin tài khoản
+            response.put("successMessage", "Đăng nhập thành công!");
+            response.put("taiKhoan", taiKhoanDangNhap);
+            response.put("id_roles", taiKhoanDangNhap.getRoles().getId_roles());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("error", "Có lỗi xảy ra khi đăng nhập: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 }

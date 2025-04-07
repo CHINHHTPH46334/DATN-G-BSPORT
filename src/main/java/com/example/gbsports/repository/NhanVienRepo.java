@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
     @Query(nativeQuery = true, value = """
@@ -58,5 +59,7 @@ public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
     boolean existsByEmail(String email);
     boolean existsBySoDienThoai(String soDienThoai);
 
+    @Query("SELECT nv FROM NhanVien nv WHERE nv.taiKhoan.id_tai_khoan = :idTaiKhoan")
+    Optional<NhanVien> findByTaiKhoanIdTaiKhoan(Integer idTaiKhoan);
 
 }

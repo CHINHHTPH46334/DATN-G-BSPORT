@@ -88,7 +88,35 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "where ctsp.id_san_pham = :idSanPham ")
     ArrayList<ChiTietSanPhamView> listCTSPFolowSanPham(@Param("idSanPham") Integer idSanPham);
 
-    @Query(nativeQuery = true, value = "WITH DanhGiaSanPham AS (\n" +
+    //=============================== Của Dũng====================================//
+    @Query(value = """
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
+    Page<ChiTietSanPhamView> getAllCTSP_HD(Pageable pageable);
+
+    @Query(value = """
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
+    Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
+    //=============================== Của Dũng====================================//
+    @Query(nativeQuery = true,value = "WITH DanhGiaSanPham AS (\n" +
             "    SELECT\n" +
             "        id_chi_tiet_san_pham,\n" +
             "        AVG(ISNULL(danh_gia, 0) * 1.0) as danh_gia_trung_binh, -- Nhân 1.0 để đảm bảo kết quả là số thực\n" +

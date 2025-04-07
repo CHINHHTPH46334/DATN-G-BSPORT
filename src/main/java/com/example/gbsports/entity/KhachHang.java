@@ -27,7 +27,7 @@ public class KhachHang {
     private String tenKhachHang;
 
     @Column(name = "gioi_tinh")
-    @NotNull(message = "Giới tính không được để trống")
+//    @NotNull(message = "Giới tính không được để trống")
     private Boolean gioiTinh;
 
     @Column(name = "so_dien_thoai")
