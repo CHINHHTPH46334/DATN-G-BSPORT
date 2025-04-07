@@ -365,6 +365,10 @@ public class BanHangController {
             hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
             hoaDon.setVoucher(voucher);
             hoaDonRepo.save(hoaDon);
+        } else {
+            HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+            hoaDon.setVoucher(null);
+            hoaDonRepo.save(hoaDon);
         }
     }
 

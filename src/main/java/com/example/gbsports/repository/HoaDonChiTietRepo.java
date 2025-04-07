@@ -247,9 +247,9 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             BEGIN TRANSACTION;
 
             -- Khai báo các biến
-            DECLARE @SOLUONG INT = 1; -- Số lượng sản phẩm cần giảm
-            DECLARE @IDCTSP INT = 1;  -- ID chi tiết sản phẩm
-            DECLARE @IDHD INT = 1;   -- ID hóa đơn
+            DECLARE @SOLUONG INT = :soLuong; -- Số lượng sản phẩm cần giảm
+            DECLARE @IDCTSP INT = :idCTSP;  -- ID chi tiết sản phẩm
+            DECLARE @IDHD INT = :idHoaDon;   -- ID hóa đơn
 
             -- Khai báo biến để tìm voucher tốt nhất và tổng tiền trước giảm
             DECLARE @TongTienTruocGiam DECIMAL(18,2);
@@ -264,33 +264,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             END;
 
             -- Tính giá sau khi áp dụng khuyến mãi cho sản phẩm
-            DECLARE @GiaSauGiam DECIMAL(18,2);
-
-            SELECT @GiaSauGiam = ( select
-                CASE\s
-                    WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,\s
-                            0,\s
-                            gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
-                    WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_giam, 0)) < 0,\s
-                            0,\s
-                            gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_giam, 0)))
-                    ELSE gia_ban
-                END AS gia_sau_giam
-            FROM chi_tiet_san_pham ctsp
-            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-            WHERE ctsp.trang_thai like N'Hoạt động' AND ctsp.id_chi_tiet_san_pham = @IDCTSP)
+            DECLARE @GiaSauGiam DECIMAL(18,2) = :giaBan;
 
             -- Lấy phí vận chuyển từ hoa_don
             SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
