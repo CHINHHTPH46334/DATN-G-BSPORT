@@ -36,9 +36,11 @@ public interface HoaDonResponse {
     LocalDateTime getNgay_chuyen();
     String getGhi_chu();
     String getLoai_hoa_don();
-
     String getMa_san_pham();
     String getTen_san_pham();
     Integer getSo_luong();
+    BigDecimal getGia_ban();
+    String getTrangThaiDonHang();
+    Float getTiLeTrangThaiDonHang();
 
 }
