@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -113,6 +114,31 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/getAllKH")
+    public ResponseEntity<Map<String, Object>> getAllKhachHang() {
+        List<KhachHang> khachHangList = khachHangRepo.findAll(Sort.by(Sort.Direction.DESC, "idKhachHang"));
+
+        // Map để lưu địa chỉ mặc định của từng khách hàng
+        Map<Integer, String> diaChiMap = new HashMap<>();
+        for (KhachHang kh : khachHangList) {
+            var diaChiList = diaChiKhachHangRepo.findByKhachHangId(kh.getIdKhachHang());
+            String diaChiMacDinh = diaChiList.stream()
+                    .filter(DiaChiKhachHang::getDiaChiMacDinh)
+                    .map(DiaChiKhachHang::getDiaChiKhachHang)
+                    .findFirst()
+                    .orElse("Chưa có địa chỉ mặc định");
+            diaChiMap.put(kh.getIdKhachHang(), diaChiMacDinh);
+        }
+
+        // Trả về response gồm danh sách khách hàng và map địa chỉ
+        Map<String, Object> response = new HashMap<>();
+        response.put("danhSachKhachHang", khachHangList);
+        response.put("diaChiMap", diaChiMap);
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addKhachHang(
             @Valid @RequestBody KhachHangRequest khachHangRequest,
@@ -144,6 +170,12 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+        if (existingTaiKhoan.isPresent()) {
+            response.put("error", "Email đã được sử dụng!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
         try {
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
@@ -163,6 +195,7 @@ public class KhachHangController {
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
             taiKhoan.setMat_khau(matKhau);
+            taiKhoan.setRoles(rolesRepo.findById(4).get());
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             KhachHang khachHang = new KhachHang();
