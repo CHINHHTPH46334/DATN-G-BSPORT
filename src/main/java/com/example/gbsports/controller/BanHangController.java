@@ -79,14 +79,95 @@ public class BanHangController {
         }
     }
 
+    @PostMapping("/addKhHD")
+    public ResponseEntity<?> addKhHd(
+            @RequestParam(value = "idKH", required = false) String idKHStr,
+            @RequestParam("idHD") Integer idHD,
+            @RequestParam("diaChi") String diaChi,
+            @RequestParam("tenKhachHang") String tenKhachHang,
+            @RequestParam("soDienThoai") String soDienThoai
+    ) {
+        try {
+            HoaDon hoaDon = hoaDonRepo.findById(idHD)
+                    .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại"));
+
+            if (idKHStr != null && !idKHStr.equals("null")) {
+                Integer idKH = Integer.valueOf(idKHStr);
+                KhachHang khachHang = khachHangRepo.findById(idKH)
+                        .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
+                hoaDon.setKhachHang(khachHang);
+                hoaDon.setHo_ten(khachHang.getTenKhachHang());
+                hoaDon.setSdt_nguoi_nhan(khachHang.getSoDienThoai());
+                hoaDon.setDia_chi(diaChi);
+            } else {
+                hoaDon.setKhachHang(null);
+                hoaDon.setHo_ten(tenKhachHang);
+                hoaDon.setSdt_nguoi_nhan(soDienThoai);
+                hoaDon.setDia_chi(diaChi);
+            }
+
+            hoaDonRepo.save(hoaDon);
+            return ResponseEntity.ok("Cập nhật khách hàng cho hóa đơn thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật khách hàng cho hóa đơn: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/setTrangThaiNhanHang")
+    public ResponseEntity<?> setTrangThaiNhanHang(
+            @RequestParam("idHD") Integer idHD,
+            @RequestParam("phuongThucNhanHang") String ptnh
+    ) {
+        try {
+            HoaDon hoaDon = hoaDonRepo.findById(idHD)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với id: " + idHD));
+
+            hoaDon.setPhuong_thuc_nhan_hang(ptnh);
+
+            // Set phí vận chuyển
+            BigDecimal phiVanChuyen = BigDecimal.ZERO;
+            if ("Giao hàng".equalsIgnoreCase(ptnh)) {
+                phiVanChuyen = BigDecimal.valueOf(30000);
+            }
+            hoaDon.setPhi_van_chuyen(phiVanChuyen);
+
+            // Lấy chi tiết hóa đơn
+            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepo.findByIdHoaDon(idHD);
+
+            // Tính tổng tiền trước giảm
+            BigDecimal tongTienTruocGiam = chiTietList.stream()
+                    .map(ct -> ct.getDon_gia().multiply(BigDecimal.valueOf(ct.getSo_luong())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Tổng tiền sau giảm = trước giảm - giảm + phí vận chuyển
+            BigDecimal tongTienSauGiam = tongTienTruocGiam.subtract(phiVanChuyen);
+
+            hoaDon.setTong_tien_truoc_giam(tongTienTruocGiam);
+            hoaDon.setTong_tien_sau_giam(tongTienSauGiam);
+
+            hoaDonRepo.save(hoaDon);
+
+            capNhatVoucher(idHD);
+
+            return ResponseEntity.ok("Cập nhật phương thức nhận hàng và tính tổng tiền thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật phương thức nhận hàng: " + e.getMessage());
+        }
+    }
+
+
+
+
     @GetMapping("/getAllHoaDonCTT")
     public List<HoaDonResponse> getAllHDCTT() {
         return hoaDonRepo.getAllHoaDonCTT();
     }
 
     @GetMapping("/getHoaDonByIdHoaDon")
-    public HoaDon getHoaDonByIdHoaDon(@RequestParam("idHD") Integer idHD) {
-        return hoaDonRepo.findById(idHD).get();
+    public HoaDonResponse getHoaDonByIdHoaDon(@RequestParam("idHD") Integer idHD) {
+        return hoaDonRepo.findHoaDonById(idHD).get(0);
     }
 
     @GetMapping("/createHoaDon")
@@ -255,7 +336,7 @@ public class BanHangController {
             @RequestParam("idHoaDon") Integer idHD,
             @RequestParam("idCTSP") Integer idCTSP,
             @RequestParam("soLuong") Integer soLuong,
-            @RequestParam("giaBan") Integer giaBan) {
+            @RequestParam("giaBan") BigDecimal giaBan) {
         try {
             // Kiểm tra hóa đơn
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
@@ -284,38 +365,75 @@ public class BanHangController {
 
     @PostMapping("/addSPHD")
     public ResponseEntity<?> addSPHD(
-            @RequestParam(value = "idHoaDon") Integer idHD,
-            @RequestParam(value = "idCTSP") Integer idCTSP,
-            @RequestParam(value = "soLuong") Integer soLuong,
-            @RequestParam(value = "giaBan") Integer giaBan) {
+            @RequestParam("idHoaDon") Integer idHD,
+            @RequestParam("idCTSP") Integer idCTSP,
+            @RequestParam("soLuong") Integer soLuong,
+            @RequestParam("giaBan") BigDecimal giaBan
+    ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
 
-            ChiTietSanPham chiTietSanPham = chiTietSanPhamRepo.findById(idCTSP)
+            ChiTietSanPham chiTietSP = chiTietSanPhamRepo.findById(idCTSP)
                     .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
 
-            if (chiTietSanPham.getSo_luong() < soLuong) {
-                return ResponseEntity.badRequest()
-                        .body("Số lượng không đủ để thêm sản phẩm!");
+            if (chiTietSP.getSo_luong() < soLuong) {
+                return ResponseEntity.badRequest().body("Không đủ số lượng tồn kho!");
             }
 
-            hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
+            // Tìm xem sản phẩm đã có trong hóa đơn chưa
+            Optional<HoaDonChiTiet> optionalCT = hoaDonChiTietRepo
+                    .findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHD);
 
-            capNhatVoucher(idHD);
-            return ResponseEntity.ok("Thêm sản phẩm vào hóa đơn thành công");
+            HoaDonChiTiet chiTiet;
+            if (optionalCT.isPresent()) {
+                chiTiet = optionalCT.get();
+                int soLuongMoi = chiTiet.getSo_luong() + soLuong;
+                chiTiet.setSo_luong(soLuongMoi);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuongMoi)));
+            } else {
+                chiTiet = new HoaDonChiTiet();
+                chiTiet.setHoaDon(hoaDon);
+                chiTiet.setChiTietSanPham(chiTietSP);
+                chiTiet.setSo_luong(soLuong);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuong)));
+            }
+
+            // Trừ tồn kho
+            chiTietSP.setSo_luong(chiTietSP.getSo_luong() - soLuong);
+            chiTietSanPhamRepo.save(chiTietSP);
+
+            // Lưu chi tiết hóa đơn
+            hoaDonChiTietRepo.save(chiTiet);
+
+            // Tính tổng tiền mới
+            List<HoaDonChiTiet> danhSachChiTiet = hoaDonChiTietRepo.findByIdHoaDon(idHD);
+            BigDecimal tongTien = danhSachChiTiet.stream()
+                    .map(HoaDonChiTiet::getDon_gia)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .add(hoaDon.getPhi_van_chuyen());
+
+            hoaDon.setTong_tien_truoc_giam(tongTien);
+            hoaDon.setTong_tien_sau_giam(tongTien); // Nếu chưa có voucher
+            hoaDonRepo.save(hoaDon);
+
+            capNhatVoucher(idHD); // Nếu có
+
+            return ResponseEntity.ok("Thêm sản phẩm thành công");
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi thêm sản phẩm: " + e.getMessage());
         }
     }
 
+
     @PostMapping("/giamSPHD")
     public ResponseEntity<?> giamSPHD(
             @RequestParam(value = "idHoaDon") Integer idHD,
             @RequestParam(value = "idCTSP") Integer idCTSP,
             @RequestParam(value = "soLuong") Integer soLuong,
-            @RequestParam(value = "giaBan") Integer giaBan) {
+            @RequestParam(value = "giaBan") BigDecimal giaBan) {
         try {
             ChiTietSanPham chiTietSanPham = chiTietSanPhamRepo.findById(idCTSP)
                     .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));

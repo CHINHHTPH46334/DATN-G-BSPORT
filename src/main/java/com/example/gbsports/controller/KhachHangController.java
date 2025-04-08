@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -113,10 +114,30 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/getAllKHHD")
-    public List<KhachHang> getAllKHHD() {
-        return khachHangRepo.findAll();
+    @GetMapping("/getAllKH")
+    public ResponseEntity<Map<String, Object>> getAllKhachHang() {
+        List<KhachHang> khachHangList = khachHangRepo.findAll(Sort.by(Sort.Direction.DESC, "idKhachHang"));
+
+        // Map để lưu địa chỉ mặc định của từng khách hàng
+        Map<Integer, String> diaChiMap = new HashMap<>();
+        for (KhachHang kh : khachHangList) {
+            var diaChiList = diaChiKhachHangRepo.findByKhachHangId(kh.getIdKhachHang());
+            String diaChiMacDinh = diaChiList.stream()
+                    .filter(DiaChiKhachHang::getDiaChiMacDinh)
+                    .map(DiaChiKhachHang::getDiaChiKhachHang)
+                    .findFirst()
+                    .orElse("Chưa có địa chỉ mặc định");
+            diaChiMap.put(kh.getIdKhachHang(), diaChiMacDinh);
+        }
+
+        // Trả về response gồm danh sách khách hàng và map địa chỉ
+        Map<String, Object> response = new HashMap<>();
+        response.put("danhSachKhachHang", khachHangList);
+        response.put("diaChiMap", diaChiMap);
+
+        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addKhachHang(
