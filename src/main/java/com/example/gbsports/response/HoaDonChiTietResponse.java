@@ -45,6 +45,8 @@ public interface HoaDonChiTietResponse {
     String getLoai_hoa_don();
     String getTrang_thai_thanh_toan();
     String getGhi_chu();
-
+    String getDon_vi();
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime getNgay_chuyen();
 
 }
