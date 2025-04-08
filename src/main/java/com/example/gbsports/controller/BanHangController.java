@@ -484,10 +484,21 @@ public class BanHangController {
     }
 
     private void capNhatVoucher(Integer idHD) {
-        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
+        List<HoaDonChiTietResponse> dsSanPham = hoaDonChiTietRepo.findHoaDonChiTietById(idHD);
+
+        BigDecimal tongTienSanPham = dsSanPham.stream()
+                .map(sp -> sp.getDon_gia()) // hoặc sp.getGiaBan().multiply(soLuong) tùy theo bạn lưu gì
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
+        // Tính lại tổng tiền trước giảm = tiền sản phẩm + phí vận chuyển
+        BigDecimal phiVanChuyen = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
+        hoaDon.setTong_tien_truoc_giam(tongTienSanPham.add(phiVanChuyen));
+
+        // Kiểm tra voucher
+        List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
 
         if (!voucherBHResponse.isEmpty()) {
             Voucher voucher = voucherRepository.findById(voucherBHResponse.get(0).getId_voucher())
@@ -496,14 +507,14 @@ public class BanHangController {
             hoaDon.setTong_tien_sau_giam(
                     hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
             hoaDon.setVoucher(voucher);
-            hoaDonRepo.save(hoaDon);
         } else {
-            // Nếu không có voucher thì giữ nguyên tong_tien_sau_giam = tong_tien_truoc_giam
             hoaDon.setVoucher(null);
             hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam());
-            hoaDonRepo.save(hoaDon);
         }
+
+        hoaDonRepo.save(hoaDon);
     }
+
 
 
 
@@ -511,6 +522,7 @@ public class BanHangController {
     public ResponseEntity<?> chuyenTrangThaiHoaDon(@RequestParam("idHoaDon") Integer idHD) {
         HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
         hoaDon.setTrang_thai("Đã thanh toán");
+        hoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
         hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now());
         hoaDonRepo.save(hoaDon);
         System.out.println(hoaDon);
@@ -527,13 +539,13 @@ public class BanHangController {
         if (phuongThuc.equalsIgnoreCase("Giao hàng")) {
             hd.setPhuong_thuc_nhan_hang("Giao hàng");
             hd.setPhi_van_chuyen(BigDecimal.valueOf(30000));
-            hoaDonRepo.save(hd);
-            return ResponseEntity.ok("oke");
         } else {
             hd.setPhuong_thuc_nhan_hang("Nhận tại cửa hàng");
             hd.setPhi_van_chuyen(BigDecimal.ZERO);
-            return ResponseEntity.ok("oke");
         }
+        hoaDonRepo.save(hd);
+        capNhatVoucher(idHD);
+        return ResponseEntity.ok("ok");
     }
 
 

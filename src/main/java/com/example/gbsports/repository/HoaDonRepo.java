@@ -143,19 +143,19 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
         @Query(value = """
                         select id_hoa_don, ma_hoa_don, hd.id_nhan_vien, ten_nhan_vien, hd.id_khach_hang, ten_khach_hang, hd.trang_thai,\s
                         hd.id_voucher, ten_voucher, sdt_nguoi_nhan, dia_chi, hd.email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten,
-                        tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu, hd.ngay_tao
+                        tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu, hd.ngay_tao, loai_hoa_don
                         from hoa_don hd\s
                         full outer join khach_hang kh on kh.id_khach_hang = hd.id_khach_hang
                         full outer join nhan_vien nv on nv.id_nhan_vien = hd.id_nhan_vien
                         full outer join voucher vc on vc.id_voucher = hd.id_voucher
-                        where hd.trang_thai = N'Chưa thanh toán'
+                        where hd.trang_thai = N'Chưa thanh toán' and hd.loai_hoa_don like N'Offline'
                         """, nativeQuery = true)
         List<HoaDonResponse> getAllHoaDonCTT();
 
         @Query(value = """
                                     SELECT id_hoa_don,ma_hoa_don,nv.id_nhan_vien,nv.ten_nhan_vien,kh.id_khach_hang,kh.ten_khach_hang,hd.ngay_tao,hd.ngay_sua,hd.trang_thai
                                     ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
-                                    ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
+                                    ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang,loai_hoa_don
                                     from hoa_don hd
                                     LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
                                     LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang

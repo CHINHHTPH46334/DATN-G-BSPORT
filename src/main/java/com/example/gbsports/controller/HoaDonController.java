@@ -64,6 +64,19 @@ public class HoaDonController {
         }
     }
 
+    @PutMapping("/updateHTTTHD")
+    public ResponseEntity<HoaDon> updateHinhThucTTHoaDon(@RequestParam("idHD") Integer id,
+                                                         @RequestParam("hinhThucThanhToan") String httt) {
+        HoaDon hoaDon = hoaDonRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        hoaDon.setHinh_thuc_thanh_toan(httt);
+        // cập nhật các field khác nếu cần
+
+        return ResponseEntity.ok(hoaDonRepo.save(hoaDon));
+    }
+
+
     @GetMapping("/all-hoa-don")
     public List<HoaDonResponse> getListHD() {
         return hoaDonRepo.getListHD();

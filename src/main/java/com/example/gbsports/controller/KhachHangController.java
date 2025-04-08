@@ -170,6 +170,12 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+        if (existingTaiKhoan.isPresent()) {
+            response.put("error", "Email đã được sử dụng!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
         try {
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
@@ -189,6 +195,7 @@ public class KhachHangController {
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
             taiKhoan.setMat_khau(matKhau);
+            taiKhoan.setRoles(rolesRepo.findById(4).get());
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             KhachHang khachHang = new KhachHang();
