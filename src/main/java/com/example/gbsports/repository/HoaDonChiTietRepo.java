@@ -80,7 +80,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void addSLGH(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
-            @Param("soLuong") Integer soLuong);
+                 @Param("soLuong") Integer soLuong);
 
     @Modifying
     @Transactional
@@ -130,7 +130,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void removeSPGH(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
-            @Param("soLuong") Integer soLuong);
+                    @Param("soLuong") Integer soLuong);
 
     // @Query(value = """
     //
@@ -144,7 +144,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
 
     @Query("SELECT h FROM HoaDonChiTiet h WHERE h.chiTietSanPham.id_chi_tiet_san_pham = :idChiTietSanPham AND h.hoaDon.id_hoa_don = :idHoaDon")
     Optional<HoaDonChiTiet> findByChiTietSanPhamIdAndHoaDonId(@Param("idChiTietSanPham") Integer idChiTietSanPham,
-            @Param("idHoaDon") Integer idHoaDon);
+                                                              @Param("idHoaDon") Integer idHoaDon);
 
     @Query("SELECT COALESCE(SUM(hdct.don_gia), 0) FROM HoaDonChiTiet hdct WHERE hdct.hoaDon.id_hoa_don = :idHoaDon")
     BigDecimal sumDonGiaByHoaDonId(@Param("idHoaDon") Integer idHoaDon);
@@ -237,9 +237,9 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             END CATCH;
             """, nativeQuery = true)
     void addSPHD(@RequestParam("idHoaDon") Integer idHD,
-            @RequestParam("idCTSP") Integer idCTSP,
-            @RequestParam("soLuong") Integer soLuong,
-            @RequestParam("giaBan") Integer giaBan);
+                 @RequestParam("idCTSP") Integer idCTSP,
+                 @RequestParam("soLuong") Integer soLuong,
+                 @RequestParam("giaBan") Integer giaBan);
 
     @Modifying
     @Transactional
@@ -336,9 +336,9 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void giamSPHD(@RequestParam(value = "idHoaDon") Integer idHD,
-            @RequestParam(value = "idCTSP") Integer idCTSP,
-            @RequestParam(value = "soLuong") Integer soLuong,
-            @RequestParam(value = "giaBan") Integer giaBan);
+                  @RequestParam(value = "idCTSP") Integer idCTSP,
+                  @RequestParam(value = "soLuong") Integer soLuong,
+                  @RequestParam(value = "giaBan") Integer giaBan);
 
     @Modifying
     @Transactional
@@ -422,6 +422,31 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Kiểm tra số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói')
+                BEGIN
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    IF @SOLUONGTON < @SOLUONG
+                    BEGIN
+                        ROLLBACK;
+                        THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                    END
+
+                    -- Trừ số lượng tồn kho
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong - @SOLUONG
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
+
                 -- Kiểm tra và cập nhật hoặc thêm sản phẩm
                 IF EXISTS (SELECT 1 FROM hoa_don_chi_tiet WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP)
                 BEGIN
@@ -501,7 +526,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void addSLGH_HD(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
-            @Param("soLuong") Integer soLuong);
+                    @Param("soLuong") Integer soLuong);
 
     @Modifying
     @Transactional
@@ -512,6 +537,28 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @IDHD INT = :idHoaDon;
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
+
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Lấy số lượng hiện tại trong chi tiết hóa đơn
+                DECLARE @SOLUONGHIENTAI INT;
+                SELECT @SOLUONGHIENTAI = so_luong
+                FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Hoàn lại số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói') AND @SOLUONGHIENTAI IS NOT NULL
+                BEGIN
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong + @SOLUONGHIENTAI
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
 
                 -- Xóa sản phẩm
                 DELETE FROM hoa_don_chi_tiet
@@ -582,7 +629,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void removeSPGHinHDCT(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
-            @Param("soLuong") Integer soLuong);
+                          @Param("soLuong") Integer soLuong);
 
     @Modifying
     @Transactional
@@ -596,7 +643,60 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
-                -- Cập nhật số lượng
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Lấy số lượng hiện tại trong chi tiết hóa đơn
+                DECLARE @SOLUONGHIENTAI INT;
+                SELECT @SOLUONGHIENTAI = so_luong
+                FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Tính số lượng mới sau khi cập nhật
+                DECLARE @SOLUONGMOI INT;
+                SET @SOLUONGMOI = @SOLUONGHIENTAI + @QUANTITYCHANGE;
+
+                -- Kiểm tra số lượng mới không được âm
+                IF @SOLUONGMOI < 0
+                BEGIN
+                    ROLLBACK;
+                    THROW 50002, 'Số lượng không thể âm!', 1;
+                END
+
+                -- Điều chỉnh số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói')
+                BEGIN
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                    -- Nếu tăng số lượng, kiểm tra tồn kho
+                    IF @QUANTITYCHANGE > 0
+                    BEGIN
+                        IF @SOLUONGTON < @QUANTITYCHANGE
+                        BEGIN
+                            ROLLBACK;
+                            THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                        END
+                        -- Trừ số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong - @QUANTITYCHANGE
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                    ELSE IF @QUANTITYCHANGE < 0
+                    BEGIN
+                        -- Hoàn lại số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong + ABS(@QUANTITYCHANGE)
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                END
+
+                -- Cập nhật số lượng trong chi tiết hóa đơn
                 UPDATE hoa_don_chi_tiet
                 SET so_luong = so_luong + @QUANTITYCHANGE,
                     don_gia = (so_luong + @QUANTITYCHANGE) * @GIABAN
@@ -667,5 +767,5 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             COMMIT;
             """, nativeQuery = true)
     void updateQuantity(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
-            @Param("quantityChange") Integer quantityChange);
+                        @Param("quantityChange") Integer quantityChange);
 }
