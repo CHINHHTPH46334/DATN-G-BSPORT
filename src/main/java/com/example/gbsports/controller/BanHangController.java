@@ -190,6 +190,7 @@ public class BanHangController {
             newHoaDon.setNhanVien(nv);
             newHoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
             newHoaDon.setPhuong_thuc_nhan_hang("Nhận tại cửa hàng");
+            newHoaDon.setHo_ten("Khách lẻ");
 
             // 4. Set default values
             newHoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);

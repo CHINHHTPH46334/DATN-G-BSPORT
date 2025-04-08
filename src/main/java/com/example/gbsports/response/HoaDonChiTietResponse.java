@@ -45,6 +45,7 @@ public interface HoaDonChiTietResponse {
     String getLoai_hoa_don();
     String getTrang_thai_thanh_toan();
     String getGhi_chu();
+    String getKich_thuoc();
 
 
 }

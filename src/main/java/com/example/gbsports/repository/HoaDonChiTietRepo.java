@@ -24,20 +24,20 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham,
                     ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
-                JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
-                JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
-                JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-                JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
-                LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                FULL OUTER JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
+                FULL OUTER JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                FULL OUTER JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+                FULL OUTER JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+                FULL OUTER JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+                FULL OUTER JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+                FULL OUTER JOIN (SELECT t.id_hoa_don, t.trang_thai
                             FROM theo_doi_don_hang t
                             WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
                                                     FROM theo_doi_don_hang t2
                                                     WHERE t2.id_hoa_don = t.id_hoa_don
                                                     )
                             ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-                LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+                FULL OUTER JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
                 WHERE hd.id_hoa_don = :idHoaDon
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> findHoaDonChiTietById(
@@ -447,6 +447,31 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Kiểm tra số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói')
+                BEGIN
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    IF @SOLUONGTON < @SOLUONG
+                    BEGIN
+                        ROLLBACK;
+                        THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                    END
+
+                    -- Trừ số lượng tồn kho
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong - @SOLUONG
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
+
                 -- Kiểm tra và cập nhật hoặc thêm sản phẩm
                 IF EXISTS (SELECT 1 FROM hoa_don_chi_tiet WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP)
                 BEGIN
@@ -538,6 +563,28 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Lấy số lượng hiện tại trong chi tiết hóa đơn
+                DECLARE @SOLUONGHIENTAI INT;
+                SELECT @SOLUONGHIENTAI = so_luong
+                FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Hoàn lại số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói') AND @SOLUONGHIENTAI IS NOT NULL
+                BEGIN
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong + @SOLUONGHIENTAI
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
+
                 -- Xóa sản phẩm
                 DELETE FROM hoa_don_chi_tiet
                 WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
@@ -621,7 +668,60 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
-                -- Cập nhật số lượng
+                -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
+                DECLARE @TRANGTHAI NVARCHAR(50);
+                SELECT TOP 1 @TRANGTHAI = trang_thai
+                FROM theo_doi_don_hang
+                WHERE id_hoa_don = @IDHD
+                  AND trang_thai != N'Đã cập nhật'
+                ORDER BY ngay_chuyen DESC;
+
+                -- Lấy số lượng hiện tại trong chi tiết hóa đơn
+                DECLARE @SOLUONGHIENTAI INT;
+                SELECT @SOLUONGHIENTAI = so_luong
+                FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Tính số lượng mới sau khi cập nhật
+                DECLARE @SOLUONGMOI INT;
+                SET @SOLUONGMOI = @SOLUONGHIENTAI + @QUANTITYCHANGE;
+
+                -- Kiểm tra số lượng mới không được âm
+                IF @SOLUONGMOI < 0
+                BEGIN
+                    ROLLBACK;
+                    THROW 50002, 'Số lượng không thể âm!', 1;
+                END
+
+                -- Điều chỉnh số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
+                IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói')
+                BEGIN
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                    -- Nếu tăng số lượng, kiểm tra tồn kho
+                    IF @QUANTITYCHANGE > 0
+                    BEGIN
+                        IF @SOLUONGTON < @QUANTITYCHANGE
+                        BEGIN
+                            ROLLBACK;
+                            THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                        END
+                        -- Trừ số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong - @QUANTITYCHANGE
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                    ELSE IF @QUANTITYCHANGE < 0
+                    BEGIN
+                        -- Hoàn lại số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong + ABS(@QUANTITYCHANGE)
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                END
+
+                -- Cập nhật số lượng trong chi tiết hóa đơn
                 UPDATE hoa_don_chi_tiet
                 SET so_luong = so_luong + @QUANTITYCHANGE,
                     don_gia = (so_luong + @QUANTITYCHANGE) * @GIABAN
