@@ -115,8 +115,8 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             WHERE t.id_hoa_don = hd.id_hoa_don
             ORDER BY t.ngay_chuyen DESC) as ngay_chuyen
             FROM hoa_don hd
-            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+            full outer JOIN voucher v ON hd.id_voucher = v.id_voucher
+            full outer join nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
             WHERE hd.ma_hoa_don = :maHoaDon""", nativeQuery = true)
     Optional<HoaDonResponse> findByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
@@ -158,9 +158,9 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                         ,vc.id_voucher,vc.ten_voucher,sdt_nguoi_nhan,dia_chi,hd.email,tong_tien_truoc_giam,phi_van_chuyen,ho_ten
                         ,tong_tien_sau_giam,hinh_thuc_thanh_toan,phuong_thuc_nhan_hang
                         from hoa_don hd
-                        LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                        LEFT JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
-                        LEFT JOIN voucher vc ON hd.id_voucher = vc.id_voucher
+                        full outer JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+                         full outer JOIN khach_hang kh ON hd.id_khach_hang = kh.id_khach_hang
+                         full outer JOIN voucher vc ON hd.id_voucher = vc.id_voucher
                         where hd.id_hoa_don = :idHd
             """, nativeQuery = true)
     List<HoaDonResponse> findHoaDonById(@Param("idHd") Integer idHd);
@@ -203,7 +203,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             hoa_don.trang_thai, hoa_don.id_voucher, sdt_nguoi_nhan, dia_chi,
             email, tong_tien_truoc_giam, tong_tien_sau_giam, hinh_thuc_thanh_toan,
             phuong_thuc_nhan_hang,loai_hoa_don, ghi_chu, ten_voucher, ma_voucher,
-            gia_tri_giam, kieu_giam_gia
+            gia_tri_giam, kieu_giam_gia, ho_ten
             from hoa_don
             join voucher vc on vc.id_voucher = hoa_don.id_voucher
             where ma_hoa_don = :maHoaDon

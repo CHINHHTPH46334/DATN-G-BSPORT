@@ -76,4 +76,8 @@ public interface HoaDonResponse {
 
     Float getTiLeTrangThaiDonHang();
 
+    BigDecimal getGia_tri_giam();
+
+    String getKieu_giam_gia();
+
 }

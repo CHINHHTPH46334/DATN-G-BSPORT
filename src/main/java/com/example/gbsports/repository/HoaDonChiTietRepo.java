@@ -24,20 +24,20 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham,
                     ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
-                JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
-                JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
-                JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-                JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
-                LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                full outer JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
+                full outer JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                full outer JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+                full outer JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+                full outer JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+                full outer JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+                full outer  JOIN (SELECT t.id_hoa_don, t.trang_thai
                             FROM theo_doi_don_hang t
                             WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
                                                     FROM theo_doi_don_hang t2
                                                     WHERE t2.id_hoa_don = t.id_hoa_don
                                                     )
                             ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-                LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+                full outer JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
                 WHERE hd.id_hoa_don = :idHoaDon
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> findHoaDonChiTietById(
