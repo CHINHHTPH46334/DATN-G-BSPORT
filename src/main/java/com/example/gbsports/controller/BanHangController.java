@@ -489,12 +489,9 @@ public class BanHangController {
 
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
-
-        // Tính lại tổng tiền trước giảm = tiền sản phẩm + phí vận chuyển
         BigDecimal phiVanChuyen = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
         hoaDon.setTong_tien_truoc_giam(tongTienSanPham.add(phiVanChuyen));
 
-        // Kiểm tra voucher
         List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
 
         if (!voucherBHResponse.isEmpty()) {

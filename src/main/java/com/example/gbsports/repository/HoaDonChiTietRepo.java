@@ -150,46 +150,70 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     BigDecimal sumDonGiaByHoaDonId(@Param("idHoaDon") Integer idHoaDon);
 
     @Query(value = """
-                        select hdct.id_hoa_don_chi_tiet, hdct.id_hoa_don, ctsp.id_chi_tiet_san_pham,
-                        sp.ma_san_pham, sp.ten_san_pham, ha.hinh_anh,
-                        hdct.so_luong, ctsp.so_luong as so_luong_ton,
-            			ctsp.id_kich_thuoc, ctsp.id_mau_sac,
-            			gia_tri, ten_mau_sac,
-                        (select
-                            CASE
-                                WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN
-                                    IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),
-                                        COALESCE(km.gia_tri_toi_da, gia_ban),
-                                        (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,
-                                        0,
-                                        gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, gia_ban),
-                                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
-                                WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN
-                                    IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),
-                                        COALESCE(km.gia_tri_toi_da, gia_ban),
-                                        COALESCE(km.gia_tri_giam, 0)) < 0,
-                                        0,
-                                        gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),
-                                            COALESCE(km.gia_tri_toi_da, gia_ban),
-                                            COALESCE(km.gia_tri_giam, 0)))
-                                ELSE gia_ban
-                            END AS gia_ban
-                        FROM chi_tiet_san_pham ctsp
-                        FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-                        FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                        FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-            			WHERE ctsp.trang_thai like N'Hoạt động' AND ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham) as gia_ban
-                        , hdct.don_gia
-                        from hoa_don_chi_tiet hdct
-                        FULL OUTER JOIN chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
-                        FULL OUTER JOIN san_pham sp on sp.id_san_pham = ctsp.id_san_pham
-                        FULL OUTER JOIN hinh_anh ha on ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            			FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-                        FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-                        where hdct.id_hoa_don = :idHD
-            """, nativeQuery = true)
-    List<HoaDonChiTietResponse> getSPGH(Integer idHD);
+    WITH gia_sau_giam_cte AS (
+    SELECT
+        ctsp.id_chi_tiet_san_pham,
+        ctsp.gia_ban,
+        km.kieu_giam_gia,
+        km.trang_thai AS trang_thai_km,
+        km.gia_tri_giam,
+        km.gia_tri_toi_da,
+        ROW_NUMBER() OVER (
+            PARTITION BY ctsp.id_chi_tiet_san_pham
+            ORDER BY CASE WHEN km.trang_thai = N'Đang diễn ra' THEN 1 ELSE 2 END
+        ) AS rn
+    FROM chi_tiet_san_pham ctsp
+    LEFT JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+    LEFT JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
+    WHERE ctsp.trang_thai = N'Hoạt động'
+)
+
+SELECT
+    hdct.id_hoa_don_chi_tiet,
+    hdct.id_hoa_don,
+    ctsp.id_chi_tiet_san_pham,
+    sp.ma_san_pham,
+    sp.ten_san_pham,
+    ha.hinh_anh,
+    hdct.so_luong,
+    ctsp.so_luong AS so_luong_ton,
+    kt.gia_tri,
+    ms.ten_mau_sac AS ten_mau,
+
+    -- Tính giá bán sau giảm
+    CASE
+        WHEN g.kieu_giam_gia = N'Phần trăm' AND g.trang_thai_km = N'Đang diễn ra' THEN
+            IIF(g.gia_ban - IIF((g.gia_ban * ISNULL(g.gia_tri_giam, 0) / 100) > ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                (g.gia_ban * ISNULL(g.gia_tri_giam, 0) / 100)) < 0,
+                0,
+                g.gia_ban - IIF((g.gia_ban * ISNULL(g.gia_tri_giam, 0) / 100) > ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                    ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                    (g.gia_ban * ISNULL(g.gia_tri_giam, 0) / 100)))
+        WHEN g.kieu_giam_gia = N'Tiền mặt' AND g.trang_thai_km = N'Đang diễn ra' THEN
+            IIF(g.gia_ban - IIF(ISNULL(g.gia_tri_giam, 0) > ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                ISNULL(g.gia_tri_giam, 0)) < 0,
+                0,
+                g.gia_ban - IIF(ISNULL(g.gia_tri_giam, 0) > ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                    ISNULL(g.gia_tri_toi_da, g.gia_ban),
+                    ISNULL(g.gia_tri_giam, 0)))
+        ELSE g.gia_ban
+    END AS gia_ban_da_giam,
+
+    hdct.don_gia
+
+FROM hoa_don_chi_tiet hdct
+LEFT JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+LEFT JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
+LEFT JOIN hinh_anh ha ON ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+LEFT JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+LEFT JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+LEFT JOIN gia_sau_giam_cte g ON g.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham AND g.rn = 1
+
+WHERE hdct.id_hoa_don = :idHD
+""", nativeQuery = true)
+    List<HoaDonChiTietResponse> getSPGH(@Param("idHD") Integer idHD);
 
     @Modifying
     @Transactional
