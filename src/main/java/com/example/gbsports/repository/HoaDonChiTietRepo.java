@@ -150,40 +150,44 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     BigDecimal sumDonGiaByHoaDonId(@Param("idHoaDon") Integer idHoaDon);
 
     @Query(value = """
-            select hdct.id_hoa_don_chi_tiet, hdct.id_hoa_don, ctsp.id_chi_tiet_san_pham,\s
-            sp.ma_san_pham, sp.ten_san_pham, ha.hinh_anh,\s
-            hdct.so_luong, ctsp.so_luong as so_luong_ton,
-            (select
-                CASE\s
-                    WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,\s
-                            0,\s
-                            gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
-                    WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_giam, 0)) < 0,\s
-                            0,\s
-                            gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_giam, 0)))
-                    ELSE gia_ban
-                END AS gia_ban
-            FROM chi_tiet_san_pham ctsp
-            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-            WHERE ctsp.trang_thai like N'Hoạt động' AND ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham) as gia_ban
-            , hdct.don_gia
-            from hoa_don_chi_tiet hdct
-            left join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
-            left join san_pham sp on sp.id_san_pham = ctsp.id_san_pham
-            left join hinh_anh ha on ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            where hdct.id_hoa_don = :idHD
+                        select hdct.id_hoa_don_chi_tiet, hdct.id_hoa_don, ctsp.id_chi_tiet_san_pham,
+                        sp.ma_san_pham, sp.ten_san_pham, ha.hinh_anh,
+                        hdct.so_luong, ctsp.so_luong as so_luong_ton,
+            			ctsp.id_kich_thuoc, ctsp.id_mau_sac,
+            			gia_tri, ten_mau_sac,
+                        (select
+                            CASE
+                                WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN
+                                    IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),
+                                        COALESCE(km.gia_tri_toi_da, gia_ban),
+                                        (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,
+                                        0,
+                                        gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),
+                                            COALESCE(km.gia_tri_toi_da, gia_ban),
+                                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
+                                WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN
+                                    IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),
+                                        COALESCE(km.gia_tri_toi_da, gia_ban),
+                                        COALESCE(km.gia_tri_giam, 0)) < 0,
+                                        0,
+                                        gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),
+                                            COALESCE(km.gia_tri_toi_da, gia_ban),
+                                            COALESCE(km.gia_tri_giam, 0)))
+                                ELSE gia_ban
+                            END AS gia_ban
+                        FROM chi_tiet_san_pham ctsp
+                        FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
+                        FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                        FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
+            			WHERE ctsp.trang_thai like N'Hoạt động' AND ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham) as gia_ban
+                        , hdct.don_gia
+                        from hoa_don_chi_tiet hdct
+                        FULL OUTER JOIN chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+                        FULL OUTER JOIN san_pham sp on sp.id_san_pham = ctsp.id_san_pham
+                        FULL OUTER JOIN hinh_anh ha on ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            			FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+                        FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+                        where hdct.id_hoa_don = :idHD
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> getSPGH(Integer idHD);
 
@@ -194,12 +198,12 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             DECLARE @IDCTSP INT = :idCTSP;  -- ID chi tiết sản phẩm
             DECLARE @IDHD INT = :idHD;      -- ID hóa đơn
             DECLARE @GiaBan DECIMAL(18,2) = :giaBan;
-            
+                        
             -- Biến tính toán
             DECLARE @TongTienTruocGiam DECIMAL(18,2);
             DECLARE @PHIVANCHUYEN DECIMAL(18,2);
             DECLARE @SoLuongTonKho INT;
-            
+                        
             -- Kiểm tra hóa đơn tồn tại
             IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
             BEGIN
@@ -207,22 +211,22 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 ROLLBACK;
                 RETURN;
             END;
-            
+                        
             -- Lấy số lượng tồn kho của sản phẩm
             SELECT @SoLuongTonKho = so_luong
             FROM chi_tiet_san_pham
             WHERE id_chi_tiet_san_pham = @IDCTSP;
-            
+                        
             IF @SoLuongTonKho IS NULL OR @SoLuongTonKho < @SOLUONG
             BEGIN
                 PRINT N'Sản phẩm không đủ tồn kho!';
                 ROLLBACK;
                 RETURN;
             END;
-            
+                        
             -- Lấy phí vận chuyển
             SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
-            
+                        
             -- Nếu sản phẩm đã có trong hóa đơn => cộng số lượng
             IF EXISTS (
                 SELECT 1 FROM hoa_don_chi_tiet
@@ -240,19 +244,19 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 INSERT INTO hoa_don_chi_tiet(id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
                 VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GiaBan);
             END;
-            
+                        
             -- Trừ tồn kho
             UPDATE chi_tiet_san_pham
             SET so_luong = so_luong - @SOLUONG
             WHERE id_chi_tiet_san_pham = @IDCTSP;
-            
+                        
             -- Tính lại tổng tiền
             SELECT @TongTienTruocGiam = @PHIVANCHUYEN + ISNULL(SUM(hdct.don_gia), 0)
             FROM hoa_don hd
             LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
             WHERE hd.id_hoa_don = @IDHD
             GROUP BY hd.phi_van_chuyen;
-            
+                        
             -- Cập nhật hóa đơn
             UPDATE hoa_don
             SET tong_tien_truoc_giam = @TongTienTruocGiam,

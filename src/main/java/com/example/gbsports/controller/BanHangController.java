@@ -5,7 +5,6 @@ import com.example.gbsports.repository.*;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.VoucherBHResponse;
-import com.example.gbsports.service.ZaloPayService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,9 +45,6 @@ public class BanHangController {
 
     @Autowired
     private TheoDoiDonHangRepo theoDoiDonHangRepo;
-
-    @Autowired
-    private ZaloPayService zaloPayService;
 
     Integer idHD = null;
     Integer idCTSP = null;
@@ -756,102 +752,102 @@ public class BanHangController {
         }
     }
 
-    @PostMapping("/thanh-toan")
-    public String thanhToan(
-            @RequestParam(value = "id_hoa_don", required = true) String idHoaDonStr,
-            @RequestParam("idKhachHang") Integer idKhachHang,
-            @RequestParam("idNhanVien") Integer idNhanVien,
-            @RequestParam("hinhThucThanhToan") String hinhThucThanhToan,
-            @RequestParam("phuongThucNhanHang") String phuongThucNhanHang,
-            @RequestParam(value = "phiVanChuyen", required = false, defaultValue = "0") BigDecimal phiVanChuyen,
-            @RequestParam(value = "idVoucher", required = false) Integer idVoucher,
-            @RequestParam(value = "tienKhachDua", required = false) BigDecimal tienKhachDua,
-            Model model) {
-        Integer idHoaDon = (idHoaDonStr != null && !idHoaDonStr.isEmpty()) ? Integer.parseInt(idHoaDonStr) : null;
-
-        if (idHoaDon == null) {
-            model.addAttribute("error", "ID hóa đơn không hợp lệ!");
-            return "redirect:/admin/ban-hang/view";
-        }
-
-        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
-        if (!hoaDonOpt.isPresent()) {
-            model.addAttribute("error", "Không tìm thấy hóa đơn!");
-            return "redirect:/admin/ban-hang/view";
-        }
-
-        HoaDon hoaDon = hoaDonOpt.get();
-
-        Optional<KhachHang> khachHangOpt = khachHangRepo.findById(idKhachHang);
-        if (khachHangOpt.isPresent()) {
-            hoaDon.setKhachHang(khachHangOpt.get());
-        }
-
-        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findById(idNhanVien);
-        if (nhanVienOpt.isPresent()) {
-            hoaDon.setNhanVien(nhanVienOpt.get());
-        }
-
-        if (idVoucher != null && idVoucher > 0) {
-            Optional<Voucher> voucherOpt = voucherRepository.findById(idVoucher);
-            if (voucherOpt.isPresent()) {
-                hoaDon.setVoucher(voucherOpt.get());
-            }
-        } else {
-            hoaDon.setVoucher(null);
-        }
-
-        hoaDon.setPhuong_thuc_nhan_hang(phuongThucNhanHang);
-        hoaDon.setHinh_thuc_thanh_toan(hinhThucThanhToan);
-        hoaDon.setPhi_van_chuyen(phiVanChuyen);
-        hoaDon.setTrang_thai("Đã thanh toán");
-        updateTongTienHoaDon(idHoaDon);
-
-        hoaDon = hoaDonRepo.findById(idHoaDon).get();
-
-        if ("Tiền mặt".equals(hinhThucThanhToan)) {
-            if (tienKhachDua == null) {
-                model.addAttribute("error", "Vui lòng nhập số tiền khách đưa!");
-                return "redirect:/admin/ban-hang/view";
-            } else if (tienKhachDua.compareTo(hoaDon.getTong_tien_sau_giam()) >= 0) {
-                System.out.println("nhảy vào thanh toán ----------------------------------------");
-                hoaDon.setTrang_thai("Đã thanh toán");
-                hoaDonRepo.save(hoaDon);
-                model.addAttribute("message", "Thanh toán thành công!");
-                return "redirect:/admin/ban-hang/view";
-            } else {
-                model.addAttribute("error", "Số tiền khách đưa không đủ!");
-                return "redirect:/admin/ban-hang/view";
-            }
-        } else if ("Chuyển khoản".equals(hinhThucThanhToan)) {
-            try {
-                // Lấy mã QR từ ZaloPay
-                Map<String, Object> qrCodeResponse = zaloPayService.createQRCode(
-                        hoaDon.getTong_tien_sau_giam().longValue(),
-                        idHoaDon.longValue()
-                );
-                String qrCodeUrl = (String) qrCodeResponse.get("qr_code_url");
-
-                if (qrCodeUrl != null && !qrCodeUrl.isEmpty()) {
-                    model.addAttribute("qrCodeUrl", qrCodeUrl);
-                    model.addAttribute("message", "Vui lòng quét mã QR để thanh toán.");
-                    hoaDon.setTrang_thai("Đã thanh toán");
-                    hoaDonRepo.save(hoaDon);
-                    return "payment-qr"; // Trả về view hiển thị mã QR
-                } else {
-                    model.addAttribute("error", "Không thể tạo mã QR. Vui lòng thử lại.");
-                    return "redirect:/admin/ban-hang/view";
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                model.addAttribute("error", "Có lỗi xảy ra khi tạo mã QR. Vui lòng thử lại.");
-                return "redirect:/admin/ban-hang/view";
-            }
-        } else {
-            model.addAttribute("error", "Hình thức thanh toán không hợp lệ!");
-            return "redirect:/admin/ban-hang/view";
-        }
-    }
+//    @PostMapping("/thanh-toan")
+//    public String thanhToan(
+//            @RequestParam(value = "id_hoa_don", required = true) String idHoaDonStr,
+//            @RequestParam("idKhachHang") Integer idKhachHang,
+//            @RequestParam("idNhanVien") Integer idNhanVien,
+//            @RequestParam("hinhThucThanhToan") String hinhThucThanhToan,
+//            @RequestParam("phuongThucNhanHang") String phuongThucNhanHang,
+//            @RequestParam(value = "phiVanChuyen", required = false, defaultValue = "0") BigDecimal phiVanChuyen,
+//            @RequestParam(value = "idVoucher", required = false) Integer idVoucher,
+//            @RequestParam(value = "tienKhachDua", required = false) BigDecimal tienKhachDua,
+//            Model model) {
+//        Integer idHoaDon = (idHoaDonStr != null && !idHoaDonStr.isEmpty()) ? Integer.parseInt(idHoaDonStr) : null;
+//
+//        if (idHoaDon == null) {
+//            model.addAttribute("error", "ID hóa đơn không hợp lệ!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//
+//        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
+//        if (!hoaDonOpt.isPresent()) {
+//            model.addAttribute("error", "Không tìm thấy hóa đơn!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//
+//        HoaDon hoaDon = hoaDonOpt.get();
+//
+//        Optional<KhachHang> khachHangOpt = khachHangRepo.findById(idKhachHang);
+//        if (khachHangOpt.isPresent()) {
+//            hoaDon.setKhachHang(khachHangOpt.get());
+//        }
+//
+//        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findById(idNhanVien);
+//        if (nhanVienOpt.isPresent()) {
+//            hoaDon.setNhanVien(nhanVienOpt.get());
+//        }
+//
+//        if (idVoucher != null && idVoucher > 0) {
+//            Optional<Voucher> voucherOpt = voucherRepository.findById(idVoucher);
+//            if (voucherOpt.isPresent()) {
+//                hoaDon.setVoucher(voucherOpt.get());
+//            }
+//        } else {
+//            hoaDon.setVoucher(null);
+//        }
+//
+//        hoaDon.setPhuong_thuc_nhan_hang(phuongThucNhanHang);
+//        hoaDon.setHinh_thuc_thanh_toan(hinhThucThanhToan);
+//        hoaDon.setPhi_van_chuyen(phiVanChuyen);
+//        hoaDon.setTrang_thai("Đã thanh toán");
+//        updateTongTienHoaDon(idHoaDon);
+//
+//        hoaDon = hoaDonRepo.findById(idHoaDon).get();
+//
+//        if ("Tiền mặt".equals(hinhThucThanhToan)) {
+//            if (tienKhachDua == null) {
+//                model.addAttribute("error", "Vui lòng nhập số tiền khách đưa!");
+//                return "redirect:/admin/ban-hang/view";
+//            } else if (tienKhachDua.compareTo(hoaDon.getTong_tien_sau_giam()) >= 0) {
+//                System.out.println("nhảy vào thanh toán ----------------------------------------");
+//                hoaDon.setTrang_thai("Đã thanh toán");
+//                hoaDonRepo.save(hoaDon);
+//                model.addAttribute("message", "Thanh toán thành công!");
+//                return "redirect:/admin/ban-hang/view";
+//            } else {
+//                model.addAttribute("error", "Số tiền khách đưa không đủ!");
+//                return "redirect:/admin/ban-hang/view";
+//            }
+//        } else if ("Chuyển khoản".equals(hinhThucThanhToan)) {
+//            try {
+//                // Lấy mã QR từ ZaloPay
+//                Map<String, Object> qrCodeResponse = zaloPayService.createQRCode(
+//                        hoaDon.getTong_tien_sau_giam().longValue(),
+//                        idHoaDon.longValue()
+//                );
+//                String qrCodeUrl = (String) qrCodeResponse.get("qr_code_url");
+//
+//                if (qrCodeUrl != null && !qrCodeUrl.isEmpty()) {
+//                    model.addAttribute("qrCodeUrl", qrCodeUrl);
+//                    model.addAttribute("message", "Vui lòng quét mã QR để thanh toán.");
+//                    hoaDon.setTrang_thai("Đã thanh toán");
+//                    hoaDonRepo.save(hoaDon);
+//                    return "payment-qr"; // Trả về view hiển thị mã QR
+//                } else {
+//                    model.addAttribute("error", "Không thể tạo mã QR. Vui lòng thử lại.");
+//                    return "redirect:/admin/ban-hang/view";
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                model.addAttribute("error", "Có lỗi xảy ra khi tạo mã QR. Vui lòng thử lại.");
+//                return "redirect:/admin/ban-hang/view";
+//            }
+//        } else {
+//            model.addAttribute("error", "Hình thức thanh toán không hợp lệ!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//    }
 
     @PostMapping("/zalopay/callback")
     public ResponseEntity<String> handleZaloPayCallback(@RequestBody Map<String, Object> callbackData) {
