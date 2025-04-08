@@ -39,7 +39,7 @@ public class HoaDon {
     private String trang_thai;
     @ManyToOne
     @JoinColumn(name = "id_voucher")
-    @JsonIgnore
+
     private Voucher voucher;
     private String sdt_nguoi_nhan;
     private String dia_chi;
@@ -54,11 +54,11 @@ public class HoaDon {
     private String loai_hoa_don;
     private String ghi_chu;
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
+
     private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
 
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnore
+  
     private List<HoaDonChiTiet> danhSachChiTiet = new ArrayList<>();
 
 }

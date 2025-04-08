@@ -114,14 +114,14 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             WHERE t.id_hoa_don = hd.id_hoa_don
             ORDER BY t.ngay_chuyen DESC) as ngay_chuyen
             FROM hoa_don hd
-            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
+            FULL OUTER JOIN voucher v ON hd.id_voucher = v.id_voucher
+            FULL OUTER JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
             WHERE hd.ma_hoa_don = :maHoaDon""", nativeQuery = true)
     Optional<HoaDonResponse> findByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
     @Query(value = """
-                INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen, nhan_vien_doi, noi_dung_doi)
-                SELECT id_hoa_don, :newTrangThai, :ngayChuyen, :nhanVienDoi, :noiDungDoi
+                INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen)
+                SELECT id_hoa_don, :newTrangThai, :ngayChuyen
                 FROM hoa_don
                 WHERE ma_hoa_don = :maHoaDon
             """, nativeQuery = true)
