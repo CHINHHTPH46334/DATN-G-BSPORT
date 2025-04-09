@@ -26,7 +26,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
 
     @Query("SELECT v FROM Voucher v WHERE v.ngayBatDau >= :startDate AND v.ngayHetHan <= :endDate")
     Page<Voucher> searchByDateRange(@Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate, Pageable pageable);
+                                    @Param("endDate") LocalDateTime endDate, Pageable pageable);
 
     Page<Voucher> findByNgayBatDauGreaterThanEqual(LocalDateTime startDate, Pageable pageable);
 
@@ -34,7 +34,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
 
     @Query("SELECT v FROM Voucher v WHERE v.giaTriToiDa BETWEEN :minPrice AND :maxPrice")
     Page<Voucher> searchByPriceRange(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice,
-            Pageable pageable);
+                                     Pageable pageable);
 
     @Query("SELECT COALESCE(MIN(v.giaTriToiDa), 0) FROM Voucher v")
     BigDecimal findMinPrice();
@@ -60,7 +60,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
                             ELSE 0
                         END
                     ELSE 0
-                END AS GiaTriGiamThucTe,
+                END AS gia_tri_giam_thuc_te,
                 v.ten_voucher
             FROM hoa_don hd
             CROSS JOIN voucher v
@@ -68,7 +68,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
             AND hd.trang_thai = N'Chưa thanh toán'
             AND v.gia_tri_toi_thieu <= hd.tong_tien_truoc_giam
             AND hd.id_hoa_don = :idHD
-            ORDER BY GiaTriGiamThucTe DESC
+            ORDER BY gia_tri_giam_thuc_te DESC
             """, nativeQuery = true)
     List<VoucherBHResponse> giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
 

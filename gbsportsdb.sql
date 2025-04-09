@@ -201,6 +201,7 @@ CREATE TABLE dia_chi_khach_hang (
     xa_phuong NVARCHAR(255),
     quan_huyen NVARCHAR(255),
     tinh_thanh_pho NVARCHAR(255),
+	dia_chi_mac_dinh BIT DEFAULT 0,  -- Cột mới được thêm, kiểu BIT với giá trị mặc định là 0
     FOREIGN KEY (id_khach_hang) REFERENCES khach_hang(id_khach_hang)
 );
 
@@ -258,7 +259,9 @@ CREATE TABLE theo_doi_don_hang (
     id_don_hang INT IDENTITY(1,1) PRIMARY KEY,
     id_hoa_don INT REFERENCES hoa_don(id_hoa_don),
     trang_thai NVARCHAR(50),
-    ngay_chuyen DATETIME
+    ngay_chuyen DATETIME,
+	nhan_vien_doi NVARCHAR(255),
+	noi_dung_doi NVARCHAR(255)
 );
 
 -- 25. Bảng yeu_cau_doi_hang
@@ -440,16 +443,16 @@ INSERT INTO mau_sac (ma_mau_sac, ten_mau_sac, trang_thai) VALUES
 
 -- 12. Bảng chi_tiet_san_pham
 INSERT INTO chi_tiet_san_pham (id_san_pham, qr_code, gia_ban, so_luong, trang_thai, ngay_tao, ngay_sua, id_kich_thuoc, id_mau_sac) VALUES
-(1, 'QR001', 100000, 50, N'Còn hàng', '2023-01-01', '2023-01-01', 1, 1),
-(2, 'QR002', 200000, 40, N'Còn hàng', '2023-02-01', '2023-02-01', 2, 2),
-(3, 'QR003', 300000, 30, N'Còn hàng', '2023-03-01', '2023-03-01', 3, 3),
-(4, 'QR004', 400000, 20, N'Hết hàng', '2023-04-01', '2023-04-01', 4, 4),
-(5, 'QR005', 500000, 10, N'Còn hàng', '2023-05-01', '2023-05-01', 5, 5),
-(6, 'QR006', 600000, 60, N'Còn hàng', '2023-06-01', '2023-06-01', 6, 6),
-(7, 'QR007', 700000, 70, N'Còn hàng', '2023-07-01', '2023-07-01', 7, 7),
-(8, 'QR008', 800000, 80, N'Còn hàng', '2023-08-01', '2023-08-01', 8, 8),
-(9, 'QR009', 900000, 90, N'Còn hàng', '2023-09-01', '2023-09-01', 9, 9),
-(10, 'QR010', 1000000, 100, N'Còn hàng', '2023-10-01', '2023-10-01', 10, 10);
+(1, 'QR001', 100000, 50, N'Hoạt động', '2023-01-01', '2023-01-01', 1, 1),
+(2, 'QR002', 200000, 40, N'Hoạt động', '2023-02-01', '2023-02-01', 2, 2),
+(3, 'QR003', 300000, 30, N'Hoạt động', '2023-03-01', '2023-03-01', 3, 3),
+(4, 'QR004', 400000, 20, N'Hoạt động', '2023-04-01', '2023-04-01', 4, 4),
+(5, 'QR005', 500000, 10, N'Hoạt động', '2023-05-01', '2023-05-01', 5, 5),
+(6, 'QR006', 600000, 60, N'Hoạt động', '2023-06-01', '2023-06-01', 6, 6),
+(7, 'QR007', 700000, 70, N'Hoạt động', '2023-07-01', '2023-07-01', 7, 7),
+(8, 'QR008', 800000, 80, N'Hoạt động', '2023-08-01', '2023-08-01', 8, 8),
+(9, 'QR009', 900000, 90, N'Hoạt động', '2023-09-01', '2023-09-01', 9, 9),
+(10, 'QR010', 1000000, 100, N'Hoạt động', '2023-10-01', '2023-10-01', 10, 10);
 
 -- 13. Bảng hinh_anh
 INSERT INTO hinh_anh (id_chi_tiet_san_pham, anh_chinh, hinh_anh) VALUES
@@ -534,17 +537,17 @@ INSERT INTO danh_sach_yeu_thich (id_khach_hang, id_chi_tiet_san_pham, ngay_them)
 (10, 10, '2025-03-10');
 
 -- 20. Bảng dia_chi_khach_hang
-INSERT INTO dia_chi_khach_hang (id_khach_hang, so_nha, xa_phuong, quan_huyen, tinh_thanh_pho) VALUES
-(1, N'Số nhà 25', N'Phường Cổ Nhuế 1', N'Quận Bắc Từ Liêm', N'Hà Nội'),
-(2, N'Số nhà 225', N'Phường Phương Canh', N'Quận Nam Từ Liêm', N'Hà Nội'),
-(3, N'Số nhà 125', N'Phường 15', N'Quận Tân Bình', N'Hồ Chí Minh'),
-(4, N'Số nhà 2', N'Phường Bến Nghé', N'Quận 1', N'Hồ Chí Minh'),
-(5, N'Số nhà 5', N'Phường Hải Châu 1', N'Quận Hải Châu', N'Đà Nẵng'),
-(6, N'Số nhà 3', N'Phường Thọ Quang', N'Quận Sơn Trà', N'Đà Nẵng'),
-(7, N'Số nhà 45', N'Phường Hòa Khánh', N'Quận Liên Chiểu', N'Đà Nẵng'),
-(8, N'Số nhà 5', N'Phường 10', N'Quận 3', N'Hồ Chí Minh'),
-(9, N'Số nhà 11', N'Phường Xuân Đỉnh', N'Quận Bắc Từ Liêm', N'Hà Nội'),
-(10, N'Số nhà 41', N'Phường Tân Phú', N'Quận 7', N'Hồ Chí Minh');
+INSERT INTO dia_chi_khach_hang (id_khach_hang, so_nha, xa_phuong, quan_huyen, tinh_thanh_pho, dia_chi_mac_dinh) VALUES
+(1, N'Số nhà 25', N'Phường Cổ Nhuế 1', N'Quận Bắc Từ Liêm', N'Hà Nội', 1),
+(2, N'Số nhà 225', N'Phường Phương Canh', N'Quận Nam Từ Liêm', N'Hà Nội', 1),
+(3, N'Số nhà 125', N'Phường 15', N'Quận Tân Bình', N'Hồ Chí Minh', 1),
+(4, N'Số nhà 2', N'Phường Bến Nghé', N'Quận 1', N'Hồ Chí Minh', 1),
+(5, N'Số nhà 5', N'Phường Hải Châu 1', N'Quận Hải Châu', N'Đà Nẵng', 1),
+(6, N'Số nhà 3', N'Phường Thọ Quang', N'Quận Sơn Trà', N'Đà Nẵng', 1),
+(7, N'Số nhà 45', N'Phường Hòa Khánh', N'Quận Liên Chiểu', N'Đà Nẵng', 1),
+(8, N'Số nhà 5', N'Phường 10', N'Quận 3', N'Hồ Chí Minh', 1),
+(9, N'Số nhà 11', N'Phường Xuân Đỉnh', N'Quận Bắc Từ Liêm', N'Hà Nội', 1),
+(10, N'Số nhà 41', N'Phường Tân Phú', N'Quận 7', N'Hồ Chí Minh', 1);
 
 -- 21. Bảng voucher
 INSERT INTO voucher (ma_voucher, ten_voucher, ngay_tao, ngay_het_han, gia_tri_giam, gia_tri_toi_thieu, trang_thai, so_luong, kieu_giam_gia, mo_ta, gia_tri_toi_da) VALUES

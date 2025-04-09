@@ -1,5 +1,7 @@
 package com.example.gbsports.util;
 
+import org.apache.commons.codec.binary.Hex;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
@@ -86,4 +88,14 @@ public class HMACUtil {
         }
         return HexStringUtil.byteArrayToHexString(hmacEncodeBytes);
     }
+
+    public static String hmacSha256Hex(String secretKey, String data) throws Exception {
+        Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256");
+        sha256_HMAC.init(secret_key);
+
+        byte[] hash = sha256_HMAC.doFinal(data.getBytes("UTF-8"));
+        return Hex.encodeHexString(hash);
+    }
+
 }
