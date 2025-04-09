@@ -11,8 +11,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaiKhoanRepo extends JpaRepository<TaiKhoan, Integer> {
-    @Query("SELECT t FROM TaiKhoan t WHERE t.ten_dang_nhap = :tenDangNhap")
-    Optional<TaiKhoan> findByTen_dang_nhap(String tenDangNhap);
+    @Query(value = """
+            SELECT t.* FROM tai_khoan t
+            full outer join roles r on r.id_roles = t.id_roles
+            WHERE t.ten_dang_nhap = :tenDangNhap
+            AND t.id_roles = 4
+            """, nativeQuery = true)
+    Optional<TaiKhoan> findByTenDangNhap(String tenDangNhap);
 
     @Query("SELECT tk FROM TaiKhoan tk WHERE tk.ten_dang_nhap = :tenDangNhap")
     List<TaiKhoan> findAllByTenDangNhap(String tenDangNhap);
@@ -32,5 +37,6 @@ public interface TaiKhoanRepo extends JpaRepository<TaiKhoan, Integer> {
     // Lấy thông tin chi tiết khách hàng
     @Query("SELECT kh FROM KhachHang kh JOIN kh.taiKhoan t WHERE t.ten_dang_nhap = :tenDangNhap AND t.roles.id_roles = 4")
     Optional<KhachHang> findKhachHangByTenDangNhap(@Param("tenDangNhap") String tenDangNhap);
+
 
 }
