@@ -171,7 +171,15 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 SELECT * FROM hoa_don
             """, nativeQuery = true)
     List<HoaDonResponse> getListHD();
-
+    @Query(value = """
+            SELECT TOP 1 trang_thai
+            FROM theo_doi_don_hang
+            WHERE id_hoa_don = :idHoaDon
+              AND trang_thai != N'Đã cập nhật'
+            ORDER BY ngay_chuyen DESC
+            """, nativeQuery = true)
+    String findLatestNonUpdatedStatusByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
+    //Nghía
     @Query(nativeQuery = true, value = """
             select ctsp.id_chi_tiet_san_pham, sp.hinh_anh, sp.ten_san_pham,\s
                               ms.ten_mau_sac, kt.gia_tri, hdct.don_gia,\s
