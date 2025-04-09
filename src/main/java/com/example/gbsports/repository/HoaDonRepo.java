@@ -121,8 +121,8 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     Optional<HoaDonResponse> findByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
     @Query(value = """
-                INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen)
-                SELECT id_hoa_don, :newTrangThai, :ngayChuyen
+                INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen, nhan_vien_doi, noi_dung_doi)
+                SELECT id_hoa_don, :newTrangThai, :ngayChuyen, :nhanVienDoi, :noiDungDoi
                 FROM hoa_don
                 WHERE ma_hoa_don = :maHoaDon
             """, nativeQuery = true)
@@ -130,11 +130,13 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Transactional
     void insertTrangThaiDonHang(@Param("maHoaDon") String maHoaDon,
                                 @Param("newTrangThai") String newTrangThai,
-                                @Param("ngayChuyen") LocalDateTime ngayChuyen);
+                                @Param("ngayChuyen") LocalDateTime ngayChuyen,
+                                @Param("nhanVienDoi") String nhanVienDoi,
+                                @Param("noiDungDoi") String noiDungDoi);
 
     // Lấy trạng thái mới nhất
     @Query(value = """
-                SELECT trang_thai, ngay_chuyen
+                SELECT trang_thai, ngay_chuyen, nhan_vien_doi, noi_dung_doi
                 FROM theo_doi_don_hang
                 WHERE id_hoa_don = :idHoaDon
                 ORDER BY ngay_chuyen ASC

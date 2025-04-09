@@ -471,7 +471,7 @@ public class BanHangController {
         HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
         hoaDon.setTrang_thai("Đã thanh toán");
         hoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
-        hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now());
+        hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now(), null, null);
         hoaDonRepo.save(hoaDon);
         System.out.println(hoaDon);
         return ResponseEntity.ok("Thanh toán hóa đơn thành công");
