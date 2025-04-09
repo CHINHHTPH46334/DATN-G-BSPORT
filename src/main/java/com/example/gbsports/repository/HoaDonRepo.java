@@ -203,7 +203,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             hoa_don.trang_thai, hoa_don.id_voucher, sdt_nguoi_nhan, dia_chi,
             email, tong_tien_truoc_giam, tong_tien_sau_giam, hinh_thuc_thanh_toan,
             phuong_thuc_nhan_hang,loai_hoa_don, ghi_chu, ten_voucher, ma_voucher,
-            gia_tri_giam, kieu_giam_gia, ho_ten
+            gia_tri_giam, kieu_giam_gia, ho_ten, phi_van_chuyen
             from hoa_don
             join voucher vc on vc.id_voucher = hoa_don.id_voucher
             where ma_hoa_don = :maHoaDon
