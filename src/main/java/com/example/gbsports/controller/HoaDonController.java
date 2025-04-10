@@ -276,83 +276,82 @@ public class HoaDonController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/cancel_order")
-    @Transactional
-    public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon) {
-        // Tìm hóa đơn
-        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
-        if (!hoaDonOpt.isPresent()) {
-            throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
-        }
+//    @PostMapping("/cancel_order")
+//    @Transactional
+//    public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon,
+//                              @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
+//                              @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
+//        Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
+//        if (!hoaDonOpt.isPresent()) {
+//            throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
+//        }
+//
+//        Integer idHoaDon = hoaDonOpt.get().getId_hoa_don();
+//        LocalDateTime ngayChuyen = LocalDateTime.now();
+//
+//        // Lấy trạng thái gần nhất (bỏ qua "Đã cập nhật")
+//        String trangThaiGanNhat = hoaDonRepo.findLatestNonUpdatedStatusByIdHoaDon(idHoaDon);
+//        if (trangThaiGanNhat == null) {
+//            throw new RuntimeException("Không tìm thấy trạng thái phù hợp cho hóa đơn với mã: " + maHoaDon);
+//        }
+//
+//        // Xử lý theo trạng thái gần nhất
+//        if ("Chờ xác nhận".equals(trangThaiGanNhat)) {
+//            // Chỉ hoàn lại số lượng voucher (nếu có)
+//            Optional<HoaDon> hoaDonEntityOpt = hoaDonRepo.findById(idHoaDon);
+//            if (hoaDonEntityOpt.isPresent()) {
+//                HoaDon hoaDon = hoaDonEntityOpt.get();
+//                Integer idVoucher = hoaDon.getVoucher() != null ? hoaDon.getVoucher().getId() : null;
+//                if (idVoucher != null) {
+//                    Optional<Voucher> voucherOpt = voucherRepo.findById(idVoucher);
+//                    if (voucherOpt.isPresent()) {
+//                        Voucher voucher = voucherOpt.get();
+//                        voucher.setSoLuong(voucher.getSoLuong() + 1);
+//                        voucherRepo.save(voucher);
+//                    } else {
+//                        throw new RuntimeException("Không tìm thấy voucher với ID: " + idVoucher);
+//                    }
+//                }
+//            }
+//        } else if ("Đã xác nhận".equals(trangThaiGanNhat) || "Chờ đóng gói".equals(trangThaiGanNhat)) {
+//            // Hoàn lại số lượng voucher (nếu có) và số lượng sản phẩm chi tiết
+//            Optional<HoaDon> hoaDonEntityOpt = hoaDonRepo.findById(idHoaDon);
+//            if (hoaDonEntityOpt.isPresent()) {
+//                HoaDon hoaDon = hoaDonEntityOpt.get();
+//                Integer idVoucher = hoaDon.getVoucher() != null ? hoaDon.getVoucher().getId() : null;
+//                if (idVoucher != null) {
+//                    Optional<Voucher> voucherOpt = voucherRepo.findById(idVoucher);
+//                    if (voucherOpt.isPresent()) {
+//                        Voucher voucher = voucherOpt.get();
+//                        voucher.setSoLuong(voucher.getSoLuong() + 1);
+//                        voucherRepo.save(voucher);
+//                    } else {
+//                        throw new RuntimeException("Không tìm thấy voucher với ID: " + idVoucher);
+//                    }
+//                }
+//            }
+//
+//            // Hoàn lại số lượng sản phẩm chi tiết
+//            List<HoaDonChiTietResponse> chiTietHoaDons = hoaDonChiTietRepo.findHoaDonChiTietById(idHoaDon);
+//            for (HoaDonChiTietResponse chiTiet : chiTietHoaDons) {
+//                Integer idCTSP = chiTiet.getId_chi_tiet_san_pham();
+//                Integer soLuong = chiTiet.getSo_luong();
+//                Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idCTSP);
+//                if (chiTietSanPhamOpt.isPresent()) {
+//                    ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
+//                    chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() + soLuong);
+//                    chiTietSanPhamRepo.save(chiTietSanPham);
+//                } else {
+//                    throw new RuntimeException("Không tìm thấy sản phẩm chi tiết với ID: " + idCTSP);
+//                }
+//            }
+//        } else {
+//            throw new RuntimeException("Không thể hủy đơn hàng ở trạng thái: " + trangThaiGanNhat);
+//        }
+////        hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã hủy", ngayChuyen, nhanVienDoi, noiDungDoi);
+//        return "Đơn hàng đã được hủy";
+//    }
 
-        Integer idHoaDon = hoaDonOpt.get().getId_hoa_don();
-        LocalDateTime ngayChuyen = LocalDateTime.now();
-
-        // Lấy trạng thái gần nhất (bỏ qua "Đã cập nhật")
-        String trangThaiGanNhat = hoaDonRepo.findLatestNonUpdatedStatusByIdHoaDon(idHoaDon);
-        if (trangThaiGanNhat == null) {
-            throw new RuntimeException("Không tìm thấy trạng thái phù hợp cho hóa đơn với mã: " + maHoaDon);
-        }
-
-        // Xử lý theo trạng thái gần nhất
-        if ("Chờ xác nhận".equals(trangThaiGanNhat)) {
-            // Chỉ hoàn lại số lượng voucher (nếu có)
-            Optional<HoaDon> hoaDonEntityOpt = hoaDonRepo.findById(idHoaDon);
-            if (hoaDonEntityOpt.isPresent()) {
-                HoaDon hoaDon = hoaDonEntityOpt.get();
-                Integer idVoucher = hoaDon.getVoucher() != null ? hoaDon.getVoucher().getId() : null;
-                if (idVoucher != null) {
-                    Optional<Voucher> voucherOpt = voucherRepo.findById(idVoucher);
-                    if (voucherOpt.isPresent()) {
-                        Voucher voucher = voucherOpt.get();
-                        voucher.setSoLuong(voucher.getSoLuong() + 1);
-                        voucherRepo.save(voucher);
-                    } else {
-                        throw new RuntimeException("Không tìm thấy voucher với ID: " + idVoucher);
-                    }
-                }
-            }
-        } else if ("Đã xác nhận".equals(trangThaiGanNhat) || "Chờ đóng gói".equals(trangThaiGanNhat)) {
-            // Hoàn lại số lượng voucher (nếu có) và số lượng sản phẩm chi tiết
-            Optional<HoaDon> hoaDonEntityOpt = hoaDonRepo.findById(idHoaDon);
-            if (hoaDonEntityOpt.isPresent()) {
-                HoaDon hoaDon = hoaDonEntityOpt.get();
-                Integer idVoucher = hoaDon.getVoucher() != null ? hoaDon.getVoucher().getId() : null;
-                if (idVoucher != null) {
-                    Optional<Voucher> voucherOpt = voucherRepo.findById(idVoucher);
-                    if (voucherOpt.isPresent()) {
-                        Voucher voucher = voucherOpt.get();
-                        voucher.setSoLuong(voucher.getSoLuong() + 1);
-                        voucherRepo.save(voucher);
-                    } else {
-                        throw new RuntimeException("Không tìm thấy voucher với ID: " + idVoucher);
-                    }
-                }
-            }
-
-            // Hoàn lại số lượng sản phẩm chi tiết
-            List<HoaDonChiTietResponse> chiTietHoaDons = hoaDonChiTietRepo.findHoaDonChiTietById(idHoaDon);
-            for (HoaDonChiTietResponse chiTiet : chiTietHoaDons) {
-                Integer idCTSP = chiTiet.getId_chi_tiet_san_pham();
-                Integer soLuong = chiTiet.getSo_luong();
-
-                Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idCTSP);
-                if (chiTietSanPhamOpt.isPresent()) {
-                    ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
-                    chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() + soLuong);
-                    chiTietSanPhamRepo.save(chiTietSanPham);
-                } else {
-                    throw new RuntimeException("Không tìm thấy sản phẩm chi tiết với ID: " + idCTSP);
-                }
-            }
-        } else {
-            throw new RuntimeException("Không thể hủy đơn hàng ở trạng thái: " + trangThaiGanNhat);
-        }
-
-        // Cập nhật trạng thái "Đã hủy"
-        hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã hủy", ngayChuyen);
-        return "Đơn hàng đã được hủy";
-    }
 
     @PostMapping("/update_ttkh")
     public ResponseEntity<Map<String, Object>> updateCustomerInfo(

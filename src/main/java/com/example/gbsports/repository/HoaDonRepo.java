@@ -209,4 +209,6 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             where ma_hoa_don = :maHoaDon
                                     """)
     HoaDonResponse getHoaDonByMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+
 }
