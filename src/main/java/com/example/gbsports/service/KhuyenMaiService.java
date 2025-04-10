@@ -322,4 +322,11 @@ public class KhuyenMaiService {
         }
         return chiTietSanPhamRepository.findBySanPhamIdSanPham(idSanPham);
     }
+
+    public Page<KhuyenMaiResponse> locTheoKieuGiamGia(String kieuGiamGia, Pageable pageable) {
+        if (kieuGiamGia == null || kieuGiamGia.equals("Tất cả")) {
+            return getAllKhuyenMai(pageable);
+        }
+        return khuyenMaiRepository.findByKieuGiamGia(kieuGiamGia, pageable).map(this::toResponse);
+    }
 }

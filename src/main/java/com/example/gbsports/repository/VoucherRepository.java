@@ -20,6 +20,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     Optional<Voucher> findByMaVoucher(String maVoucher);
 
     Page<Voucher> findByTrangThai(String trangThai, Pageable pageable);
+    Page<Voucher> findByKieuGiamGia(String kieuGiamGia, Pageable pageable);
 
     @Query("SELECT v FROM Voucher v WHERE v.maVoucher LIKE %:keyword% OR v.tenVoucher LIKE %:keyword%")
     Page<Voucher> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
