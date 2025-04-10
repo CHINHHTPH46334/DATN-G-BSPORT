@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -113,95 +114,30 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
-//    @PostMapping("/add")
-//    public ResponseEntity<Map<String, Object>> addKhachHang(
-//            @Valid @RequestBody KhachHangRequest khachHangRequest,
-//            BindingResult result) {
-//
-//        Map<String, Object> response = new HashMap<>();
-//
-//        if (result.hasErrors()) {
-//            Map<String, String> fieldErrors = new HashMap<>();
-//            for (FieldError error : result.getFieldErrors()) {
-//                fieldErrors.put(error.getField(), error.getDefaultMessage());
-//            }
-//            response.put("fieldErrors", fieldErrors);
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//
-//        if (khachHangRequest.getNgaySinh() == null) {
-//            response.put("error", "Ngày sinh không được để trống!");
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//
-//        LocalDate ngaySinh = khachHangRequest.getNgaySinh().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-//        LocalDate now = LocalDate.now();
-//        int tuoi = Period.between(ngaySinh, now).getYears();
-//        if (tuoi < 13) {
-//            Map<String, String> fieldErrors = new HashMap<>();
-//            fieldErrors.put("ngaySinh", "Khách hàng phải đủ 13 tuổi!");
-//            response.put("fieldErrors", fieldErrors);
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//
-//        Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(khachHangRequest.getMaKhachHang());
-//        if (existingKhachHang.isPresent()) {
-//            response.put("error", "Mã khách hàng đã tồn tại!");
-//            return ResponseEntity.badRequest().body(response);
-//        }
-//
-//        try {
-//            TaiKhoan taiKhoan = new TaiKhoan();
-//            taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-//            taiKhoan.setMat_khau(khachHangRequest.getMatKhau());
-//            taiKhoan = taiKhoanRepo.save(taiKhoan);
-//
-//            KhachHang khachHang = new KhachHang();
-//            BeanUtils.copyProperties(khachHangRequest, khachHang);
-//            khachHang.setTaiKhoan(taiKhoan);
-//            khachHang = khachHangRepo.save(khachHang);
-//
-//            if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
-//                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
-//                        .filter(this::isValidDiaChi)
-//                        .collect(Collectors.toList());
-//
-//                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
-//                    DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
-//                    diaChiKhachHang.setKhachHang(khachHang);
-//                    diaChiKhachHang.setSoNha(diaChiReq.getSoNha());
-//                    diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
-//                    diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
-//                    diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-//                    diaChiKhachHangRepo.save(diaChiKhachHang);
-//                }
-//            }
-//
-//            String subject = "Chào mừng bạn đến với GB Sports!";
-//            String body = "<h3>Xin chào " + khachHang.getTenKhachHang() + ",</h3>" +
-//                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại GB Sports. Tài khoản của bạn đã được tạo thành công!</p>" +
-//                    "<p>Dưới đây là thông tin đăng nhập của bạn:</p>" +
-//                    "<ul>" +
-//                    "<li><strong>Tên đăng nhập</strong>: " + taiKhoan.getTen_dang_nhap() + "</li>" +
-//                    "<li><strong>Mật khẩu</strong>: " + khachHangRequest.getMatKhau() + "</li>" +
-//                    "</ul>" +
-//                    "<p>Vui lòng đăng nhập để sử dụng dịch vụ.</p>" +
-//                    "<p>Trân trọng,<br>Đội ngũ GB Sports</p>";
-//            try {
-//                emailService.sendEmail(khachHang.getEmail(), subject, body);
-//            } catch (MessagingException e) {
-//                response.put("error", "Lưu khách hàng thành công nhưng gửi email thất bại: " + e.getMessage());
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//            }
-//
-//            response.put("successMessage", "Thêm khách hàng thành công!");
-//            response.put("khachHang", khachHang);
-//            return ResponseEntity.ok(response);
-//        } catch (Exception e) {
-//            response.put("error", "Có lỗi xảy ra khi thêm khách hàng: " + e.getMessage());
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//        }
-//    }
+    @GetMapping("/getAllKH")
+    public ResponseEntity<Map<String, Object>> getAllKhachHang() {
+        List<KhachHang> khachHangList = khachHangRepo.findAll(Sort.by(Sort.Direction.DESC, "idKhachHang"));
+
+        // Map để lưu địa chỉ mặc định của từng khách hàng
+        Map<Integer, String> diaChiMap = new HashMap<>();
+        for (KhachHang kh : khachHangList) {
+            var diaChiList = diaChiKhachHangRepo.findByKhachHangId(kh.getIdKhachHang());
+            String diaChiMacDinh = diaChiList.stream()
+                    .filter(DiaChiKhachHang::getDiaChiMacDinh)
+                    .map(DiaChiKhachHang::getDiaChiKhachHang)
+                    .findFirst()
+                    .orElse("Chưa có địa chỉ mặc định");
+            diaChiMap.put(kh.getIdKhachHang(), diaChiMacDinh);
+        }
+
+        // Trả về response gồm danh sách khách hàng và map địa chỉ
+        Map<String, Object> response = new HashMap<>();
+        response.put("danhSachKhachHang", khachHangList);
+        response.put("diaChiMap", diaChiMap);
+
+        return ResponseEntity.ok(response);
+    }
+
 
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addKhachHang(
@@ -236,6 +172,12 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+        if (existingTaiKhoan.isPresent()) {
+            response.put("error", "Email đã được sử dụng!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
         try {
             // Sinh mã khách hàng tự động nếu không có trong request
             String maKhachHang = khachHangRequest.getMaKhachHang();
@@ -258,6 +200,7 @@ public class KhachHangController {
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
             taiKhoan.setMat_khau(matKhau);
+            taiKhoan.setRoles(rolesRepo.findById(4).get());
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             // Lưu khách hàng

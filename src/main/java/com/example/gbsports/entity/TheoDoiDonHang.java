@@ -19,4 +19,6 @@ public class TheoDoiDonHang {
     private String trang_thai;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngay_chuyen;
+    private String nhan_vien_doi;
+    private String noi_dung_doi;
 }

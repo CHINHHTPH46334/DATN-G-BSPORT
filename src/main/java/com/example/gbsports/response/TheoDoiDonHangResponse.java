@@ -11,6 +11,8 @@ public interface TheoDoiDonHangResponse {
     String getTrang_thai();
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_chuyen();
+    String getNhan_vien_doi();
+    String getNoi_dung_doi();
 
     // Thêm một phương thức để lấy chuỗi định dạng
     default String getNgay_chuyen_formatted() {

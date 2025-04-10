@@ -72,4 +72,8 @@ public interface HoaDonResponse {
 
     String getMo_ta();
 
+    BigDecimal getGia_tri_giam();
+
+    String getKieu_giam_gia();
+
 }
