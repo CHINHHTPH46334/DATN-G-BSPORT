@@ -588,7 +588,7 @@ public class KhachHangController {
             // Tìm tất cả tài khoản theo email (ten_dang_nhap)
             List<TaiKhoan> taiKhoanList = taiKhoanRepo.findAllByTenDangNhap(loginRequest.getEmail());
             if (taiKhoanList.isEmpty()) {
-                response.put("error", "Email không tồn tại!");
+                response.put("error", "Tên đăng nhập không tồn tại!");
                 return ResponseEntity.badRequest().body(response);
             }
 

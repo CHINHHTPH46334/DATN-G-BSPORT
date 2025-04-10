@@ -39,6 +39,8 @@ public class HoaDonController {
     private VoucherRepository voucherRepo;
     @Autowired
     private TheoDoiDonHangRepo theoDoiDonHangRepo;
+    @Autowired
+    private DiaChiKhachHangRepo diaChiKhachHangRepo;
 
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
@@ -164,10 +166,12 @@ public class HoaDonController {
         Integer idHoaDon = hoaDon.getId_hoa_don();
         List<HoaDonChiTietResponse> chiTietHoaDons = hoaDonChiTietRepo.findHoaDonChiTietById(idHoaDon);
         List<TheoDoiDonHangResponse> trangThaiHistory = hoaDonRepo.findTrangThaiHistoryByIdHoaDon(idHoaDon);
+        List<DiaChiKhachHang> listDC = diaChiKhachHangRepo.findByKhachHangId(hoaDon.getId_khach_hang());
         Map<String, Object> response = new HashMap<>();
         response.put("hoaDon", hoaDon);
         response.put("chiTietHoaDons", chiTietHoaDons);
         response.put("trangThaiHistory", trangThaiHistory);
+        response.put("listDC", listDC);
         return response;
     }
 
