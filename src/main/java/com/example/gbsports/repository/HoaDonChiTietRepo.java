@@ -19,13 +19,14 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     hd.dia_chi, hd.email, hd.tong_tien_truoc_giam, hd.phi_van_chuyen,
                     hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang,
                     tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia,
-                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, ctsp.so_luong AS so_luong_con_lai,
+                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, ctkm.gia_sau_giam, ctsp.so_luong AS so_luong_con_lai,
                     kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
                     ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham,
                     ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
                 FULL OUTER JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
                 FULL OUTER JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
                 FULL OUTER JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
                 FULL OUTER JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
                 FULL OUTER JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
@@ -443,7 +444,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @IDHD INT = :idHoaDon;
                 DECLARE @SOLUONG INT = :soLuong;
                 DECLARE @GIABAN DECIMAL(18, 2);
+                DECLARE @GIASAUGIAM DECIMAL(18, 2);
+
+                -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Kiểm tra xem sản phẩm có áp dụng khuyến mãi không và lấy giá sau giảm (nếu có)
+                SELECT @GIASAUGIAM = MIN(ctkm.gia_sau_giam)
+                FROM chi_tiet_khuyen_mai ctkm
+                JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                WHERE ctkm.id_chi_tiet_san_pham = @IDCTSP
+                  AND km.trang_thai = N'Đang diễn ra'
+                  AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han;
+
+                -- Nếu không có khuyến mãi, sử dụng giá bán gốc
+                IF @GIASAUGIAM IS NULL
+                BEGIN
+                    SET @GIASAUGIAM = @GIABAN;
+                END
+
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
@@ -477,13 +496,13 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 BEGIN
                     UPDATE hoa_don_chi_tiet
                     SET so_luong = so_luong + @SOLUONG,
-                        don_gia = (so_luong + @SOLUONG) * @GIABAN
+                        don_gia = (so_luong + @SOLUONG) * @GIASAUGIAM
                     WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
                 END
                 ELSE
                 BEGIN
                     INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
-                    VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GIABAN);
+                    VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GIASAUGIAM);
                 END
 
                 -- Tính tổng tiền trước giảm
@@ -664,7 +683,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @IDCTSP INT = :idCTSP;
                 DECLARE @IDHD INT = :idHoaDon;
                 DECLARE @GIABAN DECIMAL(18, 2);
+                DECLARE @GIASAUGIAM DECIMAL(18, 2);
+
+                -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Kiểm tra xem sản phẩm có áp dụng khuyến mãi không và lấy giá sau giảm (nếu có)
+                SELECT @GIASAUGIAM = MIN(ctkm.gia_sau_giam)
+                FROM chi_tiet_khuyen_mai ctkm
+                JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                WHERE ctkm.id_chi_tiet_san_pham = @IDCTSP
+                  AND km.trang_thai = N'Đang diễn ra'
+                  AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han;
+
+                -- Nếu không có khuyến mãi, sử dụng giá bán gốc
+                IF @GIASAUGIAM IS NULL
+                BEGIN
+                    SET @GIASAUGIAM = @GIABAN;
+                END
+
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
@@ -724,7 +761,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 -- Cập nhật số lượng trong chi tiết hóa đơn
                 UPDATE hoa_don_chi_tiet
                 SET so_luong = so_luong + @QUANTITYCHANGE,
-                    don_gia = (so_luong + @QUANTITYCHANGE) * @GIABAN
+                    don_gia = (so_luong + @QUANTITYCHANGE) * @GIASAUGIAM
                 WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
 
                 -- Tính tổng tiền trước giảm

@@ -35,6 +35,7 @@ public interface ChiTietSanPhamView {
      Integer getSo_luong_danh_gia();
      BigDecimal getGiaGoc();
      BigDecimal getGiaHienTai();
+     BigDecimal getGia_sau_giam();
      Float getGiaTriKhuyenMai();
      String getKieuKhuyenMai();
      String getHinh_anh();
