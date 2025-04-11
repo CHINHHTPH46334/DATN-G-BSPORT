@@ -324,7 +324,7 @@ public class BanHangController {
     }
 
     @GetMapping("/getSPHD")
-    public List<HoaDonChiTietResponse> getAllSPHD(@RequestParam("idHoaDon") Integer idHD) {
+    public List<HoaDonChiTietResponse> getAllSPHD(@RequestParam(value = "idHoaDon") Integer idHD) {
         return hoaDonChiTietRepo.getSPGH(idHD);
     }
 
@@ -362,22 +362,68 @@ public class BanHangController {
 
     @PostMapping("/addSPHD")
     public ResponseEntity<?> addSPHD(
-            @RequestParam(value = "idHoaDon") Integer idHD,
-            @RequestParam(value = "idCTSP") Integer idCTSP,
-            @RequestParam(value = "soLuong") Integer soLuong,
-            @RequestParam(value = "giaBan") BigDecimal giaBan) {
+            @RequestParam("idHoaDon") Integer idHD,
+            @RequestParam("idCTSP") Integer idCTSP,
+            @RequestParam("soLuong") Integer soLuong,
+            @RequestParam("giaBan") BigDecimal giaBan
+    ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
-            hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
 
-            capNhatVoucher(idHD);
-            return ResponseEntity.ok("Thêm sản phẩm vào hóa đơn thành công");
+            ChiTietSanPham chiTietSP = chiTietSanPhamRepo.findById(idCTSP)
+                    .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
+
+            if (chiTietSP.getSo_luong() < soLuong) {
+                return ResponseEntity.badRequest().body("Không đủ số lượng tồn kho!");
+            }
+
+            // Tìm xem sản phẩm đã có trong hóa đơn chưa
+            Optional<HoaDonChiTiet> optionalCT = hoaDonChiTietRepo
+                    .findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHD);
+
+            HoaDonChiTiet chiTiet;
+            if (optionalCT.isPresent()) {
+                chiTiet = optionalCT.get();
+                int soLuongMoi = chiTiet.getSo_luong() + soLuong;
+                chiTiet.setSo_luong(soLuongMoi);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuongMoi)));
+            } else {
+                chiTiet = new HoaDonChiTiet();
+                chiTiet.setHoaDon(hoaDon);
+                chiTiet.setChiTietSanPham(chiTietSP);
+                chiTiet.setSo_luong(soLuong);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuong)));
+            }
+
+            // Trừ tồn kho
+            chiTietSP.setSo_luong(chiTietSP.getSo_luong() - soLuong);
+            chiTietSanPhamRepo.save(chiTietSP);
+
+            // Lưu chi tiết hóa đơn
+            hoaDonChiTietRepo.save(chiTiet);
+
+            // Tính tổng tiền mới
+            List<HoaDonChiTiet> danhSachChiTiet = hoaDonChiTietRepo.findByIdHoaDon(idHD);
+            BigDecimal tongTien = danhSachChiTiet.stream()
+                    .map(HoaDonChiTiet::getDon_gia)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .add(hoaDon.getPhi_van_chuyen());
+
+            hoaDon.setTong_tien_truoc_giam(tongTien);
+            hoaDon.setTong_tien_sau_giam(tongTien); // Nếu chưa có voucher
+            hoaDonRepo.save(hoaDon);
+
+            capNhatVoucher(idHD); // Nếu có
+
+            return ResponseEntity.ok("Thêm sản phẩm thành công");
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi thêm sản phẩm: " + e.getMessage());
         }
     }
+
 
     @PostMapping("/giamSPHD")
     public ResponseEntity<?> giamSPHD(
@@ -443,9 +489,12 @@ public class BanHangController {
 
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
+        // Tính lại tổng tiền trước giảm = tiền sản phẩm + phí vận chuyển
         BigDecimal phiVanChuyen = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
         hoaDon.setTong_tien_truoc_giam(tongTienSanPham.add(phiVanChuyen));
 
+        // Kiểm tra voucher
         List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
 
         if (!voucherBHResponse.isEmpty()) {
