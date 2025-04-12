@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.BCTKRepo;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -122,20 +123,11 @@ public class BCTKController {
 
         return ResponseEntity.ok(topSanPhamBanChay);
     }
-    @GetMapping("/topSPBanCham")
-    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanCham(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
-        // Lấy khoảng thời gian từ getKhoangNgay
-        Map<String, LocalDate> dates = getKhoangNgay(type, startDate, endDate);
-        LocalDate start = dates.get("startDate");
-        LocalDate end = dates.get("endDate");
-
+    @GetMapping("/topSPSapHetHang")
+    public ResponseEntity<List<ChiTietSanPhamView>> topSanPhamSapHetHang() {
         // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
-        List<HoaDonResponse> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
+        List<ChiTietSanPhamView> topSanPhamSapHetHang = bctkRepo.topSanPhamSapHetHang();
 
-        return ResponseEntity.ok(topSanPhamBanCham);
+        return ResponseEntity.ok(topSanPhamSapHetHang);
     }
 }
