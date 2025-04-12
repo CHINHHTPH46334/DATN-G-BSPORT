@@ -102,4 +102,13 @@ public class VoucherController {
     public ResponseEntity<String> offVoucher(@RequestParam("id") Integer id) {
         return ResponseEntity.ok(voucherService.offVoucher(id));
     }
+
+    @GetMapping("/loc-kieu-giam-gia-VC")
+    public ResponseEntity<Page<VoucherResponse>> locKieuGiamGia(
+            @RequestParam(required = false) String kieuGiamGia,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(voucherService.locTheoKieuGiamGia(kieuGiamGia, pageable));
+    }
 }

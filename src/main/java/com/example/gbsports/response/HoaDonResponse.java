@@ -59,22 +59,18 @@ public interface HoaDonResponse {
     String getGhi_chu();
 
     String getLoai_hoa_don();
-
     String getMa_san_pham();
 
     String getTen_san_pham();
 
     Integer getSo_luong();
+    BigDecimal getGia_ban();
+    String getTrangThaiDonHang();
+    Float getTiLeTrangThaiDonHang();
 
     String getTrang_thai_thanh_toan();
 
     String getMo_ta();
-
-    BigDecimal getGia_ban();
-
-    String getTrangThaiDonHang();
-
-    Float getTiLeTrangThaiDonHang();
 
     BigDecimal getGia_tri_giam();
 
