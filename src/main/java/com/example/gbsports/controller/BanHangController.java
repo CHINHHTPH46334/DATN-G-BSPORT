@@ -452,7 +452,6 @@ public class BanHangController {
         }
     }
 
-
     @DeleteMapping("/xoaSPHD")
     public ResponseEntity<?> xoaSanPhamKhoiHoaDon(
             @RequestParam("idHoaDon") Integer idHoaDon,
@@ -466,12 +465,18 @@ public class BanHangController {
                         .body(Map.of("success", false, "message", "Không thể xóa sản phẩm từ hóa đơn đã thanh toán!"));
             }
 
+            // Xoá sản phẩm khỏi hóa đơn
             hoaDonChiTietRepo.xoaSPKhoiHD(idHoaDon, idChiTietSanPham);
 
-            capNhatVoucher(idHoaDon);
+            // Cập nhật lại thông tin hóa đơn & voucher
+            try {
+                capNhatVoucher(idHoaDon);
+            } catch (Exception ex) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Lỗi khi cập nhật voucher: " + ex.getMessage()));
+            }
 
-            hoaDon = hoaDonRepo.findById(idHoaDon).orElseThrow(); // Cập nhật lại hóa đơn sau thay đổi
-            return ResponseEntity.ok(Map.of("success", true, "data", hoaDon));
+            return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Lỗi khi xóa sản phẩm: " + e.getMessage()));
@@ -482,34 +487,56 @@ public class BanHangController {
         List<HoaDonChiTietResponse> dsSanPham = hoaDonChiTietRepo.findHoaDonChiTietById(idHD);
 
         BigDecimal tongTienSanPham = dsSanPham.stream()
-                .map(sp -> sp.getDon_gia()) // hoặc sp.getGiaBan().multiply(soLuong) tùy theo bạn lưu gì
+                .map(HoaDonChiTietResponse::getDon_gia)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
 
-        // Tính lại tổng tiền trước giảm = tiền sản phẩm + phí vận chuyển
         BigDecimal phiVanChuyen = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
         hoaDon.setTong_tien_truoc_giam(tongTienSanPham.add(phiVanChuyen));
 
-        // Kiểm tra voucher
+        Voucher voucherCu = hoaDon.getVoucher();
+
         List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
 
         if (!voucherBHResponse.isEmpty()) {
-            Voucher voucher = voucherRepository.findById(voucherBHResponse.get(0).getId_voucher())
+            Integer idVoucherMoi = voucherBHResponse.get(0).getId_voucher();
+            Voucher voucherMoi = voucherRepository.findById(idVoucherMoi)
                     .orElseThrow(() -> new RuntimeException("Voucher không tồn tại!"));
 
             hoaDon.setTong_tien_sau_giam(
                     hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
-            hoaDon.setVoucher(voucher);
+            hoaDon.setVoucher(voucherMoi);
+
+            if (voucherCu == null) {
+                if (voucherMoi.getSoLuong() > 0) {
+                    voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
+                }
+            } else if (!voucherCu.getId().equals(voucherMoi.getId())) {
+                voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
+                voucherRepository.save(voucherCu);
+
+                if (voucherMoi.getSoLuong() > 0) {
+                    voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
+                }
+            }
+
+            voucherRepository.save(voucherMoi);
+
         } else {
+            if (voucherCu != null) {
+                voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
+                voucherRepository.save(voucherCu);
+            }
+
             hoaDon.setVoucher(null);
             hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam());
         }
 
         hoaDonRepo.save(hoaDon);
     }
-
 
     @GetMapping("/trangThaiDonHang")
     public ResponseEntity<?> chuyenTrangThaiHoaDon(@RequestParam("idHoaDon") Integer idHD) {

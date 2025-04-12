@@ -1,6 +1,5 @@
 package com.example.gbsports.controller;
 
-
 import com.example.gbsports.repository.BCTKRepo;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
@@ -21,7 +20,6 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/admin")
 public class BCTKController {
-
     @Autowired
     private BCTKRepo bctkRepo;
 

@@ -210,7 +210,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                         FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
                         FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
                         FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
-                        WHERE hdct.id_hoa_don = :idHD AND (ha.anh_chinh = 1 OR ha.anh_chinh IS NULL)
+                        WHERE hdct.id_hoa_don = :idHD
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> getSPGH(Integer idHD);
 
@@ -302,9 +302,9 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             BEGIN TRANSACTION;
                 
             -- Khai báo các biến
-            DECLARE @SOLUONG INT = 1; -- Số lượng sản phẩm cần giảm
-            DECLARE @IDCTSP INT = 1;  -- ID chi tiết sản phẩm
-            DECLARE @IDHD INT = 1;   -- ID hóa đơn
+            DECLARE @SOLUONG INT = :soLuong; -- Số lượng sản phẩm cần giảm
+            DECLARE @IDCTSP INT = :idCTSP;  -- ID chi tiết sản phẩm
+            DECLARE @IDHD INT = :idHD;   -- ID hóa đơn
                 
             -- Khai báo biến để tìm voucher tốt nhất và tổng tiền trước giảm
             DECLARE @TongTienTruocGiam DECIMAL(18,2);
@@ -424,61 +424,62 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Modifying
     @Transactional
     @Query(value = """
-            BEGIN TRY
-                BEGIN TRANSACTION;
-                DECLARE @IDCTSP INT = :idCTSP;
-                DECLARE @IDHD INT = :idHD;
-                DECLARE @TongTienTruocGiam DECIMAL(18,2);
-                DECLARE @PHIVANCHUYEN DECIMAL(18,2);
-                DECLARE @SoLuongXoa INT;
+                BEGIN TRY
+                    BEGIN TRANSACTION;
+                    DECLARE @IDCTSP INT = :idCTSP;
+                    DECLARE @IDHD INT = :idHD;
+                    DECLARE @TongTienTruocGiam DECIMAL(18,2) = 0;
+                    DECLARE @PHIVANCHUYEN DECIMAL(18,2) = 0;
+                    DECLARE @SoLuongXoa INT = 0;
 
-                IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
-                    THROW 50001, N'Hóa đơn không tồn tại!', 1;
+                    IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
+                        THROW 50001, N'Hóa đơn không tồn tại!', 1;
 
-                IF NOT EXISTS (
-                    SELECT 1 
-                    FROM hoa_don_chi_tiet 
-                    WHERE id_hoa_don = @IDHD 
-                    AND id_chi_tiet_san_pham = @IDCTSP
-                )
-                    THROW 50002, N'Sản phẩm không tồn tại trong hóa đơn để xóa!', 1;
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM hoa_don_chi_tiet
+                        WHERE id_hoa_don = @IDHD
+                          AND id_chi_tiet_san_pham = @IDCTSP
+                    )
+                        THROW 50002, N'Sản phẩm không tồn tại trong hóa đơn để xóa!', 1;
 
-                SELECT @SoLuongXoa = so_luong
-                FROM hoa_don_chi_tiet
-                WHERE id_hoa_don = @IDHD
-                AND id_chi_tiet_san_pham = @IDCTSP;
+                    SELECT @SoLuongXoa = so_luong
+                    FROM hoa_don_chi_tiet
+                    WHERE id_hoa_don = @IDHD
+                      AND id_chi_tiet_san_pham = @IDCTSP;
 
-                DELETE FROM hoa_don_chi_tiet
-                WHERE id_hoa_don = @IDHD
-                AND id_chi_tiet_san_pham = @IDCTSP;
+                    DELETE FROM hoa_don_chi_tiet
+                    WHERE id_hoa_don = @IDHD
+                      AND id_chi_tiet_san_pham = @IDCTSP;
 
-                SELECT @PHIVANCHUYEN = phi_van_chuyen 
-                FROM hoa_don 
-                WHERE id_hoa_don = @IDHD;
+                    SELECT @PHIVANCHUYEN = ISNULL(phi_van_chuyen, 0)
+                    FROM hoa_don
+                    WHERE id_hoa_don = @IDHD;
 
-                SELECT @TongTienTruocGiam = @PHIVANCHUYEN + ISNULL(SUM(don_gia), 0)
-                FROM hoa_don hd
-                LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
-                WHERE hd.id_hoa_don = @IDHD
-                GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
+                    SELECT @TongTienTruocGiam = ISNULL(SUM(ISNULL(don_gia, 0)), 0)
+                    FROM hoa_don_chi_tiet
+                    WHERE id_hoa_don = @IDHD;
 
-                UPDATE hoa_don
-                SET tong_tien_truoc_giam = @TongTienTruocGiam,
-                    tong_tien_sau_giam = @TongTienTruocGiam
-                WHERE id_hoa_don = @IDHD;
+                    SET @TongTienTruocGiam = ISNULL(@TongTienTruocGiam, 0) + ISNULL(@PHIVANCHUYEN, 0);
 
-                UPDATE chi_tiet_san_pham
-                SET so_luong = so_luong + @SoLuongXoa
-                WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    UPDATE hoa_don
+                    SET tong_tien_truoc_giam = @TongTienTruocGiam,
+                        tong_tien_sau_giam = @TongTienTruocGiam
+                    WHERE id_hoa_don = @IDHD;
 
-                COMMIT;
-            END TRY
-            BEGIN CATCH
-                ROLLBACK;
-                THROW;
-            END CATCH;
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong + @SoLuongXoa
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                    COMMIT;
+                END TRY
+                BEGIN CATCH
+                    ROLLBACK;
+                    THROW;
+                END CATCH;
             """, nativeQuery = true)
     void xoaSPKhoiHD(@Param("idHD") Integer idHoaDon, @Param("idCTSP") Integer idChiTietSanPham);
+
 
     @Modifying
     @Transactional

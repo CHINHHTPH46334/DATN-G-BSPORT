@@ -21,10 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,6 +119,28 @@ public class KhuyenMaiService {
         return khuyenMaiRepository.findAll(pageable).map(this::toResponse);
     }
 
+    private BigDecimal calculateGiaSauGiam(BigDecimal giaBan, KhuyenMai khuyenMai) {
+        BigDecimal giaSauGiam = giaBan;
+
+        if ("Phần trăm".equals(khuyenMai.getKieuGiamGia())) {
+            // Giảm theo phần trăm
+            BigDecimal giamGia = giaBan.multiply(khuyenMai.getGiaTriGiam())
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+            // Kiểm tra giá trị tối đa (nếu có)
+            if (khuyenMai.getGiaTriToiDa() != null && giamGia.compareTo(khuyenMai.getGiaTriToiDa()) > 0) {
+                giamGia = khuyenMai.getGiaTriToiDa(); // Giới hạn giá trị giảm bằng giá trị tối đa
+            }
+
+            giaSauGiam = giaBan.subtract(giamGia);
+        } else if ("Tiền mặt".equals(khuyenMai.getKieuGiamGia())) {
+            // Giảm theo số tiền cố định
+            giaSauGiam = giaBan.subtract(khuyenMai.getGiaTriGiam());
+        }
+
+        // Đảm bảo giá sau giảm không âm
+        return giaSauGiam.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : giaSauGiam;
+    }
     // 2️⃣ Thêm khuyến mãi mới
     @Transactional
     public String addKhuyenMai(KhuyenMaiRequest request, List<Integer> selectedChiTietSanPhamIds) {
@@ -164,9 +186,14 @@ public class KhuyenMaiService {
         for (Integer chiTietSanPhamId : selectedChiTietSanPhamIds) {
             ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietSanPhamId)
                     .orElseThrow(() -> new IllegalArgumentException("Chi tiết sản phẩm không tồn tại: " + chiTietSanPhamId));
+
+            // Tính giá sau giảm
+            BigDecimal giaSauGiam = calculateGiaSauGiam(chiTietSanPham.getGia_ban(), khuyenMai);
+
             ChiTietKhuyenMai chiTietKhuyenMai = new ChiTietKhuyenMai();
             chiTietKhuyenMai.setKhuyenMai(savedKhuyenMai);
             chiTietKhuyenMai.setChiTietSanPham(chiTietSanPham);
+            chiTietKhuyenMai.setGiaSauGiam(giaSauGiam);
             chiTietKhuyenMaiRepository.save(chiTietKhuyenMai);
         }
 
@@ -228,20 +255,51 @@ public class KhuyenMaiService {
             khuyenMai.setGiaTriToiDa(khuyenMai.getGiaTriGiam());
         }
         setKhuyenMaiStatus(khuyenMai);
-        khuyenMaiRepository.save(khuyenMai);
+        KhuyenMai savedKhuyenMai = khuyenMaiRepository.save(khuyenMai);
 
-        // Xóa chi tiết khuyến mãi cũ và thêm mới
-        chiTietKhuyenMaiRepository.deleteByKhuyenMaiId(khuyenMai.getId());
-        for (Integer chiTietSanPhamId : selectedChiTietSanPhamIds) {
-            ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietSanPhamId)
-                    .orElseThrow(() -> new IllegalArgumentException("Chi tiết sản phẩm không tồn tại: " + chiTietSanPhamId));
-            ChiTietKhuyenMai chiTietKhuyenMai = new ChiTietKhuyenMai();
-            chiTietKhuyenMai.setKhuyenMai(khuyenMai);
-            chiTietKhuyenMai.setChiTietSanPham(chiTietSanPham);
-            chiTietKhuyenMaiRepository.save(chiTietKhuyenMai);
+        // Lấy danh sách ChiTietKhuyenMai hiện có
+        List<ChiTietKhuyenMai> existingChiTietKhuyenMais = chiTietKhuyenMaiRepository.findByKhuyenMaiId(savedKhuyenMai.getId());
+        Set<Integer> existingIds = existingChiTietKhuyenMais.stream()
+                .map(ctkm -> ctkm.getChiTietSanPham().getId_chi_tiet_san_pham())
+                .collect(Collectors.toSet());
+        Set<Integer> newIds = new HashSet<>(selectedChiTietSanPhamIds);
+
+        // Xóa các ChiTietKhuyenMai không còn trong danh sách mới
+        List<ChiTietKhuyenMai> toDelete = existingChiTietKhuyenMais.stream()
+                .filter(ctkm -> !newIds.contains(ctkm.getChiTietSanPham().getId_chi_tiet_san_pham()))
+                .collect(Collectors.toList());
+        if (!toDelete.isEmpty()) {
+            chiTietKhuyenMaiRepository.deleteAll(toDelete);
         }
 
-        logger.info("Cập nhật khuyến mãi thành công: {}", khuyenMai.getMaKhuyenMai());
+        // Thêm hoặc cập nhật ChiTietKhuyenMai
+        List<ChiTietKhuyenMai> chiTietKhuyenMaisToSave = new ArrayList<>();
+        for (Integer chiTietSanPhamId : selectedChiTietSanPhamIds) {
+            Optional<ChiTietKhuyenMai> existingChiTietKhuyenMai = existingChiTietKhuyenMais.stream()
+                    .filter(ctkm -> ctkm.getChiTietSanPham().getId_chi_tiet_san_pham().equals(chiTietSanPhamId))
+                    .findFirst();
+
+            ChiTietSanPham chiTietSanPham = chiTietSanPhamRepository.findById(chiTietSanPhamId)
+                    .orElseThrow(() -> new IllegalArgumentException("Chi tiết sản phẩm không tồn tại: " + chiTietSanPhamId));
+            BigDecimal giaSauGiam = calculateGiaSauGiam(chiTietSanPham.getGia_ban(), savedKhuyenMai);
+
+            if (existingChiTietKhuyenMai.isPresent()) {
+                // Cập nhật giá sau giảm nếu đã tồn tại
+                ChiTietKhuyenMai chiTietKhuyenMai = existingChiTietKhuyenMai.get();
+                chiTietKhuyenMai.setGiaSauGiam(giaSauGiam);
+                chiTietKhuyenMaisToSave.add(chiTietKhuyenMai);
+            } else {
+                // Thêm mới nếu chưa tồn tại
+                ChiTietKhuyenMai chiTietKhuyenMai = new ChiTietKhuyenMai();
+                chiTietKhuyenMai.setKhuyenMai(savedKhuyenMai);
+                chiTietKhuyenMai.setChiTietSanPham(chiTietSanPham);
+                chiTietKhuyenMai.setGiaSauGiam(giaSauGiam);
+                chiTietKhuyenMaisToSave.add(chiTietKhuyenMai);
+            }
+        }
+        chiTietKhuyenMaiRepository.saveAll(chiTietKhuyenMaisToSave);
+
+        logger.info("Cập nhật khuyến mãi thành công: {}", savedKhuyenMai.getMaKhuyenMai());
         return "Cập nhật khuyến mãi thành công!";
     }
 
