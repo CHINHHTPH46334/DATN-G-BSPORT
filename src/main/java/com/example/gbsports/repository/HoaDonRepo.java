@@ -32,6 +32,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                                                 WHERE t2.id_hoa_don = t.id_hoa_don
                                                 )
                     ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            WHERE hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
             """)
     Page<HoaDonResponse> getAllHD(Pageable pageable);
@@ -53,6 +54,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             WHERE (:keyword IS NULL OR hd.ma_hoa_don LIKE %:keyword%)
             OR (:keyword IS NULL OR nv.ma_nhan_vien LIKE %:keyword%)
             OR (:keyword IS NULL OR hd.sdt_nguoi_nhan LIKE %:keyword%)
+            AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
             """, nativeQuery = true)
     Page<HoaDonResponse> timHoaDon(
@@ -74,6 +76,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                                                 )
                         ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE hd.ngay_tao BETWEEN :tuNgay AND :denNgay
+            AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
             """, nativeQuery = true)
     Page<HoaDonResponse> findHoaDonByNgay(
@@ -96,6 +99,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                                                 )
                         ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE tdh.trang_thai = :trangThai
+            AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
             """, nativeQuery = true)
     Page<HoaDonResponse> findHoaDonByTrangThaiGiaoHang(
@@ -143,14 +147,14 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     List<TheoDoiDonHangResponse> findTrangThaiHistoryByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 
     @Query(value = """
-            select id_hoa_don, ma_hoa_don, hd.id_nhan_vien, ten_nhan_vien, hd.id_khach_hang, ten_khach_hang, hd.trang_thai,\s
+            select id_hoa_don, ma_hoa_don, hd.id_nhan_vien, ten_nhan_vien, hd.id_khach_hang, ten_khach_hang, hd.trang_thai,
             hd.id_voucher, ten_voucher, sdt_nguoi_nhan, dia_chi, hd.email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten,
             tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don, ghi_chu, hd.ngay_tao
-            from hoa_don hd\s
+            from hoa_don hd
             full outer join khach_hang kh on kh.id_khach_hang = hd.id_khach_hang
             full outer join nhan_vien nv on nv.id_nhan_vien = hd.id_nhan_vien
             full outer join voucher vc on vc.id_voucher = hd.id_voucher
-            where hd.trang_thai = N'Chưa thanh toán'
+            where hd.trang_thai = N'Đang chờ' and hd.loai_hoa_don like N'Offline'
             """, nativeQuery = true)
     List<HoaDonResponse> getAllHoaDonCTT();
 

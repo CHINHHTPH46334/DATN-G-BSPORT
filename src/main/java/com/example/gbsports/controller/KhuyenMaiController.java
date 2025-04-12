@@ -92,7 +92,7 @@ public class KhuyenMaiController {
     public ResponseEntity<Page<SanPham>> searchSanPham(
             @RequestParam(value = "keywordSanPham", required = false) String keywordSanPham,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
+            @RequestParam(value = "size", defaultValue = "5000") int size) {
         Page<SanPham> result = khuyenMaiService.searchSanPham(keywordSanPham, page, size);
         return ResponseEntity.ok(result);
     }
@@ -157,5 +157,14 @@ public class KhuyenMaiController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/loc-kieu-giam-gia-KM")
+    public ResponseEntity<Page<KhuyenMaiResponse>> locKhuyenKieuGiamGia(
+            @RequestParam(required = false) String kieuGiamGia,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(khuyenMaiService.locTheoKieuGiamGia(kieuGiamGia, pageable));
     }
 }

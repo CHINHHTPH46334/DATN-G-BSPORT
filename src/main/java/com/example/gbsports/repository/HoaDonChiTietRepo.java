@@ -15,17 +15,18 @@ import java.util.Optional;
 
 public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer> {
     @Query(value = """
-                SELECT DISTINCT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten,hd.sdt_nguoi_nhan,
+                SELECT DISTINCT hd.id_hoa_don, hd.ma_hoa_don, hd.id_khach_hang, hd.ngay_tao, hd.ho_ten,hd.sdt_nguoi_nhan,
                     hd.dia_chi, hd.email, hd.tong_tien_truoc_giam, hd.phi_van_chuyen,
                     hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang,
                     tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia,
-                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, ctsp.so_luong AS so_luong_con_lai,
+                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, ctkm.gia_sau_giam, ctsp.so_luong AS so_luong_con_lai,
                     kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.ghi_chu,
                     ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham,
                     ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
                 FULL OUTER JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
                 FULL OUTER JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
                 FULL OUTER JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
                 FULL OUTER JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
                 FULL OUTER JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
@@ -216,80 +217,80 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Modifying
     @Transactional
     @Query(value = """
-    BEGIN TRY
-        BEGIN TRANSACTION;
-        
-        DECLARE @SOLUONG INT = :soLuong;
-        DECLARE @IDCTSP INT = :idCTSP;
-        DECLARE @IDHD INT = :idHD;
-        DECLARE @TongTienTruocGiam DECIMAL(12,2);
-        DECLARE @GiaTriGiamVoucher DECIMAL(12,2);
-        DECLARE @SoLuongTon INT;
+            BEGIN TRY
+                BEGIN TRANSACTION;
+                
+                DECLARE @SOLUONG INT = :soLuong;
+                DECLARE @IDCTSP INT = :idCTSP;
+                DECLARE @IDHD INT = :idHD;
+                DECLARE @TongTienTruocGiam DECIMAL(12,2);
+                DECLARE @GiaTriGiamVoucher DECIMAL(12,2);
+                DECLARE @SoLuongTon INT;
 
-        -- Kiểm tra hóa đơn tồn tại
-        IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
-            THROW 50001, N'Hóa đơn không tồn tại!', 1;
+                -- Kiểm tra hóa đơn tồn tại
+                IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
+                    THROW 50001, N'Hóa đơn không tồn tại!', 1;
 
-        -- Kiểm tra số lượng tồn kho
-        SELECT @SoLuongTon = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
-        IF @SoLuongTon IS NULL
-            THROW 50002, N'Sản phẩm không tồn tại!', 1;
-        IF @SoLuongTon < @SOLUONG
-            THROW 50003, N'Số lượng tồn kho không đủ!', 1;
+                -- Kiểm tra số lượng tồn kho
+                SELECT @SoLuongTon = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+                IF @SoLuongTon IS NULL
+                    THROW 50002, N'Sản phẩm không tồn tại!', 1;
+                IF @SoLuongTon < @SOLUONG
+                    THROW 50003, N'Số lượng tồn kho không đủ!', 1;
 
-        -- Lấy giá trị giảm từ voucher
-        SELECT @GiaTriGiamVoucher = ISNULL(vc.gia_tri_giam, 0)
-        FROM hoa_don hd
-        LEFT JOIN voucher vc ON vc.id_voucher = hd.id_voucher
-        WHERE hd.id_hoa_don = @IDHD;
+                -- Lấy giá trị giảm từ voucher
+                SELECT @GiaTriGiamVoucher = ISNULL(vc.gia_tri_giam, 0)
+                FROM hoa_don hd
+                LEFT JOIN voucher vc ON vc.id_voucher = hd.id_voucher
+                WHERE hd.id_hoa_don = @IDHD;
 
-        DECLARE @GiaSauGiam DECIMAL(12,2) = :giaBan;
+                DECLARE @GiaSauGiam DECIMAL(12,2) = :giaBan;
 
-        -- Cập nhật hoặc thêm mới chi tiết hóa đơn
-        IF EXISTS (
-            SELECT 1
-            FROM hoa_don_chi_tiet
-            WHERE id_hoa_don = @IDHD
-            AND id_chi_tiet_san_pham = @IDCTSP
-        )
-        BEGIN
-            UPDATE hoa_don_chi_tiet
-            SET so_luong = so_luong + @SOLUONG,
-                don_gia = (so_luong + @SOLUONG) * @GiaSauGiam
-            WHERE id_chi_tiet_san_pham = @IDCTSP
-            AND id_hoa_don = @IDHD;
-        END
-        ELSE
-        BEGIN
-            INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
-            VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GiaSauGiam);
-        END;
+                -- Cập nhật hoặc thêm mới chi tiết hóa đơn
+                IF EXISTS (
+                    SELECT 1
+                    FROM hoa_don_chi_tiet
+                    WHERE id_hoa_don = @IDHD
+                    AND id_chi_tiet_san_pham = @IDCTSP
+                )
+                BEGIN
+                    UPDATE hoa_don_chi_tiet
+                    SET so_luong = so_luong + @SOLUONG,
+                        don_gia = (so_luong + @SOLUONG) * @GiaSauGiam
+                    WHERE id_chi_tiet_san_pham = @IDCTSP
+                    AND id_hoa_don = @IDHD;
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
+                    VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GiaSauGiam);
+                END;
 
-        -- Cập nhật số lượng tồn kho
-        UPDATE chi_tiet_san_pham
-        SET so_luong = so_luong - @SOLUONG
-        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                -- Cập nhật số lượng tồn kho
+                UPDATE chi_tiet_san_pham
+                SET so_luong = so_luong - @SOLUONG
+                WHERE id_chi_tiet_san_pham = @IDCTSP;
 
-        -- Tính tổng tiền trước giảm
-        SELECT @TongTienTruocGiam = hd.phi_van_chuyen + ISNULL(SUM(hdct.don_gia), 0)
-        FROM hoa_don hd
-        LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
-        WHERE hd.id_hoa_don = @IDHD
-        GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
+                -- Tính tổng tiền trước giảm
+                SELECT @TongTienTruocGiam = hd.phi_van_chuyen + ISNULL(SUM(hdct.don_gia), 0)
+                FROM hoa_don hd
+                LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
+                WHERE hd.id_hoa_don = @IDHD
+                GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
 
-        -- Cập nhật tổng tiền hóa đơn
-        UPDATE hoa_don
-        SET tong_tien_truoc_giam = @TongTienTruocGiam,
-            tong_tien_sau_giam = @TongTienTruocGiam - @GiaTriGiamVoucher
-        WHERE id_hoa_don = @IDHD;
+                -- Cập nhật tổng tiền hóa đơn
+                UPDATE hoa_don
+                SET tong_tien_truoc_giam = @TongTienTruocGiam,
+                    tong_tien_sau_giam = @TongTienTruocGiam - @GiaTriGiamVoucher
+                WHERE id_hoa_don = @IDHD;
 
-        COMMIT;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        THROW;
-    END CATCH;
-    """, nativeQuery = true)
+                COMMIT;
+            END TRY
+            BEGIN CATCH
+                ROLLBACK;
+                THROW;
+            END CATCH;
+            """, nativeQuery = true)
     void addSPHD(@RequestParam("idHoaDon") Integer idHD,
                  @RequestParam("idCTSP") Integer idCTSP,
                  @RequestParam("soLuong") Integer soLuong,
@@ -423,60 +424,60 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     @Modifying
     @Transactional
     @Query(value = """
-    BEGIN TRY
-        BEGIN TRANSACTION;
-        DECLARE @IDCTSP INT = :idCTSP;
-        DECLARE @IDHD INT = :idHD;
-        DECLARE @TongTienTruocGiam DECIMAL(18,2);
-        DECLARE @PHIVANCHUYEN DECIMAL(18,2);
-        DECLARE @SoLuongXoa INT;
+            BEGIN TRY
+                BEGIN TRANSACTION;
+                DECLARE @IDCTSP INT = :idCTSP;
+                DECLARE @IDHD INT = :idHD;
+                DECLARE @TongTienTruocGiam DECIMAL(18,2);
+                DECLARE @PHIVANCHUYEN DECIMAL(18,2);
+                DECLARE @SoLuongXoa INT;
 
-        IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
-            THROW 50001, N'Hóa đơn không tồn tại!', 1;
+                IF NOT EXISTS (SELECT 1 FROM hoa_don WHERE id_hoa_don = @IDHD)
+                    THROW 50001, N'Hóa đơn không tồn tại!', 1;
 
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM hoa_don_chi_tiet 
-            WHERE id_hoa_don = @IDHD 
-            AND id_chi_tiet_san_pham = @IDCTSP
-        )
-            THROW 50002, N'Sản phẩm không tồn tại trong hóa đơn để xóa!', 1;
+                IF NOT EXISTS (
+                    SELECT 1 
+                    FROM hoa_don_chi_tiet 
+                    WHERE id_hoa_don = @IDHD 
+                    AND id_chi_tiet_san_pham = @IDCTSP
+                )
+                    THROW 50002, N'Sản phẩm không tồn tại trong hóa đơn để xóa!', 1;
 
-        SELECT @SoLuongXoa = so_luong
-        FROM hoa_don_chi_tiet
-        WHERE id_hoa_don = @IDHD
-        AND id_chi_tiet_san_pham = @IDCTSP;
+                SELECT @SoLuongXoa = so_luong
+                FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD
+                AND id_chi_tiet_san_pham = @IDCTSP;
 
-        DELETE FROM hoa_don_chi_tiet
-        WHERE id_hoa_don = @IDHD
-        AND id_chi_tiet_san_pham = @IDCTSP;
+                DELETE FROM hoa_don_chi_tiet
+                WHERE id_hoa_don = @IDHD
+                AND id_chi_tiet_san_pham = @IDCTSP;
 
-        SELECT @PHIVANCHUYEN = phi_van_chuyen 
-        FROM hoa_don 
-        WHERE id_hoa_don = @IDHD;
+                SELECT @PHIVANCHUYEN = phi_van_chuyen 
+                FROM hoa_don 
+                WHERE id_hoa_don = @IDHD;
 
-        SELECT @TongTienTruocGiam = @PHIVANCHUYEN + ISNULL(SUM(don_gia), 0)
-        FROM hoa_don hd
-        LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
-        WHERE hd.id_hoa_don = @IDHD
-        GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
+                SELECT @TongTienTruocGiam = @PHIVANCHUYEN + ISNULL(SUM(don_gia), 0)
+                FROM hoa_don hd
+                LEFT JOIN hoa_don_chi_tiet hdct ON hdct.id_hoa_don = hd.id_hoa_don
+                WHERE hd.id_hoa_don = @IDHD
+                GROUP BY hd.id_hoa_don, hd.phi_van_chuyen;
 
-        UPDATE hoa_don
-        SET tong_tien_truoc_giam = @TongTienTruocGiam,
-            tong_tien_sau_giam = @TongTienTruocGiam
-        WHERE id_hoa_don = @IDHD;
+                UPDATE hoa_don
+                SET tong_tien_truoc_giam = @TongTienTruocGiam,
+                    tong_tien_sau_giam = @TongTienTruocGiam
+                WHERE id_hoa_don = @IDHD;
 
-        UPDATE chi_tiet_san_pham
-        SET so_luong = so_luong + @SoLuongXoa
-        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                UPDATE chi_tiet_san_pham
+                SET so_luong = so_luong + @SoLuongXoa
+                WHERE id_chi_tiet_san_pham = @IDCTSP;
 
-        COMMIT;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        THROW;
-    END CATCH;
-    """, nativeQuery = true)
+                COMMIT;
+            END TRY
+            BEGIN CATCH
+                ROLLBACK;
+                THROW;
+            END CATCH;
+            """, nativeQuery = true)
     void xoaSPKhoiHD(@Param("idHD") Integer idHoaDon, @Param("idCTSP") Integer idChiTietSanPham);
 
     @Modifying
@@ -498,7 +499,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @IDHD INT = :idHoaDon;
                 DECLARE @SOLUONG INT = :soLuong;
                 DECLARE @GIABAN DECIMAL(18, 2);
+                DECLARE @GIASAUGIAM DECIMAL(18, 2);
+
+                -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Kiểm tra xem sản phẩm có áp dụng khuyến mãi không và lấy giá sau giảm (nếu có)
+                SELECT @GIASAUGIAM = MIN(ctkm.gia_sau_giam)
+                FROM chi_tiet_khuyen_mai ctkm
+                JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                WHERE ctkm.id_chi_tiet_san_pham = @IDCTSP
+                  AND km.trang_thai = N'Đang diễn ra'
+                  AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han;
+
+                -- Nếu không có khuyến mãi, sử dụng giá bán gốc
+                IF @GIASAUGIAM IS NULL
+                BEGIN
+                    SET @GIASAUGIAM = @GIABAN;
+                END
+
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
@@ -532,13 +551,13 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 BEGIN
                     UPDATE hoa_don_chi_tiet
                     SET so_luong = so_luong + @SOLUONG,
-                        don_gia = (so_luong + @SOLUONG) * @GIABAN
+                        don_gia = (so_luong + @SOLUONG) * @GIASAUGIAM
                     WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
                 END
                 ELSE
                 BEGIN
                     INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia)
-                    VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GIABAN);
+                    VALUES (@IDHD, @IDCTSP, @SOLUONG, @SOLUONG * @GIASAUGIAM);
                 END
 
                 -- Tính tổng tiền trước giảm
@@ -719,7 +738,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @IDCTSP INT = :idCTSP;
                 DECLARE @IDHD INT = :idHoaDon;
                 DECLARE @GIABAN DECIMAL(18, 2);
+                DECLARE @GIASAUGIAM DECIMAL(18, 2);
+
+                -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Kiểm tra xem sản phẩm có áp dụng khuyến mãi không và lấy giá sau giảm (nếu có)
+                SELECT @GIASAUGIAM = MIN(ctkm.gia_sau_giam)
+                FROM chi_tiet_khuyen_mai ctkm
+                JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                WHERE ctkm.id_chi_tiet_san_pham = @IDCTSP
+                  AND km.trang_thai = N'Đang diễn ra'
+                  AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han;
+
+                -- Nếu không có khuyến mãi, sử dụng giá bán gốc
+                IF @GIASAUGIAM IS NULL
+                BEGIN
+                    SET @GIASAUGIAM = @GIABAN;
+                END
+
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
 
@@ -779,7 +816,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 -- Cập nhật số lượng trong chi tiết hóa đơn
                 UPDATE hoa_don_chi_tiet
                 SET so_luong = so_luong + @QUANTITYCHANGE,
-                    don_gia = (so_luong + @QUANTITYCHANGE) * @GIABAN
+                    don_gia = (so_luong + @QUANTITYCHANGE) * @GIASAUGIAM
                 WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
 
                 -- Tính tổng tiền trước giảm

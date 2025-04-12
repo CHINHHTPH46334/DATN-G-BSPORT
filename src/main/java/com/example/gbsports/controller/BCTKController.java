@@ -1,7 +1,8 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.HoaDon;
+
 import com.example.gbsports.repository.BCTKRepo;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,8 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RestController
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/admin")
 public class BCTKController {
 
@@ -105,7 +106,10 @@ public class BCTKController {
         List<HoaDonResponse> ratios = bctkRepo.tiLeTrangThaiHoaDon();
         return ResponseEntity.ok(ratios);
     }
-
+    @GetMapping("/test")
+    public String test() {
+        return "test";
+    }
     @GetMapping("/topSPBanChay")
     public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay(
             @RequestParam(required = false) String type,
@@ -122,20 +126,12 @@ public class BCTKController {
 
         return ResponseEntity.ok(topSanPhamBanChay);
     }
-    @GetMapping("/topSPBanCham")
-    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanCham(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
-        // Lấy khoảng thời gian từ getKhoangNgay
-        Map<String, LocalDate> dates = getKhoangNgay(type, startDate, endDate);
-        LocalDate start = dates.get("startDate");
-        LocalDate end = dates.get("endDate");
-
+    @GetMapping("/topSPSapHetHang")
+    public ResponseEntity<List<ChiTietSanPhamView>> topSanPhamSapHetHang() {
         // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
-        List<HoaDonResponse> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
+        List<ChiTietSanPhamView> topSanPhamSapHetHang = bctkRepo.topSanPhamSapHetHang();
 
-        return ResponseEntity.ok(topSanPhamBanCham);
+        return ResponseEntity.ok(topSanPhamSapHetHang);
     }
+
 }

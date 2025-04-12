@@ -154,8 +154,6 @@ public class BanHangController {
     }
 
 
-
-
     @GetMapping("/getAllHoaDonCTT")
     public List<HoaDonResponse> getAllHDCTT() {
         return hoaDonRepo.getAllHoaDonCTT();
@@ -185,7 +183,7 @@ public class BanHangController {
             HoaDon newHoaDon = new HoaDon();
             newHoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
             newHoaDon.setNgay_tao(LocalDateTime.now());
-            newHoaDon.setTrang_thai("Chưa thanh toán");
+            newHoaDon.setTrang_thai("Đang chờ");
             newHoaDon.setLoai_hoa_don("Offline");
             newHoaDon.setNhanVien(nv);
             newHoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
@@ -513,16 +511,21 @@ public class BanHangController {
     }
 
 
-
-
     @GetMapping("/trangThaiDonHang")
     public ResponseEntity<?> chuyenTrangThaiHoaDon(@RequestParam("idHoaDon") Integer idHD) {
-        HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
-        hoaDon.setTrang_thai("Đã thanh toán");
-        hoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
-        hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now(), null, null);
-        hoaDonRepo.save(hoaDon);
-        System.out.println(hoaDon);
+        HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+        if (hoaDon.getPhuong_thuc_nhan_hang().equalsIgnoreCase("Nhận tại cửa hàng")) {
+            hoaDon.setTrang_thai("Hoàn thành");
+            hoaDon.setHinh_thuc_thanh_toan(hoaDon.getHinh_thuc_thanh_toan());
+            hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now(), hoaDon.getNhanVien().getTenNhanVien(), "Hoàn tất thanh toán");
+            hoaDonRepo.save(hoaDon);
+        } else if (hoaDon.getPhuong_thuc_nhan_hang().equalsIgnoreCase("Giao hàng")) {
+            hoaDon.setTrang_thai("Hoàn thành");
+            hoaDon.setHinh_thuc_thanh_toan(hoaDon.getHinh_thuc_thanh_toan());
+            hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Đã xác nhận", LocalDateTime.now(), hoaDon.getNhanVien().getTenNhanVien(), "Hoàn tất thanh toán");
+            hoaDonRepo.save(hoaDon);
+        }
+
         return ResponseEntity.ok("Thanh toán hóa đơn thành công");
     }
 
@@ -544,7 +547,6 @@ public class BanHangController {
         capNhatVoucher(idHD);
         return ResponseEntity.ok("ok");
     }
-
 
 
     @GetMapping("/view")
