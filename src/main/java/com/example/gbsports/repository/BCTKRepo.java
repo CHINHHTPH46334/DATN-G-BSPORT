@@ -1,6 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.HoaDon;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,16 +29,20 @@ public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
         Integer getTongSanPham(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
         //
-        @Query(nativeQuery = true, value = "select top 3 hdct.id_chi_tiet_san_pham ,sp.ma_san_pham, sp.ten_san_pham, sum(hdct.so_luong) as so_luong, ctsp.gia_ban from hoa_don hd " +
-                "join hoa_don_chi_tiet hdct on hdct.id_hoa_don = hd.id_hoa_don\n" +
-                "join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham\n" +
-                "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-                "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don\n" +
-                "where tddh.trang_thai = N'Hoàn thành'\n" +
-                "group by sp.ma_san_pham, sp.ten_san_pham, ctsp.gia_ban, hdct.id_chi_tiet_san_pham \n" +
-                "order by so_luong desc")
-//                and cast(tddh.ngay_chuyen as date) between :startDate and :endDate order by hdct.so_luong desc")
-        List<HoaDonResponse> topSanPhamBanChay();
+        @Query(nativeQuery = true, value = """
+            select top 5 hdct.id_chi_tiet_san_pham ,sp.ma_san_pham, (sp.ten_san_pham+N': Màu: '+ms.ten_mau_sac+N', size: '+kt.gia_tri) as ten_san_pham, sum(hdct.so_luong) as so_luong, ctsp.gia_ban from hoa_don hd
+            join hoa_don_chi_tiet hdct on hdct.id_hoa_don = hd.id_hoa_don
+            join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+            join san_pham sp on sp.id_san_pham = ctsp.id_san_pham
+            join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don
+            join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac
+            join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc
+            where tddh.trang_thai = N'Hoàn thành' and cast(tddh.ngay_chuyen as date) between :startDate AND :endDate
+            group by sp.ma_san_pham, sp.ten_san_pham, ctsp.gia_ban, hdct.id_chi_tiet_san_pham, ms.ten_mau_sac, kt.gia_tri
+             order by so_luong desc
+            """)
+        List<HoaDonResponse> topSanPhamBanChay(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 
         @Query(nativeQuery = true, value = "select top 3 sp.ma_san_pham, sp.ten_san_pham, hdct.so_luong, hd.tong_tien_sau_giam from hoa_don hd join hoa_don_chi_tiet hdct on hd.id_hoa_don = hdct.id_hoa_don\n" +
                 "join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham\n" +
@@ -47,16 +52,16 @@ public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
                 "and cast(tddh.ngay_chuyen as date) between :startDate and :endDate order by hdct.so_luong desc")
         List<HoaDonResponse> topSanPhamBanChay1(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-        @Query(nativeQuery = true, value = "select top 3 hdct.id_chi_tiet_san_pham ,sp.ma_san_pham, sp.ten_san_pham, sum(hdct.so_luong) as so_luong, ctsp.gia_ban from hoa_don hd " +
-                "join hoa_don_chi_tiet hdct on hdct.id_hoa_don = hd.id_hoa_don\n" +
-                "join chi_tiet_san_pham ctsp on ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham\n" +
-                "join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-                "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don\n" +
-                "where tddh.trang_thai = N'Hoàn thành'\n" +
-                "group by sp.ma_san_pham, sp.ten_san_pham, ctsp.gia_ban, hdct.id_chi_tiet_san_pham\n" +
-                "order by so_luong asc")
-//                "and cast(tddh.ngay_chuyen as date) between :startDate and :endDate order by hdct.so_luong")
-        List<HoaDonResponse> topSanPhamBanCham();
+        @Query(nativeQuery = true, value = """
+            select ctsp.id_chi_tiet_san_pham ,sp.ma_san_pham, (sp.ten_san_pham+N': Màu: '+ms.ten_mau_sac+N', size: '+kt.gia_tri) as ten_san_pham, 
+            ctsp.so_luong, ctsp.gia_ban from san_pham sp
+            join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham
+            join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac
+            join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc
+            where ctsp.so_luong < 10
+            order by so_luong asc
+                        """)
+        List<ChiTietSanPhamView> topSanPhamSapHetHang();
 
         @Query(nativeQuery = true, value = "SELECT tddh.trang_thai as trangThaiDonHang,\n" +
                 "    COUNT(*) as [Số lượng đơn hàng],\n" +

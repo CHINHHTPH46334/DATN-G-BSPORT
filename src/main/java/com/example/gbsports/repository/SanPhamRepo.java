@@ -105,7 +105,7 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
                         "\t\t\t\t\t\tGROUP BY ctsp.id_san_pham\n" +
                         "\t\t\t\t\t)\n" +
                         "\n" +
-                        "\t\t\t\t\tSELECT DISTINCT\n" +
+                        "\t\t\t\t\tSELECT DISTINCT top 10\n" +
                         "\t\t\t\t\t\tsp.id_san_pham,\n" +
                         "\t\t\t\t\t\tsp.ma_san_pham,\n" +
                         "\t\t\t\t\t\tsp.ten_san_pham,\n" +

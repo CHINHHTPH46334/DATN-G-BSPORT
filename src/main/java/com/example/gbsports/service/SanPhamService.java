@@ -8,6 +8,7 @@ import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,9 @@ public class SanPhamService {
     ThuongHieuRepo thuongHieuRepo;
     @Autowired
     ChatLieuRepo chatLieuRepo;
-
+//    @Cacheable("products")
     public ArrayList<SanPhamView> getAll() {
+        System.out.println("jáhdkjsadhsakjdhsakjdhákdhsakjdhsakjdhsakjdhsakjdhsạkdhsjd");
         return sanPhamRepo.getAllSanPham();
     }
 
@@ -229,7 +231,7 @@ public class SanPhamService {
     }
 
     public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc,
-            ChatLieu chatLieu) {
+                                             ChatLieu chatLieu) {
         Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
                 .filter(sanPham -> tenSanPham
                         .equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
