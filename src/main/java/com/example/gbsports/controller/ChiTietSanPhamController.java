@@ -51,8 +51,8 @@ public class ChiTietSanPhamController {
         return chiTietSanPhamService.deleteChiTietSanPham(id);
     }
 
-    @PostMapping("/changeStatusCTSP/{id}")
-    public String changeStatus(@PathVariable Integer id) {
+    @PostMapping("/changeStatusCTSP")
+    public String changeStatus(@RequestParam Integer id) {
         return chiTietSanPhamService.chuyenTrangThai(id);
     }
 
