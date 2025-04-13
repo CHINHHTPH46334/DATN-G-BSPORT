@@ -1,15 +1,12 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.DiaChiKhachHang;
-import com.example.gbsports.entity.KhachHang;
-import com.example.gbsports.entity.NhanVien;
-import com.example.gbsports.entity.TaiKhoan;
+import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
-import com.example.gbsports.request.KhachHangRequest;
-import com.example.gbsports.request.LoginRequest;
-import com.example.gbsports.request.RegisterRequest;
+import com.example.gbsports.request.*;
 import com.example.gbsports.service.EmailService;
+import com.example.gbsports.util.JwtUtil;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +16,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
@@ -54,6 +57,21 @@ public class KhachHangController {
 
     @Autowired
     private EmailService emailServiceDK_DN;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private LichSuDangNhapRepo lichSuDangNhapRepo;
 
     @GetMapping("/view")
     public ResponseEntity<Map<String, Object>> getKhachHang(
@@ -288,7 +306,6 @@ public class KhachHangController {
         }
     }
 
-
     @GetMapping("/edit/{id}")
     public ResponseEntity<Map<String, Object>> getKhachHangForEdit(@PathVariable("id") Integer id) {
         Map<String, Object> response = new HashMap<>();
@@ -321,6 +338,7 @@ public class KhachHangController {
         response.put("khachHang", request);
         return ResponseEntity.ok(response);
     }
+
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateKhachHang(@RequestBody KhachHangRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -490,7 +508,7 @@ public class KhachHangController {
             // Tạo tài khoản
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(registerRequest.getEmail());
-            taiKhoan.setMat_khau(registerRequest.getPassword());
+            taiKhoan.setMat_khau(passwordEncoder.encode(registerRequest.getPassword())); // Mã hóa mật khẩu
             taiKhoan.setRoles(rolesRepo.findById(4).get()); // Gán id_roles = 4 cho khách hàng
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
@@ -550,7 +568,6 @@ public class KhachHangController {
                     "<li>Mật khẩu: <strong>" + registerRequest.getPassword() + "</strong></li>" +
                     "</ul>" +
                     "</div>" +
-//                    "<p style='color: #d32f2f; font-weight: bold;'>🎁 ƯU ĐÃI ĐẶC BIỆT: GIẢM 20% CHO ĐƠN HÀNG ĐẦU TIÊN!</p>" +
                     "<p>Vui lòng <a href='http://localhost:5173/login-register/login'>đăng nhập</a> để bắt đầu sử dụng dịch vụ và khám phá các ưu đãi hấp dẫn.</p>" +
                     "</div>" +
                     "<div class='footer'>" +
@@ -580,7 +597,8 @@ public class KhachHangController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequest loginRequest,
-            BindingResult result) {
+            BindingResult result,
+            HttpServletRequest request) {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -595,61 +613,67 @@ public class KhachHangController {
         }
 
         try {
-            // Tìm tất cả tài khoản theo email (ten_dang_nhap)
-            List<TaiKhoan> taiKhoanList = taiKhoanRepo.findAllByTenDangNhap(loginRequest.getEmail());
-            if (taiKhoanList.isEmpty()) {
-                response.put("error", "Email không tồn tại!");
-                return ResponseEntity.badRequest().body(response);
-            }
+            // Tìm tài khoản trước để kiểm tra trạng thái
+            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhap(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
 
-            // Duyệt qua danh sách tài khoản để tìm tài khoản hợp lệ
-            TaiKhoan taiKhoanDangNhap = null;
-
-            for (TaiKhoan taiKhoan : taiKhoanList) {
-                // Kiểm tra mật khẩu
-                if (taiKhoan.getMat_khau().equals(loginRequest.getPassword())) {
-                    // Kiểm tra trạng thái tài khoản
-                    if (taiKhoan.getRoles().getId_roles() == 4) {
-                        // Tài khoản khách hàng
-                        Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                        if (khachHangOpt.isPresent()) {
-                            KhachHang khachHang = khachHangOpt.get();
-                            if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
-                                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                                return ResponseEntity.badRequest().body(response);
-                            }
-                            taiKhoanDangNhap = taiKhoan; // Tài khoản hợp lệ
-                            break;
-                        }
-                    } else {
-                        // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
-                        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                        if (nhanVienOpt.isPresent()) {
-                            NhanVien nhanVien = nhanVienOpt.get();
-                            if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
-                                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                                return ResponseEntity.badRequest().body(response);
-                            }
-                            taiKhoanDangNhap = taiKhoan; // Tài khoản hợp lệ
-                            break;
-                        }
+            // Kiểm tra trạng thái tài khoản
+            if (taiKhoan.getRoles().getId_roles() == 4) {
+                // Tài khoản khách hàng
+                Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+                if (khachHangOpt.isPresent()) {
+                    KhachHang khachHang = khachHangOpt.get();
+                    if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
+                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                        return ResponseEntity.badRequest().body(response);
+                    }
+                }
+            } else {
+                // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
+                Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+                if (nhanVienOpt.isPresent()) {
+                    NhanVien nhanVien = nhanVienOpt.get();
+                    if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
+                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                        return ResponseEntity.badRequest().body(response);
                     }
                 }
             }
-            // Kiểm tra nếu không tìm thấy tài khoản hợp lệ
-            if (taiKhoanDangNhap == null) {
-                response.put("error", "Mật khẩu không đúng !");
-                return ResponseEntity.badRequest().body(response);
+
+            // Xác thực người dùng bằng AuthenticationManager
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+
+            // Tạo JWT token
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+            String token = jwtUtil.generateToken(userDetails);
+            List<String> roles = jwtUtil.extractRoles(token);
+
+            // Lấy địa chỉ IP từ request
+            String ipAddress = request.getRemoteAddr();
+            if (ipAddress == null || ipAddress.isEmpty()) {
+                ipAddress = "Unknown";
             }
-            // Đăng nhập thành công, trả về thông tin tài khoản
+
+            // Lưu lịch sử đăng nhập
+            LichSuDangNhap lichSuDangNhap = new LichSuDangNhap();
+            lichSuDangNhap.setTaiKhoan(taiKhoan);
+            lichSuDangNhap.setNgay_dang_nhap(LocalDateTime.now());
+            lichSuDangNhap.setIp_adress(ipAddress);
+            lichSuDangNhapRepo.save(lichSuDangNhap);
+
+            // Trả về thông tin đăng nhập
             response.put("successMessage", "Đăng nhập thành công!");
-            response.put("taiKhoan", taiKhoanDangNhap);
-            response.put("id_roles", taiKhoanDangNhap.getRoles().getId_roles());
+            response.put("token", token);
+            response.put("taiKhoan", taiKhoan);
+            response.put("id_roles", taiKhoan.getRoles().getId_roles());
+            response.put("roles", roles);
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            response.put("error", "Có lỗi xảy ra khi đăng nhập: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
     @GetMapping("/details")

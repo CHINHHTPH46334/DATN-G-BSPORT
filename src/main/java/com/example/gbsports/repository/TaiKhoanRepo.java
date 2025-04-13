@@ -15,9 +15,9 @@ public interface TaiKhoanRepo extends JpaRepository<TaiKhoan, Integer> {
             SELECT t.* FROM tai_khoan t
             full outer join roles r on r.id_roles = t.id_roles
             WHERE t.ten_dang_nhap = :tenDangNhap
-            AND t.id_roles = 4
             """, nativeQuery = true)
     Optional<TaiKhoan> findByTenDangNhap(String tenDangNhap);
+//    AND t.id_roles = 4
 
     @Query("SELECT tk FROM TaiKhoan tk WHERE tk.ten_dang_nhap = :tenDangNhap")
     List<TaiKhoan> findAllByTenDangNhap(String tenDangNhap);

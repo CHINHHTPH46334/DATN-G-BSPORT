@@ -1,6 +1,5 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.BCTKRepo;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
@@ -17,11 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RestController
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/admin")
 public class BCTKController {
-
     @Autowired
     private BCTKRepo bctkRepo;
 
@@ -106,7 +104,10 @@ public class BCTKController {
         List<HoaDonResponse> ratios = bctkRepo.tiLeTrangThaiHoaDon();
         return ResponseEntity.ok(ratios);
     }
-
+    @GetMapping("/test")
+    public String test() {
+        return "test";
+    }
     @GetMapping("/topSPBanChay")
     public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay(
             @RequestParam(required = false) String type,
@@ -130,4 +131,5 @@ public class BCTKController {
 
         return ResponseEntity.ok(topSanPhamSapHetHang);
     }
+
 }

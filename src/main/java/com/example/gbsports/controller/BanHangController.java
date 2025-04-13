@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RestController
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RequestMapping("/banhang")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')") // Phân quyền cho toàn bộ controller
 public class BanHangController {
 
     @Autowired
@@ -154,8 +156,6 @@ public class BanHangController {
     }
 
 
-
-
     @GetMapping("/getAllHoaDonCTT")
     public List<HoaDonResponse> getAllHDCTT() {
         return hoaDonRepo.getAllHoaDonCTT();
@@ -185,7 +185,7 @@ public class BanHangController {
             HoaDon newHoaDon = new HoaDon();
             newHoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
             newHoaDon.setNgay_tao(LocalDateTime.now());
-            newHoaDon.setTrang_thai("Chưa thanh toán");
+            newHoaDon.setTrang_thai("Đang chờ");
             newHoaDon.setLoai_hoa_don("Offline");
             newHoaDon.setNhanVien(nv);
             newHoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
@@ -324,7 +324,7 @@ public class BanHangController {
     }
 
     @GetMapping("/getSPHD")
-    public List<HoaDonChiTietResponse> getAllSPHD(@RequestParam("idHoaDon") Integer idHD) {
+    public List<HoaDonChiTietResponse> getAllSPHD(@RequestParam(value = "idHoaDon") Integer idHD) {
         return hoaDonChiTietRepo.getSPGH(idHD);
     }
 
@@ -362,22 +362,68 @@ public class BanHangController {
 
     @PostMapping("/addSPHD")
     public ResponseEntity<?> addSPHD(
-            @RequestParam(value = "idHoaDon") Integer idHD,
-            @RequestParam(value = "idCTSP") Integer idCTSP,
-            @RequestParam(value = "soLuong") Integer soLuong,
-            @RequestParam(value = "giaBan") BigDecimal giaBan) {
+            @RequestParam("idHoaDon") Integer idHD,
+            @RequestParam("idCTSP") Integer idCTSP,
+            @RequestParam("soLuong") Integer soLuong,
+            @RequestParam("giaBan") BigDecimal giaBan
+    ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
                     .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
-            hoaDonChiTietRepo.addSPHD(idHD, idCTSP, soLuong, giaBan);
 
-            capNhatVoucher(idHD);
-            return ResponseEntity.ok("Thêm sản phẩm vào hóa đơn thành công");
+            ChiTietSanPham chiTietSP = chiTietSanPhamRepo.findById(idCTSP)
+                    .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
+
+            if (chiTietSP.getSo_luong() < soLuong) {
+                return ResponseEntity.badRequest().body("Không đủ số lượng tồn kho!");
+            }
+
+            // Tìm xem sản phẩm đã có trong hóa đơn chưa
+            Optional<HoaDonChiTiet> optionalCT = hoaDonChiTietRepo
+                    .findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHD);
+
+            HoaDonChiTiet chiTiet;
+            if (optionalCT.isPresent()) {
+                chiTiet = optionalCT.get();
+                int soLuongMoi = chiTiet.getSo_luong() + soLuong;
+                chiTiet.setSo_luong(soLuongMoi);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuongMoi)));
+            } else {
+                chiTiet = new HoaDonChiTiet();
+                chiTiet.setHoaDon(hoaDon);
+                chiTiet.setChiTietSanPham(chiTietSP);
+                chiTiet.setSo_luong(soLuong);
+                chiTiet.setDon_gia(giaBan.multiply(BigDecimal.valueOf(soLuong)));
+            }
+
+            // Trừ tồn kho
+            chiTietSP.setSo_luong(chiTietSP.getSo_luong() - soLuong);
+            chiTietSanPhamRepo.save(chiTietSP);
+
+            // Lưu chi tiết hóa đơn
+            hoaDonChiTietRepo.save(chiTiet);
+
+            // Tính tổng tiền mới
+            List<HoaDonChiTiet> danhSachChiTiet = hoaDonChiTietRepo.findByIdHoaDon(idHD);
+            BigDecimal tongTien = danhSachChiTiet.stream()
+                    .map(HoaDonChiTiet::getDon_gia)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .add(hoaDon.getPhi_van_chuyen());
+
+            hoaDon.setTong_tien_truoc_giam(tongTien);
+            hoaDon.setTong_tien_sau_giam(tongTien); // Nếu chưa có voucher
+            hoaDonRepo.save(hoaDon);
+
+            capNhatVoucher(idHD); // Nếu có
+
+            return ResponseEntity.ok("Thêm sản phẩm thành công");
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi thêm sản phẩm: " + e.getMessage());
         }
     }
+
 
     @PostMapping("/giamSPHD")
     public ResponseEntity<?> giamSPHD(
@@ -408,7 +454,6 @@ public class BanHangController {
         }
     }
 
-
     @DeleteMapping("/xoaSPHD")
     public ResponseEntity<?> xoaSanPhamKhoiHoaDon(
             @RequestParam("idHoaDon") Integer idHoaDon,
@@ -422,12 +467,18 @@ public class BanHangController {
                         .body(Map.of("success", false, "message", "Không thể xóa sản phẩm từ hóa đơn đã thanh toán!"));
             }
 
+            // Xoá sản phẩm khỏi hóa đơn
             hoaDonChiTietRepo.xoaSPKhoiHD(idHoaDon, idChiTietSanPham);
 
-            capNhatVoucher(idHoaDon);
+            // Cập nhật lại thông tin hóa đơn & voucher
+            try {
+                capNhatVoucher(idHoaDon);
+            } catch (Exception ex) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Lỗi khi cập nhật voucher: " + ex.getMessage()));
+            }
 
-            hoaDon = hoaDonRepo.findById(idHoaDon).orElseThrow(); // Cập nhật lại hóa đơn sau thay đổi
-            return ResponseEntity.ok(Map.of("success", true, "data", hoaDon));
+            return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Lỗi khi xóa sản phẩm: " + e.getMessage()));
@@ -438,24 +489,50 @@ public class BanHangController {
         List<HoaDonChiTietResponse> dsSanPham = hoaDonChiTietRepo.findHoaDonChiTietById(idHD);
 
         BigDecimal tongTienSanPham = dsSanPham.stream()
-                .map(sp -> sp.getDon_gia()) // hoặc sp.getGiaBan().multiply(soLuong) tùy theo bạn lưu gì
+                .map(HoaDonChiTietResponse::getDon_gia)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
         BigDecimal phiVanChuyen = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
         hoaDon.setTong_tien_truoc_giam(tongTienSanPham.add(phiVanChuyen));
+
+        Voucher voucherCu = hoaDon.getVoucher();
 
         List<VoucherBHResponse> voucherBHResponse = voucherRepository.giaTriGiamThucTeByIDHD(idHD);
 
         if (!voucherBHResponse.isEmpty()) {
-            Voucher voucher = voucherRepository.findById(voucherBHResponse.get(0).getId_voucher())
+            Integer idVoucherMoi = voucherBHResponse.get(0).getId_voucher();
+            Voucher voucherMoi = voucherRepository.findById(idVoucherMoi)
                     .orElseThrow(() -> new RuntimeException("Voucher không tồn tại!"));
 
             hoaDon.setTong_tien_sau_giam(
                     hoaDon.getTong_tien_truoc_giam().subtract(voucherBHResponse.get(0).getGia_tri_giam_thuc_te()));
-            hoaDon.setVoucher(voucher);
+            hoaDon.setVoucher(voucherMoi);
+
+            if (voucherCu == null) {
+                if (voucherMoi.getSoLuong() > 0) {
+                    voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
+                }
+            } else if (!voucherCu.getId().equals(voucherMoi.getId())) {
+                voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
+                voucherRepository.save(voucherCu);
+
+                if (voucherMoi.getSoLuong() > 0) {
+                    voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
+                }
+            }
+
+            voucherRepository.save(voucherMoi);
+
         } else {
+            if (voucherCu != null) {
+                voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
+                voucherRepository.save(voucherCu);
+            }
+
             hoaDon.setVoucher(null);
             hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_truoc_giam());
         }
@@ -463,17 +540,21 @@ public class BanHangController {
         hoaDonRepo.save(hoaDon);
     }
 
-
-
-
     @GetMapping("/trangThaiDonHang")
     public ResponseEntity<?> chuyenTrangThaiHoaDon(@RequestParam("idHoaDon") Integer idHD) {
-        HoaDon hoaDon = hoaDonRepo.getReferenceById(idHD);
-        hoaDon.setTrang_thai("Đã thanh toán");
-        hoaDon.setHinh_thuc_thanh_toan("Tiền mặt");
-        hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now(), null, null);
-        hoaDonRepo.save(hoaDon);
-        System.out.println(hoaDon);
+        HoaDon hoaDon = hoaDonRepo.findById(idHD).get();
+        if (hoaDon.getPhuong_thuc_nhan_hang().equalsIgnoreCase("Nhận tại cửa hàng")) {
+            hoaDon.setTrang_thai("Hoàn thành");
+            hoaDon.setHinh_thuc_thanh_toan(hoaDon.getHinh_thuc_thanh_toan());
+            hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Hoàn thành", LocalDateTime.now(), hoaDon.getNhanVien().getTenNhanVien(), "Hoàn tất thanh toán");
+            hoaDonRepo.save(hoaDon);
+        } else if (hoaDon.getPhuong_thuc_nhan_hang().equalsIgnoreCase("Giao hàng")) {
+            hoaDon.setTrang_thai("Hoàn thành");
+            hoaDon.setHinh_thuc_thanh_toan(hoaDon.getHinh_thuc_thanh_toan());
+            hoaDonRepo.insertTrangThaiDonHang(hoaDon.getMa_hoa_don(), "Đã xác nhận", LocalDateTime.now(), hoaDon.getNhanVien().getTenNhanVien(), "Hoàn tất thanh toán");
+            hoaDonRepo.save(hoaDon);
+        }
+
         return ResponseEntity.ok("Thanh toán hóa đơn thành công");
     }
 
@@ -495,7 +576,6 @@ public class BanHangController {
         capNhatVoucher(idHD);
         return ResponseEntity.ok("ok");
     }
-
 
 
     @GetMapping("/view")
