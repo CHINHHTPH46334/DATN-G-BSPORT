@@ -1,7 +1,7 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.HoaDon;
 import com.example.gbsports.repository.BCTKRepo;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,11 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RestController
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/admin")
 public class BCTKController {
-
     @Autowired
     private BCTKRepo bctkRepo;
 
@@ -92,9 +91,6 @@ public class BCTKController {
         BigDecimal doanhThu = bctkRepo.getDoanhThu(start, end);
         Integer tongDonHang = bctkRepo.getTongDonHang(start, end);
         Integer tongSanPham = bctkRepo.getTongSanPham(start, end);
-// Thêm phần gọi topSanPhamBanChay và topSanPhamBanCham
-//        List<HoaDon> topSanPhamBanChay = bctkRepo.topSanPhamBanChay(start, end);
-//        List<HoaDon> topSanPhamBanCham = bctkRepo.topSanPhamBanCham(start, end);
 
         Map<String, Object> response = new HashMap<>();
         response.put("doanhThu", doanhThu);
@@ -108,12 +104,12 @@ public class BCTKController {
         List<HoaDonResponse> ratios = bctkRepo.tiLeTrangThaiHoaDon();
         return ResponseEntity.ok(ratios);
     }
-    @GetMapping("/topSPBanChay")
-    public List<HoaDonResponse> topSanPhamBanChay(){
-        return bctkRepo.topSanPhamBanChay();
+    @GetMapping("/test")
+    public String test() {
+        return "test";
     }
-    @GetMapping("/topSPBanChay1")
-    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay1(
+    @GetMapping("/topSPBanChay")
+    public ResponseEntity<List<HoaDonResponse>> topSanPhamBanChay(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -124,13 +120,16 @@ public class BCTKController {
         LocalDate end = dates.get("endDate");
 
         // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
-        List<HoaDonResponse> topSanPhamBanChay1 = bctkRepo.topSanPhamBanChay1(start, end);
+        List<HoaDonResponse> topSanPhamBanChay = bctkRepo.topSanPhamBanChay(start, end);
 
-        return ResponseEntity.ok(topSanPhamBanChay1);
+        return ResponseEntity.ok(topSanPhamBanChay);
+    }
+    @GetMapping("/topSPSapHetHang")
+    public ResponseEntity<List<ChiTietSanPhamView>> topSanPhamSapHetHang() {
+        // Gọi trực tiếp repository để lấy danh sách sản phẩm bán chạy
+        List<ChiTietSanPhamView> topSanPhamSapHetHang = bctkRepo.topSanPhamSapHetHang();
+
+        return ResponseEntity.ok(topSanPhamSapHetHang);
     }
 
-    @GetMapping("/topSPBanCham")
-    public List<HoaDonResponse> topSanPhamBanCham() {
-        return bctkRepo.topSanPhamBanCham();
-    }
 }

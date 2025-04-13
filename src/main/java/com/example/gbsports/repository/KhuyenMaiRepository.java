@@ -19,6 +19,7 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
     Optional<KhuyenMai> findByMaKhuyenMai(String maKhuyenMai);
 
     Page<KhuyenMai> findByTrangThai(String trangThai, Pageable pageable);
+    Page<KhuyenMai> findByKieuGiamGia(String kieuGiamGia, Pageable pageable);
 
     @Query("SELECT km FROM KhuyenMai km WHERE km.maKhuyenMai LIKE %:keyword% OR km.tenKhuyenMai LIKE %:keyword%")
     Page<KhuyenMai> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);

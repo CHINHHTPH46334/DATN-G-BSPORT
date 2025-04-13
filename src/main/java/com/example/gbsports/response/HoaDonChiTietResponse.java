@@ -48,5 +48,10 @@ public interface HoaDonChiTietResponse {
     String getGhi_chu();
     String getKich_thuoc();
 
+    String getDon_vi();
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime getNgay_chuyen();
+
+
 
 }

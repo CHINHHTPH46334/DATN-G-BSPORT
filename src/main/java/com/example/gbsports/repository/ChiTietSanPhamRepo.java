@@ -135,8 +135,9 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
         ORDER BY ctsp.id_chi_tiet_san_pham
         """, nativeQuery = true)
     Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
+
     //=============================== Của Dũng====================================//
-    @Query(nativeQuery = true,value = "WITH DanhGiaSanPham AS (\n" +
+    @Query(nativeQuery = true, value = "WITH DanhGiaSanPham AS (\n" +
             "    SELECT\n" +
             "        id_chi_tiet_san_pham,\n" +
             "        AVG(ISNULL(danh_gia, 0) * 1.0) as danh_gia_trung_binh, -- Nhân 1.0 để đảm bảo kết quả là số thực\n" +

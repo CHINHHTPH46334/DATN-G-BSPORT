@@ -279,5 +279,10 @@ public class VoucherService {
         voucherRepository.save(voucher);
         return "Tắt voucher thành công!";
     }
-
+    public Page<VoucherResponse> locTheoKieuGiamGia(String kieuGiamGia, Pageable pageable) {
+        if (kieuGiamGia == null || kieuGiamGia.equals("Tất cả")) {
+            return getAllVouchers(pageable);
+        }
+        return voucherRepository.findByKieuGiamGia(kieuGiamGia, pageable).map(this::toResponse);
+    }
 }
