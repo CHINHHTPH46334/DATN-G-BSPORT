@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                                "/admin/details").permitAll()
+                                "/admin/details","/banhangweb/**","/admin/quan_ly_san_pham/**").permitAll()
                         .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL")
 //                        .requestMatchers("/api/ql/**").hasRole("QL")
 //                        .requestMatchers("/api/nv/**").hasRole("NV")

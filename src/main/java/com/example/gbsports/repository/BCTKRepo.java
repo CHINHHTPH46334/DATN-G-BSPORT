@@ -41,9 +41,9 @@ public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
             group by sp.ma_san_pham, sp.ten_san_pham, ctsp.gia_ban, hdct.id_chi_tiet_san_pham, ms.ten_mau_sac, kt.gia_tri
              order by so_luong desc
             """)
-        List<HoaDonResponse> topSanPhamBanChay(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    List<HoaDonResponse> topSanPhamBanChay(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-        @Query(nativeQuery = true, value = """
+    @Query(nativeQuery = true, value = """
             select ctsp.id_chi_tiet_san_pham ,sp.ma_san_pham, (sp.ten_san_pham+N': Màu: '+ms.ten_mau_sac+N', size: '+kt.gia_tri) as ten_san_pham, 
             ctsp.so_luong, ctsp.gia_ban from san_pham sp
             join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham
@@ -54,12 +54,18 @@ public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
                         """)
     List<ChiTietSanPhamView> topSanPhamSapHetHang();
 
-    @Query(nativeQuery = true, value = "SELECT tddh.trang_thai as trangThaiDonHang,\n" +
-            "    COUNT(*) as [Số lượng đơn hàng],\n" +
-            "    CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM  hoa_don hd\n" +
-            "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don) * 100 as tiLeTrangThaiDonHang\n" +
-            "FROM hoa_don hd\n" +
-            "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don\n" +
-            "GROUP BY tddh.trang_thai;")
+    @Query(nativeQuery = true, value = """
+            SELECT tddh.trang_thai as trangThaiDonHang,
+            COUNT(*) as [Số lượng đơn hàng],
+             CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM  hoa_don hd
+            join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don) * 100 as tiLeTrangThaiDonHang
+             FROM hoa_don hd
+            join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don
+               WHERE tddh.ngay_chuyen = (SELECT MAX(ngay_chuyen)
+                                                            FROM theo_doi_don_hang t2
+                                                            WHERE t2.id_hoa_don = tddh.id_hoa_don) and\s
+            	   hd.trang_thai = N'Hoàn thành'
+            GROUP BY tddh.trang_thai
+            """)
     List<HoaDonResponse> tiLeTrangThaiHoaDon();
 }

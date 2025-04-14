@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 //import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -43,7 +44,7 @@ public class NhanVienController {
     @Autowired
     private TaiKhoanRepo taiKhoanRepo;
     @Autowired
-//    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/quan-ly-nhan-vien/findAll")
     public List<NhanVien> findAll() {
@@ -75,9 +76,9 @@ public class NhanVienController {
         TaiKhoan taiKhoan = new TaiKhoan();
         String generatedPassword = PasswordGenerator.generateRandomPassword();
         // Mã hóa mật khẩu trước khi lưu
-//        String encodedPassword = passwordEncoder.encode(generatedPassword);
+        String encodedPassword = passwordEncoder.encode(generatedPassword);
         taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
-        taiKhoan.setMat_khau(generatedPassword);
+        taiKhoan.setMat_khau(encodedPassword);
         taiKhoan.setRoles(rolesRepo.findById(3).get());
         taiKhoanRepo.save(taiKhoan);
         nhanVien.setTrangThai("Đang hoạt động");
@@ -160,7 +161,7 @@ public class NhanVienController {
                 TaiKhoan taiKhoan = new TaiKhoan();
                 String generatedPassword = PasswordGenerator.generateRandomPassword();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
-                taiKhoan.setMat_khau(generatedPassword);
+                taiKhoan.setMat_khau(passwordEncoder.encode(generatedPassword));
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
@@ -194,17 +195,17 @@ public class NhanVienController {
         }
     }
 
-    @PostMapping("/quan-ly-nhan-vien/changeStatus")
-    public String changeStatus(@RequestBody NhanVienRequest nhanVienRequest) {
-        if (nhanVienRequest.getTrangThai().equals("Đang hoạt động")) {
-            nhanVienRequest.setTrangThai("Đã nghỉ việc");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+    @PutMapping("/quan-ly-nhan-vien/changeStatus")
+    public String changeStatus(@RequestParam("id") Integer id) {
+        NhanVien nhanVien = nhanVienRepo.findById(id).get();
+        if (nhanVien.getTrangThai().equals("Đang hoạt động")) {
+            nhanVien.setTrangThai("Ngừng hoạt động");
+
             nhanVienRepo.save(nhanVien);
         } else {
-            nhanVienRequest.setTrangThai("Đang hoạt động");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+            nhanVien.setTrangThai("Đang hoạt động");
+
+
             nhanVienRepo.save(nhanVien);
         }
         return "Chuyển trạng thái thành công";
