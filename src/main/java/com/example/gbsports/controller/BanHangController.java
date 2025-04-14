@@ -9,12 +9,14 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -46,34 +48,34 @@ public class BanHangController {
     @Autowired
     private TheoDoiDonHangRepo theoDoiDonHangRepo;
 
-    Integer idHD = null;
-    Integer idCTSP = null;
-    Integer idNV = null;
+//    Integer idHD = null;
+//    Integer idCTSP = null;
+//    Integer idNV = null;
 
-    public void viewALl(Model model) {
-        model.addAttribute("listHoaDon", hoaDonRepo.getAllHoaDonCTT());
-        model.addAttribute("listCTSP", chiTietSanPhamRepo.listCTSP());
-        model.addAttribute("listKH", khachHangRepo.findAll());
-        model.addAttribute("listVC", voucherRepository.findAll());
-        model.addAttribute("listNV", nhanVienRepo.findAll());
-        if (idHD == null) {
-            model.addAttribute("hdbh", null);
-        } else {
-            model.addAttribute("hdbh", hoaDonRepo.findHoaDonById(idHD).get(0));
-            model.addAttribute("listGH", hoaDonChiTietRepo.getSPGH(idHD));
-        }
-        if (idCTSP == null) {
-            model.addAttribute("slgh", null);
-        } else {
-            ChiTietSanPham ct = new ChiTietSanPham();
-            for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
-                if (idCTSP == ctsp.getId_chi_tiet_san_pham()) {
-                    ct = ctsp;
-                }
-            }
-            model.addAttribute("slgh", ct);
-        }
-    }
+//    public void viewALl(Model model) {
+//        model.addAttribute("listHoaDon", hoaDonRepo.getAllHoaDonCTT());
+//        model.addAttribute("listCTSP", chiTietSanPhamRepo.listCTSP());
+//        model.addAttribute("listKH", khachHangRepo.findAll());
+//        model.addAttribute("listVC", voucherRepository.findAll());
+//        model.addAttribute("listNV", nhanVienRepo.findAll());
+//        if (idHD == null) {
+//            model.addAttribute("hdbh", null);
+//        } else {
+//            model.addAttribute("hdbh", hoaDonRepo.findHoaDonById(idHD).get(0));
+//            model.addAttribute("listGH", hoaDonChiTietRepo.getSPGH(idHD));
+//        }
+//        if (idCTSP == null) {
+//            model.addAttribute("slgh", null);
+//        } else {
+//            ChiTietSanPham ct = new ChiTietSanPham();
+//            for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+//                if (idCTSP == ctsp.getId_chi_tiet_san_pham()) {
+//                    ct = ctsp;
+//                }
+//            }
+//            model.addAttribute("slgh", ct);
+//        }
+//    }
 
     @PostMapping("/addKhHD")
     public ResponseEntity<?> addKhHd(
@@ -125,8 +127,11 @@ public class BanHangController {
             BigDecimal phiVanChuyen = BigDecimal.ZERO;
             if ("Giao hàng".equalsIgnoreCase(ptnh)) {
                 phiVanChuyen = BigDecimal.valueOf(30000);
+                hoaDon.setPhi_van_chuyen(phiVanChuyen);
+            } else if ("Nhận tại cửa hàng".equalsIgnoreCase(ptnh)) {
+                hoaDon.setDia_chi(null);
+                hoaDon.setPhi_van_chuyen(BigDecimal.ZERO);
             }
-            hoaDon.setPhi_van_chuyen(phiVanChuyen);
 
             // Lấy chi tiết hóa đơn
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepo.findByIdHoaDon(idHD);
@@ -249,16 +254,27 @@ public class BanHangController {
                 chiTietSanPhamRepo.updateSLCTSPByIdCTSP(idChiTietSanPham, soLuong);
             }
 
-            // Chỉ cần gọi delete, Hibernate sẽ tự cascade xóa danh sách chi tiết
+            // Nếu hóa đơn có dùng voucher
+            if (hoaDon.getVoucher() != null) {
+                Voucher voucher = hoaDon.getVoucher();
+                if ("Đang diễn ra".equalsIgnoreCase(voucher.getTrangThai())) {
+                    voucher.setSoLuong(voucher.getSoLuong() + 1);
+                    voucherRepository.save(voucher); // cần repo lưu lại nếu không dùng cascade
+                }
+            }
+
             hoaDonRepo.delete(hoaDon);
 
-            return ResponseEntity.ok(Map.of("success", true, "message", "Đã xóa hóa đơn và cập nhật số lượng tồn thành công"));
+            return ResponseEntity.ok(Map.of("success", true, "message", "Đã xóa hóa đơn và cập nhật lại tồn kho, voucher nếu có"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError()
                     .body(Map.of("success", false, "message", "Lỗi khi xóa hóa đơn: " + e.getMessage()));
         }
     }
+
+
+
 
 
     @PutMapping("/updateHoaDon")
@@ -576,36 +592,37 @@ public class BanHangController {
     }
 
 
-    @GetMapping("/view")
-    public String viewBanHang(Model model) {
-        viewALl(model);
-        return "banhang";
-    }
 
-    @GetMapping("/view/{idHd}")
-    public String detail(@RequestParam("idHd") Integer id) {
-        idHD = id;
-        return "redirect:/admin/ban-hang/view";
-    }
-
-    @PostMapping("/view/add-hoa-don")
-    public String addHoaDon() {
-        HoaDon hoaDon = new HoaDon();
-        idNV = 1;
-        Optional<NhanVien> nv = nhanVienRepo.findById(idNV);
-        hoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
-        hoaDon.setNhanVien(nv.get());
-        hoaDon.setNgay_tao(LocalDateTime.now());
-        hoaDon.setTrang_thai("Chưa thanh toán");
-        hoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);
-        hoaDon.setPhi_van_chuyen(BigDecimal.ZERO);
-        hoaDon.setTong_tien_sau_giam(BigDecimal.ZERO);
-
-        HoaDon savedHoaDon = hoaDonRepo.save(hoaDon);
-        idHD = savedHoaDon.getId_hoa_don();
-
-        return "redirect:/admin/ban-hang/view";
-    }
+//    @GetMapping("/view")
+//    public String viewBanHang(Model model) {
+//        viewALl(model);
+//        return "banhang";
+//    }
+//
+//    @GetMapping("/view/{idHd}")
+//    public String detail(@RequestParam("idHd") Integer id) {
+//        idHD = id;
+//        return "redirect:/admin/ban-hang/view";
+//    }
+//
+//    @PostMapping("/view/add-hoa-don")
+//    public String addHoaDon() {
+//        HoaDon hoaDon = new HoaDon();
+//        idNV = 1;
+//        Optional<NhanVien> nv = nhanVienRepo.findById(idNV);
+//        hoaDon.setMa_hoa_don(generateUniqueMaHoaDon());
+//        hoaDon.setNhanVien(nv.get());
+//        hoaDon.setNgay_tao(LocalDateTime.now());
+//        hoaDon.setTrang_thai("Chưa thanh toán");
+//        hoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);
+//        hoaDon.setPhi_van_chuyen(BigDecimal.ZERO);
+//        hoaDon.setTong_tien_sau_giam(BigDecimal.ZERO);
+//
+//        HoaDon savedHoaDon = hoaDonRepo.save(hoaDon);
+//        idHD = savedHoaDon.getId_hoa_don();
+//
+//        return "redirect:/admin/ban-hang/view";
+//    }
 
     @RequestMapping(value = "/update-khach-hang", method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody
@@ -951,71 +968,71 @@ public class BanHangController {
         return maHoaDon;
     }
 
-    @GetMapping("/view/addAndUdateSPGH")
-    public String addAndUpdateSPGH(
-            @RequestParam("idCTSP") Integer idChiTietSanPham,
-            @RequestParam(value = "idHoaDonADGH", required = false) Integer idHoaDon,
-            @RequestParam("soLuong") Integer soLuong,
-            Model model) {
-
-        if (idHoaDon == null) {
-            if (idHD != null) {
-                idHoaDon = idHD;
-            } else {
-                model.addAttribute("error", "Không có hóa đơn được chọn!");
-                return "redirect:/admin/ban-hang/view";
-            }
-        }
-
-        Optional<HoaDonChiTiet> existingHdct = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(idChiTietSanPham, idHoaDon);
-
-        Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idChiTietSanPham);
-        if (!chiTietSanPhamOpt.isPresent()) {
-            model.addAttribute("error", "Không tìm thấy sản phẩm!");
-            return "redirect:/admin/ban-hang/view";
-        }
-
-        ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
-
-        if (chiTietSanPham.getSo_luong() < soLuong) {
-            model.addAttribute("error", "Số lượng không đủ!");
-            return "redirect:/admin/ban-hang/view";
-        }
-
-        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
-        if (!hoaDonOpt.isPresent()) {
-            model.addAttribute("error", "Không tìm thấy hóa đơn!");
-            return "redirect:/admin/ban-hang/view";
-        }
-
-        HoaDon hoaDon = hoaDonOpt.get();
-
-        if (existingHdct.isPresent()) {
-            HoaDonChiTiet hdct = existingHdct.get();
-            int newSoLuong = hdct.getSo_luong() + soLuong;
-            if (chiTietSanPham.getSo_luong() < newSoLuong) {
-                model.addAttribute("error", "Số lượng không đủ!");
-                return "redirect:/admin/ban-hang/view";
-            }
-            hdct.setSo_luong(newSoLuong);
-            hdct.setDon_gia(BigDecimal.valueOf(newSoLuong).multiply(chiTietSanPham.getGia_ban()));
-            hoaDonChiTietRepo.save(hdct);
-        } else {
-            HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
-            hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
-            hoaDonChiTiet.setHoaDon(hoaDon);
-            hoaDonChiTiet.setSo_luong(soLuong);
-            hoaDonChiTiet.setDon_gia(BigDecimal.valueOf(soLuong).multiply(chiTietSanPham.getGia_ban()));
-            hoaDonChiTietRepo.save(hoaDonChiTiet);
-        }
-
-        chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuong);
-        chiTietSanPhamRepo.save(chiTietSanPham);
-
-        updateTongTienHoaDon(idHoaDon);
-
-        return "redirect:/admin/ban-hang/view";
-    }
+//    @GetMapping("/view/addAndUdateSPGH")
+//    public String addAndUpdateSPGH(
+//            @RequestParam("idCTSP") Integer idChiTietSanPham,
+//            @RequestParam(value = "idHoaDonADGH", required = false) Integer idHoaDon,
+//            @RequestParam("soLuong") Integer soLuong,
+//            Model model) {
+//
+//        if (idHoaDon == null) {
+//            if (idHD != null) {
+//                idHoaDon = idHD;
+//            } else {
+//                model.addAttribute("error", "Không có hóa đơn được chọn!");
+//                return "redirect:/admin/ban-hang/view";
+//            }
+//        }
+//
+//        Optional<HoaDonChiTiet> existingHdct = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(idChiTietSanPham, idHoaDon);
+//
+//        Optional<ChiTietSanPham> chiTietSanPhamOpt = chiTietSanPhamRepo.findById(idChiTietSanPham);
+//        if (!chiTietSanPhamOpt.isPresent()) {
+//            model.addAttribute("error", "Không tìm thấy sản phẩm!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//
+//        ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
+//
+//        if (chiTietSanPham.getSo_luong() < soLuong) {
+//            model.addAttribute("error", "Số lượng không đủ!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//
+//        Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
+//        if (!hoaDonOpt.isPresent()) {
+//            model.addAttribute("error", "Không tìm thấy hóa đơn!");
+//            return "redirect:/admin/ban-hang/view";
+//        }
+//
+//        HoaDon hoaDon = hoaDonOpt.get();
+//
+//        if (existingHdct.isPresent()) {
+//            HoaDonChiTiet hdct = existingHdct.get();
+//            int newSoLuong = hdct.getSo_luong() + soLuong;
+//            if (chiTietSanPham.getSo_luong() < newSoLuong) {
+//                model.addAttribute("error", "Số lượng không đủ!");
+//                return "redirect:/admin/ban-hang/view";
+//            }
+//            hdct.setSo_luong(newSoLuong);
+//            hdct.setDon_gia(BigDecimal.valueOf(newSoLuong).multiply(chiTietSanPham.getGia_ban()));
+//            hoaDonChiTietRepo.save(hdct);
+//        } else {
+//            HoaDonChiTiet hoaDonChiTiet = new HoaDonChiTiet();
+//            hoaDonChiTiet.setChiTietSanPham(chiTietSanPham);
+//            hoaDonChiTiet.setHoaDon(hoaDon);
+//            hoaDonChiTiet.setSo_luong(soLuong);
+//            hoaDonChiTiet.setDon_gia(BigDecimal.valueOf(soLuong).multiply(chiTietSanPham.getGia_ban()));
+//            hoaDonChiTietRepo.save(hoaDonChiTiet);
+//        }
+//
+//        chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuong);
+//        chiTietSanPhamRepo.save(chiTietSanPham);
+//
+//        updateTongTienHoaDon(idHoaDon);
+//
+//        return "redirect:/admin/ban-hang/view";
+//    }
 
     private void updateTongTienHoaDon(Integer idHoaDon) {
         Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);

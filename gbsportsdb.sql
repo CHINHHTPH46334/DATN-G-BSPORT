@@ -143,7 +143,7 @@ CREATE TABLE chi_tiet_khuyen_mai (
 	id_ctkm INT IDENTITY(1,1) PRIMARY KEY,
     id_khuyen_mai INT REFERENCES khuyen_mai(id_khuyen_mai),
     id_chi_tiet_san_pham INT REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham),
-    
+    gia_sau_giam DECIMAL(12,2)
 );
 
 -- 15. Bảng khach_hang
@@ -297,14 +297,19 @@ CREATE TABLE phieu_doi_hang (
 -- Chèn dữ liệu mẫu
 -- 1. Bảng roles
 INSERT INTO roles (id_roles, ma_roles, ten_roles) VALUES
-(1, 'AD', N'Admin'),
-(2, 'QL', N'Quản lý'),
-(3, 'NV', N'Nhân viên'),
-(4, 'KH', N'Khách hàng');
+(1, 'ROLE_ADMIN', N'Admin'),
+(2, 'ROLE_QL', N'Quản lý'),
+(3, 'ROLE_NV', N'Nhân viên'),
+(4, 'ROLE_KH', N'Khách hàng');
 
 -- 2. Bảng tai_khoan
 INSERT INTO tai_khoan (id_roles, ten_dang_nhap, mat_khau) VALUES
-(1, 'admin', 'admin123'),
+(1, 'thuptqph46287@fpt.edu.vn', '$2a$10$isBXW0aHXbeM4MlGRzBMe.aTZGuBYMM7aVWp0q6ss.RGDf0HDGUN2'), --MK: thu123
+(1, 'nghianhph46340@fpt.edu.vn', '$2a$10$YMSAVjBltC6FlCow9fw1muCSCsGVgoE.bi.AEa5C9BBwnmhs5GA56'), --MK: nghia123
+(1, 'chinhhtph46334@fpt.edu.vn', '$2a$10$NRzZ3AO62Gf5yVLcumhvyeuWpWKU9nW0s6nNboXD9IKa7.hj6OAJO'), --MK: chinh123
+(1, 'dunghbph46428@fpt.edu.vn', '$2a$10$rviQ5PIc4TJj.HBFkjqW/eXwa4kYnOz./tGGSOUaoRD/9roUXfY36'), --MK: dung123
+(1, 'Lenhpvph46331@fpt.edu.vn', '$2a$10$kkcLL1T7wjYw.pCEynqgcO5pXLrhYtc1R2O0FnG3GKxWa12k2QJRq'), --MK: lenh123
+(1, 'huyvtph46307@fpt.edu.vn', '$2a$10$fCOqAb1zAPLNBmQE9XAoZepHC5sUOsxKDUf.M5QhroFkSUqWpwwvG'), --MK: huy123
 (2, 'quanly1', 'ql123'),        
 (2, 'quanly2', 'ql456'),        
 (3, 'nhanvien1', 'nv123'),         
@@ -340,15 +345,12 @@ INSERT INTO lich_su_dang_nhap (id_tai_khoan, ngay_dang_nhap, ip_adress) VALUES
 
 -- 4. Bảng nhan_vien
 INSERT INTO nhan_vien (id_tai_khoan, ma_nhan_vien, ten_nhan_vien, ngay_sinh, email, dia_chi_lien_he, gioi_tinh, so_dien_thoai, anh_nhan_vien, ngay_tham_gia, trang_thai) VALUES
-(1, 'NV01', N'Nguyễn Hữu Nghĩa', '2000-10-17', 'nghianhph46340@fpt.edu.vn', N'Số 7, Phường Phương Canh, Quận Nam Từ Liêm, Thành phố Hà Nội', 1, '0353225292', 'avatar2.jpg', '2023-02-01', N'Đang hoạt động'),
-(2, 'NV02', N'Hoàng Thọ Chính', '2004-12-13', 'chinhhtph46334@fpt.edu.vn', N'Số 5, Xã Vân Canh, Huyện Hoài Đức, Thành phố Hà Nội', 1, '0989864737', 'avatar3.jpg', '2023-03-01', N'Đang hoạt động'),
-(3, 'NV03', N'Nguyễn Thị Kiều Anh', '2003-04-12', 'annv@gmail.com', N'Số 123, Phường Tây Tựu, Quận Bắc Từ Liêm, Thành phố Hà Nội', 0, '0378854735', 'avatar4.jpg', '2023-04-01', N'Đã nghỉ việc'),
-(4, 'NV04', N'Vũ Tuấn Huy', '2004-02-15', 'huyvtph46307@fpt.edu.vn', N'Số 26, Phường Đội Cấn, Quận Ba Đình, Thành phố Hà Nội', 1, '0912301363', 'avatar5.jpg', '2023-05-01', N'Đang hoạt động'),
-(5, 'NV05', N'Hồ Bá Dũng', '2004-11-14', 'dunghbph46428@fpt.edu.vn', N'Số 7 ngõ 324, Phường Láng Thượng, Quận Đống Đa, Thành phố Hà Nội', 1, '0397572262', 'avatar6.jpg', '2023-06-01', N'Đang hoạt động'),
-(6, 'NV06', N'Phùn Văn Lềnh', '2003-09-10', 'lenhpvph46331@fpt.edu.vn', N'Số 4 ngõ 45, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Thành phố Hà Nội', 1, '0388109763', 'avatar7.jpg', '2023-07-01', N'Đang hoạt động'),
-(7, 'NV07', N'Hà Trung Thành', '2001-11-23', 'thanhht@gmail.com', N'Số 3 ngõ 89, Phường Thảo Điền, Thành phố Thủ Đức, Thành phố Hồ Chí Minh', 1, '0325467832', 'avatar8.jpg', '2023-08-01', N'Đã nghỉ việc'),
-(8, 'NV08', N'Lê Thành Dương', '2000-01-17', 'duonglt@gmail.com', N'Khu 7, Xã Mai Hạ, Huyện Mai Châu, Tỉnh Hoà Bình', 1, '0987678543', 'avatar9.jpg', '2023-09-01', N'Đã nghỉ việc'),
-(9, 'NV09', N'Lê Thị Nhàn', '1999-08-29', 'nhanlt@gmail.com', N'Khu 8, Xã Đông Xá, Huyện Vân Đồn, Tỉnh Quảng Ninh', 0, '0987678543', 'avatar10.jpg', '2023-10-01', N'Đã nghỉ việc');
+(1, 'NV02', N'Phạm Thị Quỳnh Thu', '2002-12-13', 'thuptqph46287@fpt.edu.vn', N'Số 5, Xã Vân Canh, Huyện Hoài Đức, Thành phố Hà Nội', 1, '0989864737', 'avatar3.jpg', '2023-03-01', N'Đang hoạt động'),
+(2, 'NV01', N'Nguyễn Hữu Nghĩa', '2000-10-17', 'nghianhph46340@fpt.edu.vn', N'Số 7, Phường Phương Canh, Quận Nam Từ Liêm, Thành phố Hà Nội', 1, '0353225292', 'avatar2.jpg', '2023-02-01', N'Đang hoạt động'),
+(3, 'NV02', N'Hoàng Thọ Chính', '2004-12-13', 'chinhhtph46334@fpt.edu.vn', N'Số 5, Xã Vân Canh, Huyện Hoài Đức, Thành phố Hà Nội', 1, '0989864737', 'avatar3.jpg', '2023-03-01', N'Đang hoạt động'),
+(4, 'NV05', N'Hồ Bá Dũng', '2004-11-14', 'dunghbph46428@fpt.edu.vn', N'Số 7 ngõ 324, Phường Láng Thượng, Quận Đống Đa, Thành phố Hà Nội', 1, '0397572262', 'avatar6.jpg', '2023-06-01', N'Đang hoạt động'),
+(5, 'NV06', N'Phùn Văn Lềnh', '2003-09-10', 'lenhpvph46331@fpt.edu.vn', N'Số 4 ngõ 45, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Thành phố Hà Nội', 1, '0388109763', 'avatar7.jpg', '2023-07-01', N'Đang hoạt động'),
+(6, 'NV04', N'Vũ Tuấn Huy', '2004-02-15', 'huyvtph46307@fpt.edu.vn', N'Số 26, Phường Đội Cấn, Quận Ba Đình, Thành phố Hà Nội', 1, '0912301363', 'avatar5.jpg', '2023-05-01', N'Đang hoạt động');
 
 -- 5. Bảng danh_muc_san_pham
 INSERT INTO danh_muc_san_pham (ma_danh_muc, ten_danh_muc, trang_thai, ngay_tao, ngay_sua) VALUES

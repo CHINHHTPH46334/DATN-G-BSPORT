@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(nativeQuery = true, value = """
             SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
@@ -174,6 +175,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                 SELECT * FROM hoa_don
             """, nativeQuery = true)
     List<HoaDonResponse> getListHD();
+
     @Query(value = """
             SELECT TOP 1 trang_thai
             FROM theo_doi_don_hang
@@ -182,6 +184,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             ORDER BY ngay_chuyen DESC
             """, nativeQuery = true)
     String findLatestNonUpdatedStatusByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
+
     //Nghía
     @Query(nativeQuery = true, value = """
             select ctsp.id_chi_tiet_san_pham, sp.hinh_anh, sp.ten_san_pham,\s
@@ -222,4 +225,10 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             where ma_hoa_don = :maHoaDon
                                     """)
     HoaDonResponse getHoaDonByMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+    @Query(value = """
+            SELECT h.* FROM hoa_don h WHERE h.trang_thai like N'Đang chờ' AND h.ngay_tao < :startOfToday
+            """, nativeQuery = true)
+    List<HoaDon> findExpiredChoHoaDons(@Param("startOfToday") LocalDateTime startOfToday);
+
 }
