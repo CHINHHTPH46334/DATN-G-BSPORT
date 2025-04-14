@@ -39,13 +39,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Thêm cấu hình CORS
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                                "/admin/login_admin", "/admin/details").permitAll()
-                        .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL", "NV")
-//                        .requestMatchers("/api/ql/**").hasRole("QL")
-                        .requestMatchers("/banhang/**", "/admin/qlhd/**", "").hasRole("NV")
-//                        .requestMatchers("/api/kh/**").hasRole("KH")
-                        .anyRequest().authenticated()
+                    .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
+                        "/admin/login_admin", "/admin/details","/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
+                        "/admin/forgot-password", "/admin/reset-password").permitAll()
+                    .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL", "NV")
+                    .requestMatchers("/api/khach-hang/change-password").hasAnyRole( "ADMIN", "QL", "NV", "KH")
+//                    .requestMatchers("/api/khach-hang/change-password").authenticated()// Đổi mk cho cả NV+KH
+                    .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
