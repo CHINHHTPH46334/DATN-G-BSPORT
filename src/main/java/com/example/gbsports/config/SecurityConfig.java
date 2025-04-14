@@ -41,10 +41,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
                                 "/admin/details","/banhangweb/**","/admin/quan_ly_san_pham/**").permitAll()
-                        .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL")
-//                        .requestMatchers("/api/ql/**").hasRole("QL")
-//                        .requestMatchers("/api/nv/**").hasRole("NV")
-//                        .requestMatchers("/api/kh/**").hasRole("KH")
+                        .requestMatchers("/admin/qlhd/**", "/banhang/**","/admin/login-admin").hasAnyRole("ADMIN", "QL","NV")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
