@@ -601,7 +601,6 @@ public class KhachHangController {
             HttpServletRequest request) {
 
         Map<String, Object> response = new HashMap<>();
-
         // Kiểm tra validation từ Request
         if (result.hasErrors()) {
             Map<String, String> fieldErrors = new HashMap<>();
@@ -611,35 +610,19 @@ public class KhachHangController {
             response.put("fieldErrors", fieldErrors);
             return ResponseEntity.badRequest().body(response);
         }
-
         try {
             // Tìm tài khoản trước để kiểm tra trạng thái
-            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhap(loginRequest.getEmail())
+            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(loginRequest.getEmail())
                     .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
-
-            // Kiểm tra trạng thái tài khoản
-            if (taiKhoan.getRoles().getId_roles() == 4) {
-                // Tài khoản khách hàng
-                Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                if (khachHangOpt.isPresent()) {
-                    KhachHang khachHang = khachHangOpt.get();
-                    if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
-                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                        return ResponseEntity.badRequest().body(response);
-                    }
-                }
-            } else {
-                // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
-                Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                if (nhanVienOpt.isPresent()) {
-                    NhanVien nhanVien = nhanVienOpt.get();
-                    if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
-                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                        return ResponseEntity.badRequest().body(response);
-                    }
+            // Tài khoản khách hàng
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (khachHangOpt.isPresent()) {
+                KhachHang khachHang = khachHangOpt.get();
+                if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
+                    response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                    return ResponseEntity.badRequest().body(response);
                 }
             }
-
             // Xác thực người dùng bằng AuthenticationManager
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -672,10 +655,11 @@ public class KhachHangController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! " + e.getMessage());
+            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! ");
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @GetMapping("/details")
     public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
         Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);

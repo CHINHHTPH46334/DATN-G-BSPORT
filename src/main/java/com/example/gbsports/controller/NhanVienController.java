@@ -1,16 +1,18 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.NhanVien;
-import com.example.gbsports.entity.PasswordGenerator;
-import com.example.gbsports.entity.Roles;
-import com.example.gbsports.entity.TaiKhoan;
+import com.example.gbsports.entity.*;
+import com.example.gbsports.repository.LichSuDangNhapRepo;
 import com.example.gbsports.repository.NhanVienRepo;
 import com.example.gbsports.repository.RolesRepo;
 import com.example.gbsports.repository.TaiKhoanRepo;
+import com.example.gbsports.request.LoginRequest;
 import com.example.gbsports.request.NhanVienRequest;
 import com.example.gbsports.response.NhanVienResponse;
+import com.example.gbsports.util.JwtUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,12 +21,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -41,6 +53,16 @@ public class NhanVienController {
     private RolesRepo rolesRepo;
     @Autowired
     private TaiKhoanRepo taiKhoanRepo;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private LichSuDangNhapRepo lichSuDangNhapRepo;
 
     @GetMapping("/quan-ly-nhan-vien/findAll")
     public List<NhanVien> findAll() {
@@ -245,7 +267,7 @@ public class NhanVienController {
         nhanVien.setTaiKhoan(taiKhoan);
         nhanVienRepo.save(nhanVien);
         String tenDN = nhanVien.getEmail().split("@")[0];
-        String content =  "<h1>Chào mừng bạn đến với hệ thống G&B SPORTS</h1>" +
+        String content = "<h1>Chào mừng bạn đến với hệ thống G&B SPORTS</h1>" +
                 "</div>" +
                 "<div class='content'>" +
                 "<h3>Chúc mừng bạn đã được tạo tài khoản nhân viên!</h3>" +
@@ -257,7 +279,7 @@ public class NhanVienController {
                 "</div>" +
                 "<p><strong>Vui lòng đổi mật khẩu sau khi đăng nhập.</strong></p>";
 
-        sendEmail(nhanVien.getEmail(),content);
+        sendEmail(nhanVien.getEmail(), content);
         return "Thêm thành công";
     }
 
@@ -335,7 +357,7 @@ public class NhanVienController {
                         "<p><strong>Mã nhân viên:</strong> " + nhanVienRequest.getMaNhanVien() + "</p>" +
                         "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
                         "</div>";
-                sendEmail(nhanVienRequest.getEmail(),content);
+                sendEmail(nhanVienRequest.getEmail(), content);
                 NhanVien nhanVien = new NhanVien();
                 BeanUtils.copyProperties(nhanVienRequest, nhanVien);
                 nhanVien.setIdNhanVien(nhanVienRequest.getIdNhanVien());
@@ -402,6 +424,70 @@ public class NhanVienController {
 //
 //        }
 //    }
+    @PostMapping("/login_admin")
+    public ResponseEntity<Map<String, Object>> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            BindingResult result,
+            HttpServletRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        // Kiểm tra validation từ Request
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.put(error.getField(), error.getDefaultMessage());
+            }
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        try {
+            // Tìm tài khoản trước để kiểm tra trạng thái
+            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+            // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
+            Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (nhanVienOpt.isPresent()) {
+                NhanVien nhanVien = nhanVienOpt.get();
+                if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
+                    response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+            // Xác thực người dùng bằng AuthenticationManager
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+            // Tạo JWT token
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+            String token = jwtUtil.generateToken(userDetails);
+            List<String> roles = jwtUtil.extractRoles(token);
+            // Lấy địa chỉ IP từ request
+            String ipAddress = request.getRemoteAddr();
+            if (ipAddress == null || ipAddress.isEmpty()) {
+                ipAddress = "Unknown";
+            }
+
+            // Lưu lịch sử đăng nhập
+            LichSuDangNhap lichSuDangNhap = new LichSuDangNhap();
+            lichSuDangNhap.setTaiKhoan(taiKhoan);
+            lichSuDangNhap.setNgay_dang_nhap(LocalDateTime.now());
+            lichSuDangNhap.setIp_adress(ipAddress);
+            lichSuDangNhapRepo.save(lichSuDangNhap);
+            // Trả về thông tin đăng nhập
+            response.put("successMessage", "Đăng nhập thành công!");
+            response.put("token", token);
+            response.put("taiKhoan", taiKhoan);
+            response.put("id_roles", taiKhoan.getRoles().getId_roles());
+            response.put("roles", roles);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! ");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @GetMapping("/details")
     public ResponseEntity<NhanVien> getNhanVienDetails(@RequestParam String tenDangNhap) {
         Optional<NhanVien> nhanVien = taiKhoanRepo.findNhanVienByTenDangNhap(tenDangNhap);
