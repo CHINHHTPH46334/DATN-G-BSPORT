@@ -40,8 +40,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                        "/admin/login_admin", "/admin/details","/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
-                        "/admin/forgot-password", "/admin/reset-password").permitAll()
+                        "/admin/quan-ly-nhan-vien/login_admin", "/admin/quan-ly-nhan-vien/details","/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
+                        "/admin/quan-ly-nhan-vien/forgot-password", "/admin/quan-ly-nhan-vien/reset-password", "/banhangweb/**","/admin/quan_ly_san_pham/**").permitAll()
                     .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL", "NV")
                     .requestMatchers("/api/khach-hang/change-password").hasAnyRole( "ADMIN", "QL", "NV", "KH")
 //                    .requestMatchers("/api/khach-hang/change-password").authenticated()// Đổi mk cho cả NV+KH

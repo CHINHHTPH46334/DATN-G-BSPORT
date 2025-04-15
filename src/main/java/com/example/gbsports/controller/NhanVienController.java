@@ -40,7 +40,7 @@ import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
-@RequestMapping("/admin")
+@RequestMapping("/admin/quan-ly-nhan-vien")
 public class NhanVienController {
     @Autowired
     NhanVienRepo nhanVienRepo;
@@ -63,7 +63,7 @@ public class NhanVienController {
     @Autowired
     private LichSuDangNhapRepo lichSuDangNhapRepo;
 
-    @GetMapping("/quan-ly-nhan-vien/findAll")
+    @GetMapping("/findAll")
     public List<NhanVien> findAll() {
         return nhanVienRepo.findAll();
     }
@@ -73,193 +73,29 @@ public class NhanVienController {
 //    public List<NhanVienResponse> getAll(){
 //        return nhanVienRepo.getAll();
 //    }
-    @GetMapping("/quan-ly-nhan-vien")
+    @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                             @RequestParam(value = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.listPT(pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/findById")
+    @GetMapping("/findById")
     public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
-//    ArrayList<String> mangLoi = new ArrayList<>();
-//    private ArrayList<String> checkTrong(NhanVienRequest nhanVienRequest) {
-//        mangLoi.clear();
-//        // Kiểm tra trống
-//        if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//            mangLoi.add("Mã nhân viên không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//            mangLoi.add("Tên nhân viên không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//            mangLoi.add("Email không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//            mangLoi.add("Số điện thoại không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getNgaySinh() == null) {
-//            mangLoi.add("Chưa chọn ngày sinh \n");
-//        }
-//        if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//            mangLoi.add("Địa chỉ liên hệ không được để trống \n");
-//        }
-//        if (nhanVienRequest.getGioiTinh() == null ) {
-//            mangLoi.add("Chưa chọn giới tính \n");
-//        }
-//
-////        // Kiểm tra trùng mã, email, số điện thoại
-////        if (nhanVienRepo.existsByMaNhanVien(nhanVienRequest.getMaNhanVien())) {
-////            return "Mã nhân viên đã tồn tại";
-////        }
-////        if (nhanVienRepo.existsByEmail(nhanVienRequest.getEmail())) {
-////            return "Email đã tồn tại";
-////        }
-////        if (nhanVienRepo.existsBySoDienThoai(nhanVienRequest.getSoDienThoai())) {
-////            return "Số điện thoại đã tồn tại";
-////        }
-//
-//        return mangLoi; // Không có lỗi
-//    }
-//    ArrayList<String> mangTrung = new ArrayList<>();
-//    private ArrayList<String> checkTrung(NhanVienRequest nhanVienRequest){
-//        mangTrung.clear();
-//        for (NhanVienResponse nv: nhanVienRepo.getAll()) {
-//            if (nv.getMaNhanVien().trim().equalsIgnoreCase(nhanVienRequest.getMaNhanVien().trim())){
-//                mangTrung.add("Trùng mã nhân viên");
-//            }
-//            if (nv.getEmail().trim().equalsIgnoreCase(nhanVienRequest.getEmail().trim())){
-//                mangTrung.add("Trùng Email");
-//            }
-//            if (nv.getSoDienThoai().trim().equalsIgnoreCase(nhanVienRequest.getSoDienThoai().trim())){
-//                mangTrung.add("Trùng số điện thoại");
-//            }
-//        }
-//        return mangTrung;
-//    }
-//
-//    @PostMapping("/quan-ly-nhan-vien/add")
-//    public String add(@RequestBody NhanVienRequest nhanVienRequest) {
-//       if (checkTrong(nhanVienRequest).isEmpty() && checkTrung(nhanVienRequest).isEmpty()){
-//        NhanVien nhanVien = new NhanVien();
-//        BeanUtils.copyProperties(nhanVienRequest, nhanVien);
-//        nhanVienRepo.save(nhanVien);
-//        return "Thêm thành công";
-//       }
-//        return mangLoi.toString()+mangTrung.toString();
-//    }
-//private List<String> validateNhanVien(NhanVienRequest nhanVienRequest) {
-//    List<String> errors = new ArrayList<>();
-//
-//    if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//        errors.add("Mã nhân viên không được để trống.");
-//    }
-//    if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//        errors.add("Tên nhân viên không được để trống.");
-//    }
-//    if (nhanVienRequest.getNgaySinh() == null) {
-//        errors.add("Ngày sinh không được để trống.");
-//    }
-//    if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//        errors.add("Email không được để trống.");
-//    }
-//    if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//        errors.add("Địa chỉ liên hệ không được để trống.");
-//    }
-//    if (nhanVienRequest.getGioiTinh() == null) {
-//        errors.add("Giới tính không được để trống.");
-//    }
-//    if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//        errors.add("Số điện thoại không được để trống.");
-//    }
-//    if (nhanVienRequest.getTrangThai() == null || nhanVienRequest.getTrangThai().trim().isEmpty()) {
-//        errors.add("Trạng thái không được để trống.");
-//    }
-//
-//    return errors;
-//}
-//    @PostMapping("/quan-ly-nhan-vien/add")
-//    public ResponseEntity<?> add(@RequestBody NhanVienRequest nhanVienRequest) {
-//        List<String> errors = validateNhanVien(nhanVienRequest);
-//        if (!errors.isEmpty()) {
-//            return ResponseEntity.badRequest().body(errors); // Trả về lỗi dưới dạng JSON
-//        }
-//        NhanVien nhanVien = new NhanVien();
-//        BeanUtils.copyProperties(nhanVienRequest, nhanVien);
-//        nhanVienRepo.save(nhanVien);
-//        return ResponseEntity.ok("Thêm thành công");
-//    }
 
-//    private String validateNhanVien(NhanVienRequest nhanVienRequest) {
-//        StringBuilder errors = new StringBuilder();
-//
-//        if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//            errors.append("Mã nhân viên không được để trống.\n");
-//        } else if (nhanVienRepo.existsByMaNhanVien(nhanVienRequest.getMaNhanVien())) {
-//            errors.append("Mã nhân viên đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//            errors.append("Tên nhân viên không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getNgaySinh() == null) {
-//            errors.append("Ngày sinh không được để trống.\n");
-//        } else {
-//            LocalDate birthDate = nhanVienRequest.getNgaySinh().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-//            int age = Period.between(birthDate, LocalDate.now()).getYears();
-//            if (age < 18 || age > 50) {
-//                errors.append("Tuổi nhân viên phải từ 18 đến 50\n");
-//            }
-//        }
-//
-//        if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//            errors.append("Email không được để trống.\n");
-//        } else if (!nhanVienRequest.getEmail().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
-//            errors.append("Email không đúng định dạng.\n");
-//        } else if (nhanVienRepo.existsByEmail(nhanVienRequest.getEmail())) {
-//            errors.append("Email đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//            errors.append("Địa chỉ liên hệ không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getGioiTinh() == null) {
-//            errors.append("Giới tính không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//            errors.append("Số điện thoại không được để trống.\n");
-//        } else if (!nhanVienRequest.getSoDienThoai().matches("^(0[3|5|7|8|9])[0-9]{8,9}$")) {
-//            errors.append("Số điện thoại không đúng định dạng Việt Nam.\n");
-//        } else if (nhanVienRepo.existsBySoDienThoai(nhanVienRequest.getSoDienThoai())) {
-//            errors.append("Số điện thoại đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getTrangThai() == null || nhanVienRequest.getTrangThai().trim().isEmpty()) {
-//            errors.append("Trạng thái không được để trống.\n");
-//        }
-//
-//        return errors.toString().trim();
-//    }
-
-    @PostMapping("/quan-ly-nhan-vien/add")
+    @PostMapping("/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
-//
-//        String errorMessage = validateNhanVien(nhanVienRequest);
-//        if (!errorMessage.isEmpty()) {
-//            return errorMessage; // Trả về lỗi nếu có
-//        }
         NhanVien nhanVien = new NhanVien();
         BeanUtils.copyProperties(nhanVienRequest, nhanVien);
         TaiKhoan taiKhoan = new TaiKhoan();
         String generatedPassword = PasswordGenerator.generateRandomPassword();
-        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
-        taiKhoan.setMat_khau(generatedPassword);
+        // Mã hóa mật khẩu trước khi lưu
+        String encodedPassword = passwordEncoder.encode(generatedPassword);
+        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
+        taiKhoan.setMat_khau(encodedPassword);
         taiKhoan.setRoles(rolesRepo.findById(3).get());
         taiKhoanRepo.save(taiKhoan);
         nhanVien.setTrangThai("Đang hoạt động");
@@ -274,7 +110,7 @@ public class NhanVienController {
                 "<div class='info-box'>" +
                 "<p><strong>Mã Nhân Viên:</strong> " + nhanVien.getMaNhanVien() + "</p>" +
                 "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
-                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + taiKhoan.getMat_khau() + "</p>" +
+                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + generatedPassword + "</p>" +
                 "</div>" +
                 "<p><strong>Vui lòng đổi mật khẩu sau khi đăng nhập.</strong></p>";
 
@@ -329,7 +165,7 @@ public class NhanVienController {
         }
     }
 
-    @PutMapping("/quan-ly-nhan-vien/update")
+    @PutMapping("/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
         try {
@@ -340,13 +176,11 @@ public class NhanVienController {
                 // Nếu email thay đổi thì gọi hàm xử lý gửi email đã có sẵn
                 // Giả sử hàm gửi email là sendEmailToEmployee
                 TaiKhoan taiKhoan = new TaiKhoan();
-                String generatedPassword = PasswordGenerator.generateRandomPassword();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
-                taiKhoan.setMat_khau(generatedPassword);
-                taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
+                taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
-                String tenDN = nhanVienRequest.getEmail().split("@")[0];
+                String tenDN = nhanVienRequest.getEmail();
                 String content = "<h1>Cập nhật tài khoản thành công</h1>" +
                         "</div>" +
                         "<div class='content'>" +
@@ -376,24 +210,24 @@ public class NhanVienController {
         }
     }
 
-    @PostMapping("/quan-ly-nhan-vien/changeStatus")
-    public String changeStatus(@RequestBody NhanVienRequest nhanVienRequest) {
-        if (nhanVienRequest.getTrangThai().equals("Đang hoạt động")) {
-            nhanVienRequest.setTrangThai("Đã nghỉ việc");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+    @PutMapping("/changeStatus")
+    public String changeStatus(@RequestParam("id") Integer id) {
+        NhanVien nhanVien = nhanVienRepo.findById(id).get();
+        if (nhanVien.getTrangThai().equals("Đang hoạt động")) {
+            nhanVien.setTrangThai("Ngừng hoạt động");
+
             nhanVienRepo.save(nhanVien);
         } else {
-            nhanVienRequest.setTrangThai("Đang hoạt động");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+            nhanVien.setTrangThai("Đang hoạt động");
+
+
             nhanVienRepo.save(nhanVien);
         }
         return "Chuyển trạng thái thành công";
     }
 //Search NV API
 
-    @GetMapping("/quan-ly-nhan-vien/search")
+    @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "keyword", required = false) String keyword) {
@@ -401,7 +235,7 @@ public class NhanVienController {
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/locTrangThai")
+    @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "trangThai", required = false) String trangThai) {
@@ -576,5 +410,9 @@ public class NhanVienController {
 
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/listTrangAdmin")
+    public List<NhanVienResponse> listTrangAdmin(){
+        return nhanVienRepo.listTrangAdmin();
     }
 }

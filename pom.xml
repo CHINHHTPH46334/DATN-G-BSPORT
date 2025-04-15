@@ -151,6 +151,11 @@
             <artifactId>payos-java</artifactId>
             <version>1.0.3</version>
         </dependency>
+        <!-- mã hoá mật khẩu-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
