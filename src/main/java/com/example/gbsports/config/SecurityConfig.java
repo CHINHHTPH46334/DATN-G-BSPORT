@@ -40,8 +40,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                                "/admin/details","/banhangweb/**","/admin/quan_ly_san_pham/**").permitAll()
-                        .requestMatchers("/admin/qlhd/**", "/banhang/**","/admin/login-admin").hasAnyRole("ADMIN", "QL","NV")
+                                "/admin/details","/banhangweb/**","/admin/quan_ly_san_pham/**", "/admin/quan-ly-nhan-vien/login_admin").permitAll()
+                        .requestMatchers( "/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL","NV")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -41,7 +41,7 @@ import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
-@RequestMapping("/admin")
+@RequestMapping("/admin/quan-ly-nhan-vien")
 public class NhanVienController {
     @Autowired
     NhanVienRepo nhanVienRepo;
@@ -64,7 +64,7 @@ public class NhanVienController {
     @Autowired
     private LichSuDangNhapRepo lichSuDangNhapRepo;
 
-    @GetMapping("/quan-ly-nhan-vien/findAll")
+    @GetMapping("/findAll")
     public List<NhanVien> findAll() {
         return nhanVienRepo.findAll();
     }
@@ -74,19 +74,19 @@ public class NhanVienController {
 //    public List<NhanVienResponse> getAll(){
 //        return nhanVienRepo.getAll();
 //    }
-    @GetMapping("/quan-ly-nhan-vien")
+    @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                             @RequestParam(value = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.listPT(pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/findById")
+    @GetMapping("/findById")
     public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
 
-    @PostMapping("/quan-ly-nhan-vien/add")
+    @PostMapping("/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
         NhanVien nhanVien = new NhanVien();
@@ -111,7 +111,7 @@ public class NhanVienController {
                 "<div class='info-box'>" +
                 "<p><strong>Mã Nhân Viên:</strong> " + nhanVien.getMaNhanVien() + "</p>" +
                 "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
-                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + taiKhoan.getMat_khau() + "</p>" +
+                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + generatedPassword + "</p>" +
                 "</div>" +
                 "<p><strong>Vui lòng đổi mật khẩu sau khi đăng nhập.</strong></p>";
 
@@ -166,7 +166,7 @@ public class NhanVienController {
         }
     }
 
-    @PutMapping("/quan-ly-nhan-vien/update")
+    @PutMapping("/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
         try {
@@ -177,9 +177,7 @@ public class NhanVienController {
                 // Nếu email thay đổi thì gọi hàm xử lý gửi email đã có sẵn
                 // Giả sử hàm gửi email là sendEmailToEmployee
                 TaiKhoan taiKhoan = new TaiKhoan();
-                String generatedPassword = PasswordGenerator.generateRandomPassword();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
-                taiKhoan.setMat_khau(passwordEncoder.encode(generatedPassword));
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
@@ -213,7 +211,7 @@ public class NhanVienController {
         }
     }
 
-    @PutMapping("/quan-ly-nhan-vien/changeStatus")
+    @PutMapping("/changeStatus")
     public String changeStatus(@RequestParam("id") Integer id) {
         NhanVien nhanVien = nhanVienRepo.findById(id).get();
         if (nhanVien.getTrangThai().equals("Đang hoạt động")) {
@@ -230,7 +228,7 @@ public class NhanVienController {
     }
 //Search NV API
 
-    @GetMapping("/quan-ly-nhan-vien/search")
+    @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "keyword", required = false) String keyword) {
@@ -238,7 +236,7 @@ public class NhanVienController {
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/locTrangThai")
+    @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "trangThai", required = false) String trangThai) {
@@ -334,5 +332,9 @@ public class NhanVienController {
         }
         return nhanVien.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    @GetMapping("/listTrangAdmin")
+    public List<NhanVienResponse> listTrangAdmin(){
+        return nhanVienRepo.listTrangAdmin();
     }
 }
