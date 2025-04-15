@@ -36,19 +36,22 @@ public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
     Page<NhanVienResponse> listPT(Pageable pageable);
 
     @Query(nativeQuery = true, value = """
-                SELECT id_nhan_vien AS idNhanVien, anh_nhan_vien as anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien, 
-                       ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh, 
+                SELECT id_nhan_vien AS idNhanVien, anh_nhan_vien AS anhNhanVien, ma_nhan_vien AS maNhanVien, ten_nhan_vien AS tenNhanVien,
+                       ngay_sinh AS ngaySinh, email, dia_chi_lien_he AS diaChiLienHe, gioi_tinh AS gioiTinh,
                        so_dien_thoai AS soDienThoai, trang_thai AS trangThai
                 FROM nhan_vien nv
-                join tai_khoan tk on tk.id_tai_khoan = nv.id_tai_khoan
-            	join roles r on r.id_roles = tk.id_roles 
-                WHERE tk.id_roles = 3 and email LIKE %:keyword% 
-                OR LOWER(ma_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(ten_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%')) 
-                OR so_dien_thoai LIKE %:keyword%
-                OR LOWER(dia_chi_lien_he) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(trang_thai) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                order by id_nhan_vien desc 
+                JOIN tai_khoan tk ON tk.id_tai_khoan = nv.id_tai_khoan
+                JOIN roles r ON r.id_roles = tk.id_roles
+                WHERE tk.id_roles = 3
+                AND (
+                    email LIKE CONCAT('%', :keyword, '%')
+                    OR LOWER(ma_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(ten_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR so_dien_thoai LIKE CONCAT('%', :keyword, '%')
+                    OR LOWER(dia_chi_lien_he) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    OR LOWER(trang_thai) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                )
+                ORDER BY id_nhan_vien DESC;
             """)
     Page<NhanVienResponse> timNhanVien(@Param("keyword") String keyword, Pageable pageable);
 
