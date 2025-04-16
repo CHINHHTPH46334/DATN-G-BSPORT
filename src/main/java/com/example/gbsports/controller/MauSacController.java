@@ -6,6 +6,7 @@ import com.example.gbsports.repository.MauSacRepo;
 import com.example.gbsports.service.DanhMucService;
 import com.example.gbsports.service.MauSacService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,5 +20,9 @@ public class MauSacController {
     @GetMapping("/MauSac")
     public List<MauSac> getAllMauSac(){
         return mauSacService.listFindAllMauSac();
+    }
+    @PostMapping("/addMauSac")
+    public ResponseEntity<?> addMauSac(@RequestParam("tenMauSac") String tenMauSac){
+        return ResponseEntity.ok(mauSacService.getMauSacOrCreateMauSac(tenMauSac));
     }
 }

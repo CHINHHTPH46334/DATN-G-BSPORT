@@ -17,9 +17,9 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
                         "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong\n"
                         +
                         "            from san_pham sp\n" +
-                        "          full outer  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-                        "           full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-                        "          full outer  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+                        "          left  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+                        "           left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+                        "          left  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
                         "\t\t\t full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
                         "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc, \n"
                         +
@@ -31,9 +31,9 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
                         "th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong, max(ctsp.ngay_sua) as ngay_sua_moi\n"
                         +
                         "from san_pham sp\n" +
-                        "full outer  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-                        "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-                        "full outer  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+                        "left  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+                        "left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+                        "left  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
                         "full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
                         "group by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc,\n" +
                         "th.ten_thuong_hieu, ten_chat_lieu,hinh_anh\n" +

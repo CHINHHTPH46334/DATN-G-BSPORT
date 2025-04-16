@@ -43,8 +43,8 @@ public class DanhMucService {
         newDanhMuc.setMa_danh_muc("DM0" + (maxNumber + 1));
         newDanhMuc.setTen_danh_muc(tenDanhMuc);
         newDanhMuc.setTrang_thai("Hoạt động");
-        newDanhMuc.setNgay_tao(new Date());
-        newDanhMuc.setNgay_sua(new Date());
+        newDanhMuc.setNgay_tao(LocalDateTime.now());
+        newDanhMuc.setNgay_sua(LocalDateTime.now());
         danhMucRepo.save(newDanhMuc);
         return newDanhMuc;
     }

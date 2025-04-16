@@ -37,7 +37,18 @@ public class SanPhamService {
     ChatLieuRepo chatLieuRepo;
 //    @Cacheable("products")
     public ArrayList<SanPhamView> getAll() {
-        System.out.println("jáhdkjsadhsakjdhsakjdhákdhsakjdhsakjdhsakjdhsakjdhsạkdhsjd");
+        ArrayList<SanPhamView> newList = new ArrayList<>();
+        for (SanPhamView spv: sanPhamRepo.getAllSanPham()) {
+            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+                newList.add(spv);
+            }
+        }
+        for (SanPhamView spXet: newList) {
+            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+            sanPham.setTrang_thai("Không hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
+
         return sanPhamRepo.getAllSanPham();
     }
 
@@ -54,6 +65,17 @@ public class SanPhamService {
     }
 
     public ArrayList<SanPhamView> getAllSPNgaySua() {
+        ArrayList<SanPhamView> newList = new ArrayList<>();
+        for (SanPhamView spv: sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
+            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+                newList.add(spv);
+            }
+        }
+        for (SanPhamView spXet: newList) {
+            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+            sanPham.setTrang_thai("Không hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
         return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
     }
 
@@ -175,14 +197,14 @@ public class SanPhamService {
         } else {
             if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Hết hàng");
+                    ctspXoa.setTrang_thai("Không hoạt động");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Không hoạt động");
                 sanPhamRepo.save(spDelete);
             } else {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Còn hàng");
+                    ctspXoa.setTrang_thai("Hoạt động");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Hoạt động");
@@ -274,5 +296,4 @@ public class SanPhamService {
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }
-
 }

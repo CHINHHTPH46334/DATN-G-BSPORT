@@ -6,6 +6,7 @@ import com.example.gbsports.repository.ChatLieuRepo;
 import com.example.gbsports.service.ChatLieuService;
 import com.example.gbsports.service.DanhMucService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,5 +20,9 @@ public class ChatLieuController {
     @GetMapping("/ChatLieu")
     public List<ChatLieu> getAllChatLieu(){
         return chatLieuService.listFindAllChatLieu();
+    }
+    @PostMapping("/addChatLieu")
+    public ResponseEntity<?> addChatLieu(@RequestParam("tenChatLieu") String tenChatLieu){
+        return ResponseEntity.ok(chatLieuService.getChatLieuOrCreateChatLieu(tenChatLieu));
     }
 }

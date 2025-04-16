@@ -5,6 +5,7 @@ import com.example.gbsports.repository.ChatLieuRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -41,8 +42,8 @@ public class ChatLieuService {
         newChatLieu.setMa_chat_lieu("CL0" + (maxNumber + 1));
         newChatLieu.setTen_chat_lieu(tenChatLieu);
         newChatLieu.setTrang_thai("Hoạt động");
-        newChatLieu.setNgay_tao(new Date());
-        newChatLieu.setNgay_sua(new Date());
+        newChatLieu.setNgay_tao(LocalDateTime.now());
+        newChatLieu.setNgay_sua(LocalDateTime.now());
         chatLieuRepo.save(newChatLieu);
         return newChatLieu;
     }

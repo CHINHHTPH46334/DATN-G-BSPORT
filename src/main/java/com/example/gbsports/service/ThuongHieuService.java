@@ -5,6 +5,7 @@ import com.example.gbsports.repository.ThuongHieuRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +42,9 @@ public class ThuongHieuService {
         newThuongHieu.setMa_thuong_hieu("TH0" + (maxNumber + 1));
         newThuongHieu.setTen_thuong_hieu(tenThuongHieu);
         newThuongHieu.setTrang_thai("Hoạt động");
-        newThuongHieu.setNgay_tao(new Date());
-        newThuongHieu.setNgay_sua(new Date());
+        newThuongHieu.setNgay_tao(LocalDateTime.now());
+        newThuongHieu.setNgay_sua(LocalDateTime.now());
+        thuongHieuRepo.save(newThuongHieu);
         return newThuongHieu;
     }
 }

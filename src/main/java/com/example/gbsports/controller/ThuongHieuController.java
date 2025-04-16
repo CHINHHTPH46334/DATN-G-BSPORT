@@ -6,6 +6,7 @@ import com.example.gbsports.repository.ThuongHieuRepo;
 import com.example.gbsports.service.DanhMucService;
 import com.example.gbsports.service.ThuongHieuService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,5 +20,10 @@ public class ThuongHieuController {
     @GetMapping("/ThuongHieu")
     public List<ThuongHieu> getAllThuongHieu(){
         return thuongHieuService.listFindAllThuongHieu();
+    }
+
+    @PostMapping("/addThuongHieu")
+    public ResponseEntity<?> addThuongHieu(@RequestParam("tenThuongHieu") String tenThuongHieu){
+        return ResponseEntity.ok(thuongHieuService.getThuongHieuOrCreateThuongHieu(tenThuongHieu));
     }
 }

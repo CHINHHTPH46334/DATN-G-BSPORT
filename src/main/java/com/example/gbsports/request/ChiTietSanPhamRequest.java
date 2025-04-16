@@ -1,21 +1,16 @@
 package com.example.gbsports.request;
 
-import com.example.gbsports.entity.KichThuoc;
-import com.example.gbsports.entity.MauSac;
-import com.example.gbsports.entity.SanPham;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
 @Data
 public class ChiTietSanPhamRequest {
@@ -32,10 +27,10 @@ public class ChiTietSanPhamRequest {
     @Temporal(TemporalType.TIMESTAMP)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 //    @NotNull(message = "Không để trống ngày tạo")
-    private Date ngay_tao;
+    private LocalDateTime ngay_tao;
     @Temporal(TemporalType.TIMESTAMP)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date ngay_sua;
+    private LocalDateTime ngay_sua;
     @NotNull(message = "Không để trống kích thước")
     private Integer id_kich_thuoc;
     @NotNull(message = "Không để trống màu sắc")
