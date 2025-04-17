@@ -29,10 +29,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +91,7 @@ public class NhanVienController {
         String generatedPassword = PasswordGenerator.generateRandomPassword();
         // Mã hóa mật khẩu trước khi lưu
         String encodedPassword = passwordEncoder.encode(generatedPassword);
-        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
+        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
         taiKhoan.setMat_khau(encodedPassword);
         taiKhoan.setRoles(rolesRepo.findById(3).get());
         taiKhoanRepo.save(taiKhoan);
@@ -177,7 +174,7 @@ public class NhanVienController {
                 // Giả sử hàm gửi email là sendEmailToEmployee
                 TaiKhoan taiKhoan = new TaiKhoan();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
-                taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
+                taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
                 String tenDN = nhanVienRequest.getEmail();
