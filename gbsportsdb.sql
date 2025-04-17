@@ -59,7 +59,7 @@ CREATE TABLE chat_lieu (
     ten_chat_lieu NVARCHAR(200),
 	ngay_tao DATETIME,
 	ngay_sua DATETIME,
-	trang_thai NVARCHAR(50)
+	trang_thai NVARCHAR(50),
 );
 
 -- 7. Bảng thuong_hieu

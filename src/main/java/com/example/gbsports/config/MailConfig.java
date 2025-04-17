@@ -15,8 +15,8 @@ public class MailConfig {
         mailSender.setHost("smtp.gmail.com"); // Thay bằng SMTP server của bạn
         mailSender.setPort(587);
 
-        mailSender.setUsername("dunghbph46428@fpt.edu.vn"); // Email gửi
-        mailSender.setPassword("wjai drxi htks qxoj"); // Mật khẩu email
+        mailSender.setUsername("ptqt10722@gmail.com"); // Email gửi
+        mailSender.setPassword("flxd dsqg yvww xprm"); // Mật khẩu email
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.auth", "true");

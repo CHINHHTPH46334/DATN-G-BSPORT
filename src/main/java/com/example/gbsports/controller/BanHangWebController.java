@@ -1,9 +1,6 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.HoaDon;
-import com.example.gbsports.entity.HoaDonChiTiet;
-import com.example.gbsports.entity.TheoDoiDonHang;
-import com.example.gbsports.entity.Voucher;
+import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
@@ -82,12 +79,35 @@ public class BanHangWebController {
         return ResponseEntity.ok(hoaDonAdd);
     }
 
+    @PostMapping("/taoHoaDonWeb1")
+    public ResponseEntity<?> taoHoaDonWeb1(@RequestBody HoaDon hoaDon) {
+        HoaDon hoaDonAdd = new HoaDon();
+        BeanUtils.copyProperties(hoaDon, hoaDonAdd);
+        hoaDonAdd.setMa_hoa_don(generateUniqueMaHoaDon());
+        hoaDonAdd.setLoai_hoa_don("Online");
+        hoaDonAdd.setNgay_tao(LocalDateTime.now());
+        hoaDonAdd.setNgay_sua(LocalDateTime.now());
+        hoaDonAdd.setPhuong_thuc_nhan_hang("Giao hàng");
+        hoaDonAdd.setVoucher(hoaDon.getVoucher().getId() != null ? voucherRepository.findById(hoaDon.getVoucher().getId()).get() : null);
+        hoaDonRepo.save(hoaDonAdd);
+        idHoaDon = hoaDonAdd.getId_hoa_don();
+        TheoDoiDonHang theoDoiDonHang = new TheoDoiDonHang();
+        theoDoiDonHang.setHoaDon(hoaDonAdd);
+        theoDoiDonHang.setTrang_thai("Đã xác nhận");
+        theoDoiDonHang.setNgay_chuyen(LocalDateTime.now());
+        theoDoiDonHangRepo.save(theoDoiDonHang);
+        sendEmail(hoaDonAdd.getEmail(), hoaDonAdd.getMa_hoa_don());
+        return ResponseEntity.ok(hoaDonAdd);
+    }
+
+
     @PostMapping("/taoHoaDonChiTiet")
     public ResponseEntity<?> taoHoaDonChiTiet(@RequestBody List<HoaDonChiTiet> hoaDonChiTiets) {
         ArrayList<HoaDonChiTiet> listHdct = new ArrayList<>();
         for (HoaDonChiTiet hdct : hoaDonChiTiets) {
             HoaDonChiTiet hoaDonChiTietAdd = new HoaDonChiTiet();
             hoaDonChiTietAdd.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
+            System.out.println("id Hoá đơn: fdfdfd: "+idHoaDon);
             hoaDonChiTietAdd.setChiTietSanPham(
                     chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).orElseThrow()
             );

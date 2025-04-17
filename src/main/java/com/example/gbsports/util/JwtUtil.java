@@ -25,7 +25,6 @@ public class JwtUtil {
     public JwtUtil(@Value("${jwt.secret}") String secretKeyString) {
         this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyString));
     }
-
     // Tạo reset token
     public String generateResetToken(String email) {
         Map<String, Object> claims = new HashMap<>();

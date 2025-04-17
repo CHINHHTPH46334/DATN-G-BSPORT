@@ -1,16 +1,17 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.NhanVien;
-import com.example.gbsports.entity.PasswordGenerator;
-import com.example.gbsports.entity.Roles;
-import com.example.gbsports.entity.TaiKhoan;
+import com.example.gbsports.entity.*;
+import com.example.gbsports.repository.LichSuDangNhapRepo;
 import com.example.gbsports.repository.NhanVienRepo;
 import com.example.gbsports.repository.RolesRepo;
 import com.example.gbsports.repository.TaiKhoanRepo;
-import com.example.gbsports.request.NhanVienRequest;
+import com.example.gbsports.request.*;
 import com.example.gbsports.response.NhanVienResponse;
+import com.example.gbsports.util.JwtUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,22 +20,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-<<<<<<< HEAD
 import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
-=======
 import java.time.LocalDateTime;
 import java.util.HashMap;
->>>>>>> ff57901 (dunghb)
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
-@RequestMapping("/admin")
+@RequestMapping("/admin/quan-ly-nhan-vien")
 public class NhanVienController {
     @Autowired
     NhanVienRepo nhanVienRepo;
@@ -46,8 +50,18 @@ public class NhanVienController {
     private RolesRepo rolesRepo;
     @Autowired
     private TaiKhoanRepo taiKhoanRepo;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private LichSuDangNhapRepo lichSuDangNhapRepo;
 
-    @GetMapping("/quan-ly-nhan-vien/findAll")
+    @GetMapping("/findAll")
     public List<NhanVien> findAll() {
         return nhanVienRepo.findAll();
     }
@@ -57,224 +71,91 @@ public class NhanVienController {
 //    public List<NhanVienResponse> getAll(){
 //        return nhanVienRepo.getAll();
 //    }
-    @GetMapping("/quan-ly-nhan-vien")
+    @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                             @RequestParam(value = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.listPT(pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/findById")
+    @GetMapping("/findById")
     public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
-//    ArrayList<String> mangLoi = new ArrayList<>();
-//    private ArrayList<String> checkTrong(NhanVienRequest nhanVienRequest) {
-//        mangLoi.clear();
-//        // Kiểm tra trống
-//        if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//            mangLoi.add("Mã nhân viên không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//            mangLoi.add("Tên nhân viên không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//            mangLoi.add("Email không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//            mangLoi.add("Số điện thoại không được để trống \n") ;
-//        }
-//        if (nhanVienRequest.getNgaySinh() == null) {
-//            mangLoi.add("Chưa chọn ngày sinh \n");
-//        }
-//        if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//            mangLoi.add("Địa chỉ liên hệ không được để trống \n");
-//        }
-//        if (nhanVienRequest.getGioiTinh() == null ) {
-//            mangLoi.add("Chưa chọn giới tính \n");
-//        }
-//
-////        // Kiểm tra trùng mã, email, số điện thoại
-////        if (nhanVienRepo.existsByMaNhanVien(nhanVienRequest.getMaNhanVien())) {
-////            return "Mã nhân viên đã tồn tại";
-////        }
-////        if (nhanVienRepo.existsByEmail(nhanVienRequest.getEmail())) {
-////            return "Email đã tồn tại";
-////        }
-////        if (nhanVienRepo.existsBySoDienThoai(nhanVienRequest.getSoDienThoai())) {
-////            return "Số điện thoại đã tồn tại";
-////        }
-//
-//        return mangLoi; // Không có lỗi
-//    }
-//    ArrayList<String> mangTrung = new ArrayList<>();
-//    private ArrayList<String> checkTrung(NhanVienRequest nhanVienRequest){
-//        mangTrung.clear();
-//        for (NhanVienResponse nv: nhanVienRepo.getAll()) {
-//            if (nv.getMaNhanVien().trim().equalsIgnoreCase(nhanVienRequest.getMaNhanVien().trim())){
-//                mangTrung.add("Trùng mã nhân viên");
-//            }
-//            if (nv.getEmail().trim().equalsIgnoreCase(nhanVienRequest.getEmail().trim())){
-//                mangTrung.add("Trùng Email");
-//            }
-//            if (nv.getSoDienThoai().trim().equalsIgnoreCase(nhanVienRequest.getSoDienThoai().trim())){
-//                mangTrung.add("Trùng số điện thoại");
-//            }
-//        }
-//        return mangTrung;
-//    }
-//
-//    @PostMapping("/quan-ly-nhan-vien/add")
-//    public String add(@RequestBody NhanVienRequest nhanVienRequest) {
-//       if (checkTrong(nhanVienRequest).isEmpty() && checkTrung(nhanVienRequest).isEmpty()){
-//        NhanVien nhanVien = new NhanVien();
-//        BeanUtils.copyProperties(nhanVienRequest, nhanVien);
-//        nhanVienRepo.save(nhanVien);
-//        return "Thêm thành công";
-//       }
-//        return mangLoi.toString()+mangTrung.toString();
-//    }
-//private List<String> validateNhanVien(NhanVienRequest nhanVienRequest) {
-//    List<String> errors = new ArrayList<>();
-//
-//    if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//        errors.add("Mã nhân viên không được để trống.");
-//    }
-//    if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//        errors.add("Tên nhân viên không được để trống.");
-//    }
-//    if (nhanVienRequest.getNgaySinh() == null) {
-//        errors.add("Ngày sinh không được để trống.");
-//    }
-//    if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//        errors.add("Email không được để trống.");
-//    }
-//    if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//        errors.add("Địa chỉ liên hệ không được để trống.");
-//    }
-//    if (nhanVienRequest.getGioiTinh() == null) {
-//        errors.add("Giới tính không được để trống.");
-//    }
-//    if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//        errors.add("Số điện thoại không được để trống.");
-//    }
-//    if (nhanVienRequest.getTrangThai() == null || nhanVienRequest.getTrangThai().trim().isEmpty()) {
-//        errors.add("Trạng thái không được để trống.");
-//    }
-//
-//    return errors;
-//}
-//    @PostMapping("/quan-ly-nhan-vien/add")
-//    public ResponseEntity<?> add(@RequestBody NhanVienRequest nhanVienRequest) {
-//        List<String> errors = validateNhanVien(nhanVienRequest);
-//        if (!errors.isEmpty()) {
-//            return ResponseEntity.badRequest().body(errors); // Trả về lỗi dưới dạng JSON
-//        }
-//        NhanVien nhanVien = new NhanVien();
-//        BeanUtils.copyProperties(nhanVienRequest, nhanVien);
-//        nhanVienRepo.save(nhanVien);
-//        return ResponseEntity.ok("Thêm thành công");
-//    }
 
-//    private String validateNhanVien(NhanVienRequest nhanVienRequest) {
-//        StringBuilder errors = new StringBuilder();
-//
-//        if (nhanVienRequest.getMaNhanVien() == null || nhanVienRequest.getMaNhanVien().trim().isEmpty()) {
-//            errors.append("Mã nhân viên không được để trống.\n");
-//        } else if (nhanVienRepo.existsByMaNhanVien(nhanVienRequest.getMaNhanVien())) {
-//            errors.append("Mã nhân viên đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getTenNhanVien() == null || nhanVienRequest.getTenNhanVien().trim().isEmpty()) {
-//            errors.append("Tên nhân viên không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getNgaySinh() == null) {
-//            errors.append("Ngày sinh không được để trống.\n");
-//        } else {
-//            LocalDate birthDate = nhanVienRequest.getNgaySinh().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-//            int age = Period.between(birthDate, LocalDate.now()).getYears();
-//            if (age < 18 || age > 50) {
-//                errors.append("Tuổi nhân viên phải từ 18 đến 50\n");
-//            }
-//        }
-//
-//        if (nhanVienRequest.getEmail() == null || nhanVienRequest.getEmail().trim().isEmpty()) {
-//            errors.append("Email không được để trống.\n");
-//        } else if (!nhanVienRequest.getEmail().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
-//            errors.append("Email không đúng định dạng.\n");
-//        } else if (nhanVienRepo.existsByEmail(nhanVienRequest.getEmail())) {
-//            errors.append("Email đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getDiaChiLienHe() == null || nhanVienRequest.getDiaChiLienHe().trim().isEmpty()) {
-//            errors.append("Địa chỉ liên hệ không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getGioiTinh() == null) {
-//            errors.append("Giới tính không được để trống.\n");
-//        }
-//
-//        if (nhanVienRequest.getSoDienThoai() == null || nhanVienRequest.getSoDienThoai().trim().isEmpty()) {
-//            errors.append("Số điện thoại không được để trống.\n");
-//        } else if (!nhanVienRequest.getSoDienThoai().matches("^(0[3|5|7|8|9])[0-9]{8,9}$")) {
-//            errors.append("Số điện thoại không đúng định dạng Việt Nam.\n");
-//        } else if (nhanVienRepo.existsBySoDienThoai(nhanVienRequest.getSoDienThoai())) {
-//            errors.append("Số điện thoại đã tồn tại.\n");
-//        }
-//
-//        if (nhanVienRequest.getTrangThai() == null || nhanVienRequest.getTrangThai().trim().isEmpty()) {
-//            errors.append("Trạng thái không được để trống.\n");
-//        }
-//
-//        return errors.toString().trim();
-//    }
-
-    @PostMapping("/quan-ly-nhan-vien/add")
+    @PostMapping("/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
-//
-//        String errorMessage = validateNhanVien(nhanVienRequest);
-//        if (!errorMessage.isEmpty()) {
-//            return errorMessage; // Trả về lỗi nếu có
-//        }
         NhanVien nhanVien = new NhanVien();
         BeanUtils.copyProperties(nhanVienRequest, nhanVien);
         TaiKhoan taiKhoan = new TaiKhoan();
         String generatedPassword = PasswordGenerator.generateRandomPassword();
-<<<<<<< HEAD
-        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
-        taiKhoan.setMat_khau(generatedPassword);
-=======
         // Mã hóa mật khẩu trước khi lưu
         String encodedPassword = passwordEncoder.encode(generatedPassword);
         taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
         taiKhoan.setMat_khau(encodedPassword);
->>>>>>> ff57901 (dunghb)
         taiKhoan.setRoles(rolesRepo.findById(3).get());
         taiKhoanRepo.save(taiKhoan);
         nhanVien.setTrangThai("Đang hoạt động");
         nhanVien.setTaiKhoan(taiKhoan);
+        nhanVien.setNgayThamGia(LocalDate.now());
         nhanVienRepo.save(nhanVien);
-        sendEmail(nhanVien.getEmail(), nhanVien.getMaNhanVien(), generatedPassword, nhanVien.getEmail());
+        String tenDN = nhanVien.getEmail().split("@")[0];
+        String content = "<h1>Chào mừng bạn đến với hệ thống G&B SPORTS</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h3>Chúc mừng bạn đã được tạo tài khoản nhân viên!</h3>" +
+                "<p>Dưới đây là thông tin đăng nhập của bạn:</p>" +
+                "<div class='info-box'>" +
+                "<p><strong>Mã Nhân Viên:</strong> " + nhanVien.getMaNhanVien() + "</p>" +
+                "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
+                "<p><strong>Mật khẩu đăng nhập tạm thời:</strong> " + generatedPassword + "</p>" +
+                "</div>" +
+                "<p><strong>Vui lòng đổi mật khẩu sau khi đăng nhập.</strong></p>";
+
+        sendEmail(nhanVien.getEmail(), content);
         return "Thêm thành công";
     }
 
-    private void sendEmail(String toEmail, String maNhanVien, String password, String email) {
+    private void sendEmail(String toEmail, String content) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            String tenDN = toEmail.split("@")[0];
+
             helper.setTo(toEmail);
             helper.setSubject("Thông tin đăng nhập hệ thống của bạn");
-            String body = "Chúc mừng bạn đã được tạo tài khoản trên hệ thống của chúng tôi! Dưới đây là thông tin đăng nhập của bạn <br><br>"
-                    + "<b> Mã Nhân Viên: " + maNhanVien + "</b><br>"
-                    + "<b> Tên tài khoản: " + tenDN + "</b><br>"
-                    + "<b> Mật khẩu đăng nhập tạm thời: " + password + "</b><br><br>"
-                    + "<b>Vui lòng đổi mật khẩu sau khi đăng nhập.<b>"
-                    + "<p>Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ bộ phận hỗ trợ.</p>"
-                    + "<p>Trân trọng,</p>"
-                    + "<p><b>[G&B Sport]</b></p>";
+            String body = "<!DOCTYPE html>" +
+                    "<html lang='vi'>" +
+                    "<head>" +
+                    "<meta charset='UTF-8'>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: rgb(217, 27, 27); color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".header h1 { margin: 0; font-size: 24px; color: white; }" +
+                    ".content { padding: 20px; }" +
+                    ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                    ".info-box { background-color: rgb(255, 239, 239); border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box p { margin: 5px 0; }" +
+                    ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                    ".footer a { color: rgb(232, 78, 78); text-decoration: none; }" +
+                    ".footer a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    content +
+                    "<p>Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ bộ phận hỗ trợ.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
             helper.setText(body, true);
 
             mailSender.send(message);
@@ -283,7 +164,7 @@ public class NhanVienController {
         }
     }
 
-    @PutMapping("/quan-ly-nhan-vien/update")
+    @PutMapping("/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
         try {
@@ -294,16 +175,21 @@ public class NhanVienController {
                 // Nếu email thay đổi thì gọi hàm xử lý gửi email đã có sẵn
                 // Giả sử hàm gửi email là sendEmailToEmployee
                 TaiKhoan taiKhoan = new TaiKhoan();
-                String generatedPassword = PasswordGenerator.generateRandomPassword();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
-<<<<<<< HEAD
-                taiKhoan.setMat_khau(generatedPassword);
-=======
->>>>>>> ff57901 (dunghb)
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
-                sendEmail(nhanVienRequest.getEmail(), nhanVienRequest.getMaNhanVien(), generatedPassword, nhanVienRequest.getEmail());
+                String tenDN = nhanVienRequest.getEmail().split("@")[0];
+                String content = "<h1>Cập nhật tài khoản thành công</h1>" +
+                        "</div>" +
+                        "<div class='content'>" +
+                        "<h3>Xin chào!</h3>" +
+                        "<p>Thông tin tài khoản của bạn trên hệ thống G&B SPORTS đã được cập nhật thành công.</p>" +
+                        "<div class='info-box'>" +
+                        "<p><strong>Mã nhân viên:</strong> " + nhanVienRequest.getMaNhanVien() + "</p>" +
+                        "<p><strong>Tên tài khoản:</strong> " + tenDN + "</p>" +
+                        "</div>";
+                sendEmail(nhanVienRequest.getEmail(), content);
                 NhanVien nhanVien = new NhanVien();
                 BeanUtils.copyProperties(nhanVienRequest, nhanVien);
                 nhanVien.setIdNhanVien(nhanVienRequest.getIdNhanVien());
@@ -323,24 +209,24 @@ public class NhanVienController {
         }
     }
 
-    @PostMapping("/quan-ly-nhan-vien/changeStatus")
-    public String changeStatus(@RequestBody NhanVienRequest nhanVienRequest) {
-        if (nhanVienRequest.getTrangThai().equals("Đang hoạt động")) {
-            nhanVienRequest.setTrangThai("Đã nghỉ việc");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+    @PutMapping("/changeStatus")
+    public String changeStatus(@RequestParam("id") Integer id) {
+        NhanVien nhanVien = nhanVienRepo.findById(id).get();
+        if (nhanVien.getTrangThai().equals("Đang hoạt động")) {
+            nhanVien.setTrangThai("Ngừng hoạt động");
+
             nhanVienRepo.save(nhanVien);
         } else {
-            nhanVienRequest.setTrangThai("Đang hoạt động");
-            NhanVien nhanVien = new NhanVien();
-            BeanUtils.copyProperties(nhanVienRequest, nhanVien);
+            nhanVien.setTrangThai("Đang hoạt động");
+
+
             nhanVienRepo.save(nhanVien);
         }
         return "Chuyển trạng thái thành công";
     }
 //Search NV API
 
-    @GetMapping("/quan-ly-nhan-vien/search")
+    @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "keyword", required = false) String keyword) {
@@ -348,7 +234,7 @@ public class NhanVienController {
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
-    @GetMapping("/quan-ly-nhan-vien/locTrangThai")
+    @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
                                               @RequestParam(name = "trangThai", required = false) String trangThai) {
@@ -370,6 +256,70 @@ public class NhanVienController {
 //
 //        }
 //    }
+    @PostMapping("/login_admin")
+    public ResponseEntity<Map<String, Object>> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            BindingResult result,
+            HttpServletRequest request) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        // Kiểm tra validation từ Request
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.put(error.getField(), error.getDefaultMessage());
+            }
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        try {
+            // Tìm tài khoản trước để kiểm tra trạng thái
+            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+            // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
+            Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (nhanVienOpt.isPresent()) {
+                NhanVien nhanVien = nhanVienOpt.get();
+                if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
+                    response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+            // Xác thực người dùng bằng AuthenticationManager
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+            // Tạo JWT token
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+            String token = jwtUtil.generateToken(userDetails);
+            List<String> roles = jwtUtil.extractRoles(token);
+            // Lấy địa chỉ IP từ request
+            String ipAddress = request.getRemoteAddr();
+            if (ipAddress == null || ipAddress.isEmpty()) {
+                ipAddress = "Unknown";
+            }
+
+            // Lưu lịch sử đăng nhập
+            LichSuDangNhap lichSuDangNhap = new LichSuDangNhap();
+            lichSuDangNhap.setTaiKhoan(taiKhoan);
+            lichSuDangNhap.setNgay_dang_nhap(LocalDateTime.now());
+            lichSuDangNhap.setIp_adress(ipAddress);
+            lichSuDangNhapRepo.save(lichSuDangNhap);
+            // Trả về thông tin đăng nhập
+            response.put("successMessage", "Đăng nhập thành công!");
+            response.put("token", token);
+            response.put("taiKhoan", taiKhoan);
+            response.put("id_roles", taiKhoan.getRoles().getId_roles());
+            response.put("roles", roles);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! ");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @GetMapping("/details")
     public ResponseEntity<NhanVien> getNhanVienDetails(@RequestParam String tenDangNhap) {
         Optional<NhanVien> nhanVien = taiKhoanRepo.findNhanVienByTenDangNhap(tenDangNhap);
@@ -380,5 +330,88 @@ public class NhanVienController {
         }
         return nhanVien.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody QuenMKRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Tìm tài khoản nhân viên theo email
+        Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(request.getEmail());
+        if (!taiKhoanOpt.isPresent()) {
+            response.put("error", "Email không tồn tại trong hệ thống!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        TaiKhoan taiKhoan = taiKhoanOpt.get();
+        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+        if (nhanVienOpt.isPresent() && !"Đang hoạt động".equals(nhanVienOpt.get().getTrangThai())) {
+            response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        // Tạo reset token
+        String resetToken = jwtUtil.generateResetToken(request.getEmail());
+//        // Tạo liên kết đặt lại mật khẩu
+//        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
+//
+//        // Gửi email
+//        String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+//                "</div>" +
+//                "<div class='content'>" +
+//                "<h3>Xin chào,</h3>" +
+//                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B SPORTS.</p>" +
+//                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+//                "<div class='info-box'>" +
+//                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+//                "</div>" +
+//                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>";
+//
+//        try {
+//            sendEmail(request.getEmail(), content);
+//            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
+//        } catch (Exception e) {
+//            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
+//        }
+        response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
+        response.put("resetToken", resetToken); // Thêm token vào phản hồi
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetMKRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Xác thực reset token và lấy email
+        String email;
+        try {
+            email = jwtUtil.validateResetTokenAndGetEmail(request.getToken());
+        } catch (Exception e) {
+            response.put("error", "Token không hợp lệ hoặc đã hết hạn! " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Tìm tài khoản nhân viên theo email
+        Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(email);
+        if (!taiKhoanOpt.isPresent()) {
+            response.put("error", "Tài khoản không tồn tại!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        TaiKhoan taiKhoan = taiKhoanOpt.get();
+        Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+        if (nhanVienOpt.isPresent() && !"Đang hoạt động".equals(nhanVienOpt.get().getTrangThai())) {
+            response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Cập nhật mật khẩu cho tài khoản nhân viên
+        taiKhoan.setMat_khau(passwordEncoder.encode(request.getNewPassword()));
+        taiKhoanRepo.save(taiKhoan);
+
+        response.put("successMessage", "Đặt lại mật khẩu thành công!");
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/listTrangAdmin")
+    public List<NhanVienResponse> listTrangAdmin(){
+        return nhanVienRepo.listTrangAdmin();
     }
 }
