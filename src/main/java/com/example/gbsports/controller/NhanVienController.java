@@ -21,9 +21,14 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
 
+<<<<<<< HEAD
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+=======
+import java.time.LocalDateTime;
+import java.util.HashMap;
+>>>>>>> ff57901 (dunghb)
 import java.util.List;
 import java.util.Optional;
 
@@ -237,8 +242,15 @@ public class NhanVienController {
         BeanUtils.copyProperties(nhanVienRequest, nhanVien);
         TaiKhoan taiKhoan = new TaiKhoan();
         String generatedPassword = PasswordGenerator.generateRandomPassword();
+<<<<<<< HEAD
         taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
         taiKhoan.setMat_khau(generatedPassword);
+=======
+        // Mã hóa mật khẩu trước khi lưu
+        String encodedPassword = passwordEncoder.encode(generatedPassword);
+        taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
+        taiKhoan.setMat_khau(encodedPassword);
+>>>>>>> ff57901 (dunghb)
         taiKhoan.setRoles(rolesRepo.findById(3).get());
         taiKhoanRepo.save(taiKhoan);
         nhanVien.setTrangThai("Đang hoạt động");
@@ -284,7 +296,10 @@ public class NhanVienController {
                 TaiKhoan taiKhoan = new TaiKhoan();
                 String generatedPassword = PasswordGenerator.generateRandomPassword();
                 taiKhoan.setId_tai_khoan(nhanVienRequest.getTaiKhoan().getId_tai_khoan());
+<<<<<<< HEAD
                 taiKhoan.setMat_khau(generatedPassword);
+=======
+>>>>>>> ff57901 (dunghb)
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail().split("@")[0]);
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
