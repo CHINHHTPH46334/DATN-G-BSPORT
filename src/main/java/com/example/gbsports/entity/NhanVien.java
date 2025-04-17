@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -40,7 +41,7 @@ public class NhanVien {
     @Column(name = "anh_nhan_vien")
     private String anhNhanVien;
     @Column(name = "ngay_tham_gia")
-    private Date ngayThamGia;
+    private LocalDate ngayThamGia;
     @Column(name = "trang_thai")
     private String trangThai;
 

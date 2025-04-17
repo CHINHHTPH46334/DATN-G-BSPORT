@@ -44,7 +44,7 @@ public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
                 JOIN roles r ON r.id_roles = tk.id_roles
                 WHERE tk.id_roles = 3
                 AND (
-                    email LIKE CONCAT('%', :keyword, '%')
+                    LOWER(email) LIKE CONCAT('%', :keyword, '%')
                     OR LOWER(ma_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%'))
                     OR LOWER(ten_nhan_vien) LIKE LOWER(CONCAT('%', :keyword, '%'))
                     OR so_dien_thoai LIKE CONCAT('%', :keyword, '%')

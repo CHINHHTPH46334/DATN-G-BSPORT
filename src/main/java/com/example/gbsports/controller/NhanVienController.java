@@ -31,8 +31,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +98,7 @@ public class NhanVienController {
         taiKhoanRepo.save(taiKhoan);
         nhanVien.setTrangThai("Đang hoạt động");
         nhanVien.setTaiKhoan(taiKhoan);
+        nhanVien.setNgayThamGia(LocalDate.now());
         nhanVienRepo.save(nhanVien);
         String tenDN = nhanVien.getEmail().split("@")[0];
         String content = "<h1>Chào mừng bạn đến với hệ thống G&B SPORTS</h1>" +
@@ -180,7 +179,7 @@ public class NhanVienController {
                 taiKhoan.setTen_dang_nhap(nhanVienRequest.getEmail());
                 taiKhoan.setRoles(rolesRepo.findById(3).get());
                 taiKhoanRepo.save(taiKhoan);
-                String tenDN = nhanVienRequest.getEmail();
+                String tenDN = nhanVienRequest.getEmail().split("@")[0];
                 String content = "<h1>Cập nhật tài khoản thành công</h1>" +
                         "</div>" +
                         "<div class='content'>" +
