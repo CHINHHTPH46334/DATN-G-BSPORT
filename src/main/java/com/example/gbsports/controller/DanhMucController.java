@@ -1,5 +1,6 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.entity.ChatLieu;
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.repository.DanhMucRepo;
 import com.example.gbsports.service.DanhMucService;
@@ -24,5 +25,14 @@ public class DanhMucController {
     @PostMapping("/addDanhMuc")
     public ResponseEntity<?> addDanhMuc(@RequestParam("tenDanhMuc") String tenDanhMuc) {
         return ResponseEntity.ok(danhMucService.getDanhMucOrCreateDanhMuc(tenDanhMuc));
+    }
+
+    @PutMapping("/changeTrangThaiDanhMuc")
+    public ResponseEntity<?> changeTrangThaiDanhMuc(@RequestParam("idDanhMuc") Integer idDanhMuc){
+        return danhMucService.changeTrangThaiDanhMuc(idDanhMuc);
+    }
+    @PutMapping("/updateDanhMuc")
+    public ResponseEntity<?> updateDanhMuc(@RequestBody DanhMuc danhMuc){
+        return danhMucService.updateDanhMuc(danhMuc);
     }
 }

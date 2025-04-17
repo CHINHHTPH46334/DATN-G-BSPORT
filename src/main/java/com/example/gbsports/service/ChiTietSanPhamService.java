@@ -197,6 +197,7 @@ public class ChiTietSanPhamService {
                         ctspSua.setNgay_sua(new Date());
                         System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                         if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
+                            ctspSua.setNgay_sua(new Date());
                             chiTietSanPhamRepo.save(ctspSua);
                             return ResponseEntity.ok("cập nhật số lượng");
                         } else {

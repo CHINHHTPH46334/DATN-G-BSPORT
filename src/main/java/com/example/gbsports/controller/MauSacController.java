@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.entity.MauSac;
+import com.example.gbsports.entity.ThuongHieu;
 import com.example.gbsports.repository.MauSacRepo;
 import com.example.gbsports.service.DanhMucService;
 import com.example.gbsports.service.MauSacService;
@@ -24,5 +25,13 @@ public class MauSacController {
     @PostMapping("/addMauSac")
     public ResponseEntity<?> addMauSac(@RequestParam("tenMauSac") String tenMauSac){
         return ResponseEntity.ok(mauSacService.getMauSacOrCreateMauSac(tenMauSac));
+    }
+    @PutMapping("/changeTrangThaiMauSac")
+    public ResponseEntity<?> changeTrangThaiMauSac(@RequestParam("idMauSac") Integer idMauSac){
+        return mauSacService.changeTrangThaiMauSac(idMauSac);
+    }
+    @PutMapping("/updateMauSac")
+    public ResponseEntity<?> updateMauSac(@RequestBody MauSac mauSac){
+        return mauSacService.updateMauSac(mauSac);
     }
 }

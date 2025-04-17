@@ -1,15 +1,17 @@
 package com.example.gbsports.service;
 
+import com.example.gbsports.entity.ChatLieu;
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.repository.DanhMucRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class DanhMucService {
@@ -47,5 +49,37 @@ public class DanhMucService {
         newDanhMuc.setNgay_sua(LocalDateTime.now());
         danhMucRepo.save(newDanhMuc);
         return newDanhMuc;
+    }
+
+    public ResponseEntity<?> changeTrangThaiDanhMuc(@RequestParam("idDanhMuc") Integer idDanhMuc) {
+        if (idDanhMuc != null) {
+            DanhMuc danhMuc = danhMucRepo.findById(idDanhMuc).get();
+            if (danhMuc.getTrang_thai().equals("Hoạt động")) {
+                danhMuc.setTrang_thai("Không hoạt động");
+            } else {
+                danhMuc.setTrang_thai("Hoạt động");
+            }
+            danhMuc.setNgay_sua(LocalDateTime.now());
+            danhMucRepo.save(danhMuc);
+            return ResponseEntity.ok(danhMuc);
+        } else {
+            Map<String, String> error = new HashMap<>();
+            error.put("messege", "Lỗi null");
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    public ResponseEntity<?> updateDanhMuc(@RequestBody DanhMuc danhMuc){
+        if (danhMuc.getId_danh_muc() != null){
+            DanhMuc danhMucSua = danhMucRepo.findById(danhMuc.getId_danh_muc()).get();
+            danhMucSua.setTen_danh_muc(danhMuc.getTen_danh_muc());
+            danhMucSua.setNgay_sua(LocalDateTime.now());
+            danhMucRepo.save(danhMucSua);
+            return ResponseEntity.ok(danhMucSua);
+        }else {
+            Map<String, String> error = new HashMap<>();
+            error.put("messege","Lỗi id null");
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.entity.KichThuoc;
+import com.example.gbsports.entity.MauSac;
 import com.example.gbsports.repository.KichThuocRepo;
 import com.example.gbsports.service.DanhMucService;
 import com.example.gbsports.service.KichThuocService;
@@ -27,5 +28,13 @@ public class KichThuocController {
     public ResponseEntity<?> addSize(@RequestParam("giaTri") String giaTri,
                                      @RequestParam("donVi") String donVi) {
         return ResponseEntity.ok(kichThuocService.getKichThuocOrCreateKichThuoc(giaTri, donVi));
+    }
+    @PutMapping("/changeTrangThaiKichThuoc")
+    public ResponseEntity<?> changeTrangThaiKichThuoc(@RequestParam("idKichThuoc") Integer idKichThuoc){
+        return kichThuocService.changeTrangThaiKichThuoc(idKichThuoc);
+    }
+    @PutMapping("/updateKichThuoc")
+    public ResponseEntity<?> updateKichThuoc(@RequestBody KichThuoc kichThuoc){
+        return kichThuocService.updateKichThuoc(kichThuoc);
     }
 }

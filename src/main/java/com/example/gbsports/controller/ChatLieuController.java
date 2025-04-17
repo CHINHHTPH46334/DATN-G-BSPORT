@@ -25,4 +25,12 @@ public class ChatLieuController {
     public ResponseEntity<?> addChatLieu(@RequestParam("tenChatLieu") String tenChatLieu){
         return ResponseEntity.ok(chatLieuService.getChatLieuOrCreateChatLieu(tenChatLieu));
     }
+    @PutMapping("/changeTrangThaiChatLieu")
+    public ResponseEntity<?> changeTrangThaiChatLieu(@RequestParam("idChatLieu") Integer idChatLieu){
+        return chatLieuService.changeTrangThaiChatLieu(idChatLieu);
+    }
+    @PutMapping("/updateChatLieu")
+    public ResponseEntity<?> updateChatLieu(@RequestBody ChatLieu chatLieu){
+        return chatLieuService.updateChatLieu(chatLieu);
+    }
 }

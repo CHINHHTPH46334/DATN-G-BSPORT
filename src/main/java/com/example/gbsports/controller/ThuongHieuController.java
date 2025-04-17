@@ -1,5 +1,6 @@
 package com.example.gbsports.controller;
 
+import com.example.gbsports.entity.ChatLieu;
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.entity.ThuongHieu;
 import com.example.gbsports.repository.ThuongHieuRepo;
@@ -25,5 +26,13 @@ public class ThuongHieuController {
     @PostMapping("/addThuongHieu")
     public ResponseEntity<?> addThuongHieu(@RequestParam("tenThuongHieu") String tenThuongHieu){
         return ResponseEntity.ok(thuongHieuService.getThuongHieuOrCreateThuongHieu(tenThuongHieu));
+    }
+    @PutMapping("/changeTrangThaiThuongHieu")
+    public ResponseEntity<?> changeTrangThaiThuongHieu(@RequestParam("idThuongHieu") Integer idThuongHieu){
+        return thuongHieuService.changeTrangThaiThuongHieu(idThuongHieu);
+    }
+    @PutMapping("/updateThuongHieu")
+    public ResponseEntity<?> updateThuongHieu(@RequestBody ThuongHieu thuongHieu){
+        return thuongHieuService.updateThuongHieu(thuongHieu);
     }
 }
