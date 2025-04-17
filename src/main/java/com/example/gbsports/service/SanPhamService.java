@@ -179,7 +179,7 @@ public class SanPhamService {
 
     }
 
-    public String chuyenTrangThai(@PathVariable Integer id) {
+    public String chuyenTrangThai(@RequestParam("id") Integer id) {
         ArrayList<ChiTietSanPham> list = new ArrayList<>();
         SanPham spDelete = new SanPham();
         for (SanPham sp : sanPhamRepo.findAll()) {
