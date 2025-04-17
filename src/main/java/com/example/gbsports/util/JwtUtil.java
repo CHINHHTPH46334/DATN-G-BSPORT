@@ -2,12 +2,13 @@ package com.example.gbsports.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +19,19 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    // Tạo khóa bí mật an toàn cho HS512
-    private final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final SecretKey SECRET_KEY;
+
+    // Tiêm secretKeyString qua constructor
+    public JwtUtil(@Value("${jwt.secret}") String secretKeyString) {
+        this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyString));
+    }
+    // Tạo reset token
+    public String generateResetToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+        claims.put("type", "RESET_TOKEN"); // Đánh dấu đây là reset token
+        return createToken(claims, email, 60 * 60 * 1000); // 1 giờ (miliseconds)
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -57,15 +69,31 @@ public class JwtUtil {
         claims.put("roles", userDetails.getAuthorities().stream()
                 .map(auth -> auth.getAuthority())
                 .collect(Collectors.toList()));
-        return createToken(claims, userDetails.getUsername());
+        return createToken(claims, userDetails.getUsername(), 10 * 60 * 60 * 1000); // 10 hours
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    // Xác thực reset token và lấy email
+    public String validateResetTokenAndGetEmail(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            if (!"RESET_TOKEN".equals(claims.get("type"))) {
+                throw new IllegalArgumentException("Invalid token type");
+            }
+            if (isTokenExpired(token)) {
+                throw new IllegalArgumentException("Token has expired");
+            }
+            return claims.get("email", String.class);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid or expired token: " + e.getMessage());
+        }
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long validity) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .setExpiration(new Date(System.currentTimeMillis() + validity))
                 .signWith(SECRET_KEY) // Sử dụng SecretKey
                 .compact();
     }

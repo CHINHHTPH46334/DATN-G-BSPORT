@@ -20,7 +20,7 @@ public class ChiTietGioHang {
     @ManyToOne
     @MapsId("idGioHang")
     @JoinColumn(name = "id_gio_hang", nullable = false)
-    @JsonIgnore // Ngắt vòng lặp
+//    @JsonIgnore // Ngắt vòng lặp
     private GioHang gioHang;
 
     @ManyToOne

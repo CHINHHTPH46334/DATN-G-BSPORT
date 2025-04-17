@@ -306,108 +306,6 @@ public class KhachHangController {
         }
     }
 
-    @PostMapping("/add/banhang")
-    public ResponseEntity<Map<String, Object>> addKhachHangBH(
-            @Valid @RequestBody KhachHangRequest khachHangRequest,
-            BindingResult result) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        // Kiểm tra lỗi validate các field bắt buộc (như @NotBlank)
-        if (result.hasErrors()) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            for (FieldError error : result.getFieldErrors()) {
-                fieldErrors.put(error.getField(), error.getDefaultMessage());
-            }
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Kiểm tra mã khách hàng
-        String maKhachHang = khachHangRequest.getMaKhachHang();
-        if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
-            maKhachHang = generateMaKhachHang();
-        } else {
-            Optional<KhachHang> existingKhach = khachHangRepo.findByMaKhachHang(maKhachHang);
-            if (existingKhach.isPresent()) {
-                response.put("error", "Mã khách hàng đã tồn tại!");
-                return ResponseEntity.badRequest().body(response);
-            }
-        }
-        khachHangRequest.setMaKhachHang(maKhachHang);
-
-        // Kiểm tra nếu email đã tồn tại
-        if (khachHangRequest.getEmail() != null && !khachHangRequest.getEmail().isEmpty()) {
-            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
-            if (existingTaiKhoan.isPresent()) {
-                response.put("error", "Email đã được sử dụng!");
-                return ResponseEntity.badRequest().body(response);
-            }
-        }
-
-        try {
-            // Lưu tài khoản nếu có email
-            TaiKhoan taiKhoan = null;
-            String matKhau = null;
-            if (khachHangRequest.getEmail() != null && !khachHangRequest.getEmail().isEmpty()) {
-                matKhau = generateRandomPassword();
-                taiKhoan = new TaiKhoan();
-                taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-                taiKhoan.setMat_khau(matKhau);
-                taiKhoan.setRoles(rolesRepo.findById(4).get()); // role khách hàng
-                taiKhoan = taiKhoanRepo.save(taiKhoan);
-            }
-
-            // Lưu khách hàng
-            KhachHang khachHang = new KhachHang();
-            BeanUtils.copyProperties(khachHangRequest, khachHang);
-            khachHang.setTaiKhoan(taiKhoan); // sẽ null nếu không có email
-            khachHang = khachHangRepo.save(khachHang);
-
-            // Lưu địa chỉ nếu có
-            if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
-                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
-                        .filter(this::isValidDiaChi)
-                        .collect(Collectors.toList());
-
-                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
-                    DiaChiKhachHang diaChi = new DiaChiKhachHang();
-                    diaChi.setKhachHang(khachHang);
-                    diaChi.setSoNha(diaChiReq.getSoNha());
-                    diaChi.setXaPhuong(diaChiReq.getXaPhuong());
-                    diaChi.setQuanHuyen(diaChiReq.getQuanHuyen());
-                    diaChi.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-                    diaChi.setDiaChiMacDinh(Boolean.TRUE.equals(diaChiReq.getDiaChiMacDinh()));
-                    diaChiKhachHangRepo.save(diaChi);
-                }
-            }
-
-            // Gửi email nếu có
-            if (taiKhoan != null) {
-                try {
-                    String subject = "Chào mừng bạn đến với GB Sports!";
-                    String body = "<p>Xin chào " + khachHang.getTenKhachHang() + ",</p>"
-                            + "<p>Tài khoản của bạn đã được tạo thành công.</p>"
-                            + "<p><strong>Tên đăng nhập:</strong> " + taiKhoan.getTen_dang_nhap() + "<br>"
-                            + "<strong>Mật khẩu:</strong> " + matKhau + "</p>";
-                    emailService.sendEmail(taiKhoan.getTen_dang_nhap(), subject, body);
-                    response.put("emailMessage", "Gửi email thành công!");
-                } catch (MessagingException e) {
-                    response.put("warning", "Lưu khách hàng thành công nhưng gửi email thất bại!");
-                }
-            }
-
-            response.put("successMessage", "Thêm khách hàng thành công!");
-            response.put("khachHang", khachHang);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            response.put("error", "Lỗi hệ thống: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-
     @GetMapping("/edit/{id}")
     public ResponseEntity<Map<String, Object>> getKhachHangForEdit(@PathVariable("id") Integer id) {
         Map<String, Object> response = new HashMap<>();
@@ -703,7 +601,6 @@ public class KhachHangController {
             HttpServletRequest request) {
 
         Map<String, Object> response = new HashMap<>();
-
         // Kiểm tra validation từ Request
         if (result.hasErrors()) {
             Map<String, String> fieldErrors = new HashMap<>();
@@ -713,35 +610,19 @@ public class KhachHangController {
             response.put("fieldErrors", fieldErrors);
             return ResponseEntity.badRequest().body(response);
         }
-
         try {
             // Tìm tài khoản trước để kiểm tra trạng thái
-            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhap(loginRequest.getEmail())
+            TaiKhoan taiKhoan = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(loginRequest.getEmail())
                     .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
-
-            // Kiểm tra trạng thái tài khoản
-            if (taiKhoan.getRoles().getId_roles() == 4) {
-                // Tài khoản khách hàng
-                Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                if (khachHangOpt.isPresent()) {
-                    KhachHang khachHang = khachHangOpt.get();
-                    if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
-                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                        return ResponseEntity.badRequest().body(response);
-                    }
-                }
-            } else {
-                // Tài khoản người dùng (Admin, Quản lý, Nhân viên)
-                Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
-                if (nhanVienOpt.isPresent()) {
-                    NhanVien nhanVien = nhanVienOpt.get();
-                    if ("Ngừng hoạt động".equals(nhanVien.getTrangThai())) {
-                        response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
-                        return ResponseEntity.badRequest().body(response);
-                    }
+            // Tài khoản khách hàng
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (khachHangOpt.isPresent()) {
+                KhachHang khachHang = khachHangOpt.get();
+                if ("Ngừng hoạt động".equals(khachHang.getTrangThai())) {
+                    response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                    return ResponseEntity.badRequest().body(response);
                 }
             }
-
             // Xác thực người dùng bằng AuthenticationManager
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -774,10 +655,11 @@ public class KhachHangController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! " + e.getMessage());
+            response.put("error", "Tên đăng nhập hoặc mật khẩu không đúng! ");
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @GetMapping("/details")
     public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
         Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);
@@ -788,5 +670,182 @@ public class KhachHangController {
         }
         return khachHang.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody DoiMKRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Lấy username từ token
+        String token = authHeader.substring(7); // Bỏ "Bearer "
+        String username = jwtUtil.extractUsername(token);
+
+        // Lấy vai trò từ token
+        List<String> rolesFromToken = jwtUtil.extractRoles(token);
+
+        // Tìm tất cả tài khoản liên quan đến email (cả khách hàng và nhân viên)
+        List<TaiKhoan> taiKhoanList = taiKhoanRepo.findAllByTenDangNhap(username);
+        if (taiKhoanList.isEmpty()) {
+            response.put("error", "Tài khoản không tồn tại!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Xác định tài khoản cần đổi mật khẩu dựa trên vai trò từ token
+        TaiKhoan taiKhoanToUpdate = null;
+        for (TaiKhoan taiKhoan : taiKhoanList) {
+            String roleFromTaiKhoan = taiKhoan.getRoles().getMa_roles();
+            if (rolesFromToken.contains(roleFromTaiKhoan)) {
+                taiKhoanToUpdate = taiKhoan;
+                break;
+            }
+        }
+
+        if (taiKhoanToUpdate == null) {
+            response.put("error", "Không tìm thấy tài khoản phù hợp với vai trò của bạn!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Kiểm tra trạng thái tài khoản
+        boolean isActive = false;
+        if (taiKhoanToUpdate.getRoles().getId_roles() == 4) { // Khách hàng
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoanToUpdate.getId_tai_khoan());
+            if (khachHangOpt.isPresent() && "Đang hoạt động".equals(khachHangOpt.get().getTrangThai())) {
+                isActive = true;
+            }
+        } else { // Nhân viên (id_roles = 1, 2, 3)
+            Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoanToUpdate.getId_tai_khoan());
+            if (nhanVienOpt.isPresent() && "Đang hoạt động".equals(nhanVienOpt.get().getTrangThai())) {
+                isActive = true;
+            }
+        }
+
+        if (!isActive) {
+            response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(request.getOldPassword(), taiKhoanToUpdate.getMat_khau())) {
+            response.put("error", "Mật khẩu cũ không đúng!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Cập nhật mật khẩu mới cho tài khoản đã chọn
+        taiKhoanToUpdate.setMat_khau(passwordEncoder.encode(request.getNewPassword()));
+        taiKhoanRepo.save(taiKhoanToUpdate);
+
+        response.put("successMessage", "Đổi mật khẩu thành công!");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody QuenMKRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Tìm tài khoản khách hàng theo email
+        Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(request.getEmail());
+        if (!taiKhoanOpt.isPresent()) {
+            response.put("error", "Email không tồn tại trong hệ thống!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        TaiKhoan taiKhoan = taiKhoanOpt.get();
+        Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+        if (khachHangOpt.isPresent() && !"Đang hoạt động".equals(khachHangOpt.get().getTrangThai())) {
+            response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        // Tạo reset token
+        String resetToken = jwtUtil.generateResetToken(request.getEmail());
+//        // Tạo liên kết đặt lại mật khẩu
+//        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
+//        // Gửi email
+//        String emailContent = "<!DOCTYPE html>" +
+//                "<html lang='vi'>" +
+//                "<head>" +
+//                "<meta charset='UTF-8'>" +
+//                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+//                "<style>" +
+//                "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+//                ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+//                ".header { background-color: #d02c39; color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+//                ".header h1 { margin: 0; font-size: 24px; }" +
+//                ".content { padding: 20px; }" +
+//                ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+//                ".info-box { background-color: #fff5f5; border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+//                ".info-box p { margin: 5px 0; }" +
+//                ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+//                ".footer a { color: #d02c39; text-decoration: none; }" +
+//                ".footer a:hover { text-decoration: underline; }" +
+//                "</style>" +
+//                "</head>" +
+//                "<body>" +
+//                "<div class='container'>" +
+//                "<div class='header'>" +
+//                "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+//                "</div>" +
+//                "<div class='content'>" +
+//                "<h3>Xin chào,</h3>" +
+//                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản khách hàng tại G&B SPORTS.</p>" +
+//                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+//                "<div class='info-box'>" +
+//                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+//                "</div>" +
+//                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
+//                "</div>" +
+//                "<div class='footer'>" +
+//                "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+//                "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+//                "</div>" +
+//                "</div>" +
+//                "</body>" +
+//                "</html>";
+//
+//        try {
+//            emailService.sendEmail(request.getEmail(), "Đặt lại mật khẩu - G&B SPORTS", emailContent);
+//            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
+//        } catch (MessagingException e) {
+//            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
+//        }
+        response.put("successMessage", "Email hợp lệ, vui lòng nhập mật khẩu mới.");
+        response.put("resetToken", resetToken); // Thêm token vào phản hồi
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetMKRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Xác thực reset token và lấy email
+        String email;
+        try {
+            email = jwtUtil.validateResetTokenAndGetEmail(request.getToken());
+        } catch (Exception e) {
+            response.put("error", "Token không hợp lệ hoặc đã hết hạn! " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Tìm tài khoản khách hàng theo email
+        Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(email);
+        if (!taiKhoanOpt.isPresent()) {
+            response.put("error", "Tài khoản không tồn tại!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        TaiKhoan taiKhoan = taiKhoanOpt.get();
+        Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+        if (khachHangOpt.isPresent() && !"Đang hoạt động".equals(khachHangOpt.get().getTrangThai())) {
+            response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Cập nhật mật khẩu cho tài khoản khách hàng
+        taiKhoan.setMat_khau(passwordEncoder.encode(request.getNewPassword()));
+        taiKhoanRepo.save(taiKhoan);
+
+        response.put("successMessage", "Đặt lại mật khẩu thành công!");
+        return ResponseEntity.ok(response);
     }
 }

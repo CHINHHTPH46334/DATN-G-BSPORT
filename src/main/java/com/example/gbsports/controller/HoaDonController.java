@@ -80,6 +80,7 @@ public class HoaDonController {
         return hoaDonRepo.getListHD();
     }
 
+    //    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -100,18 +101,10 @@ public class HoaDonController {
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "3") Integer size) {
-        if (page < 0 || size <= 0) {
-            throw new IllegalArgumentException("Page hoặc size không hợp lệ");
-        }
         Pageable pageable = PageRequest.of(page, size);
         String searchKeyword = null;
-        if (keyword != null) {
-            String trimmedKeyword = keyword.trim();
-            if (trimmedKeyword.isEmpty()) {
-                throw new IllegalArgumentException("Từ khóa tìm kiếm không được để trống");
-            }
-            searchKeyword = "%" + trimmedKeyword.replaceAll("[^a-zA-Z0-9\\s]", "") + "%";
-        }
+        String trimmedKeyword = keyword.trim();
+        searchKeyword = "%" + trimmedKeyword.replaceAll("[^a-zA-Z0-9\\s]", "") + "%";
         return hoaDonRepo.timHoaDon(searchKeyword, pageable);
     }
 

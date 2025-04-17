@@ -2,6 +2,7 @@ package com.example.gbsports.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public interface NhanVienResponse {
@@ -16,5 +17,5 @@ public interface NhanVienResponse {
     String getSoDienThoai();
     String getTrangThai();
     String getAnhNhanVien();
-    Date getNgayThamGia();
+    LocalDate getNgayThamGia();
 }

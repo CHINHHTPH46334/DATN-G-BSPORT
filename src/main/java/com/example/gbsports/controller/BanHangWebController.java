@@ -110,6 +110,7 @@ public class BanHangWebController {
         for (HoaDonChiTiet hdct : hoaDonChiTiets) {
             HoaDonChiTiet hoaDonChiTietAdd = new HoaDonChiTiet();
             hoaDonChiTietAdd.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
+            System.out.println("id Hoá đơn: fdfdfd: "+idHoaDon);
             hoaDonChiTietAdd.setChiTietSanPham(
                     chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).orElseThrow()
             );

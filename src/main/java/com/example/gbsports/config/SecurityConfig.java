@@ -39,13 +39,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Thêm cấu hình CORS
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                                "/admin/details").permitAll()
-                        .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL")
-//                        .requestMatchers("/api/ql/**").hasRole("QL")
-//                        .requestMatchers("/api/nv/**").hasRole("NV")
-//                        .requestMatchers("/api/kh/**").hasRole("KH")
-                        .anyRequest().authenticated()
+                                .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
+                                        "/admin/quan-ly-nhan-vien/login_admin", "/admin/quan-ly-nhan-vien/details","/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
+                                        "/admin/quan-ly-nhan-vien/forgot-password", "/admin/quan-ly-nhan-vien/reset-password", "/banhangweb/**","/admin/quan_ly_san_pham/**","/gioHangWeb/**").permitAll()
+                                .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL", "NV")
+                                .requestMatchers("/api/khach-hang/change-password").hasAnyRole( "ADMIN", "QL", "NV", "KH")
+                                .anyRequest().authenticated()
+//                    .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
