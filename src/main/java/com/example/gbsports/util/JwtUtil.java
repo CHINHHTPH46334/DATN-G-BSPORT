@@ -2,12 +2,13 @@ package com.example.gbsports.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +19,20 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    // Tạo khóa bí mật an toàn cho HS512
-    private final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final SecretKey SECRET_KEY;
+
+    // Tiêm secretKeyString qua constructor
+    public JwtUtil(@Value("${jwt.secret}") String secretKeyString) {
+        this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyString));
+    }
+
+    // Tạo reset token
+    public String generateResetToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+        claims.put("type", "RESET_TOKEN"); // Đánh dấu đây là reset token
+        return createToken(claims, email, 60 * 60 * 1000); // 1 giờ (miliseconds)
+    }
 
     // Tạo reset token
     public String generateResetToken(String email) {

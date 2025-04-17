@@ -44,8 +44,8 @@ public class SecurityConfig {
                         "/admin/quan-ly-nhan-vien/forgot-password", "/admin/quan-ly-nhan-vien/reset-password", "/banhangweb/**","/admin/quan_ly_san_pham/**","/gioHangWeb/**").permitAll()
                     .requestMatchers("/admin/qlhd/**", "/banhang/**").hasAnyRole("ADMIN", "QL", "NV")
                     .requestMatchers("/api/khach-hang/change-password").hasAnyRole( "ADMIN", "QL", "NV", "KH")
-//                    .requestMatchers("/api/khach-hang/change-password").authenticated()// Đổi mk cho cả NV+KH
                     .anyRequest().authenticated()
+//                    .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
