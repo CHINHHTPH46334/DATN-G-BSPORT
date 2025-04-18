@@ -28,33 +28,33 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "ctsp.ngay_tao, ctsp.ngay_sua, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc, sp.id_san_pham, sp.id_danh_muc, sp.id_thuong_hieu, sp.id_chat_lieu\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
+            "left join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "left join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "left join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "left join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     ArrayList<ChiTietSanPhamView> listCTSP();
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
+            "left join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "left join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "left join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "left join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu")
     Page<ChiTietSanPhamView> listPhanTrangChiTietSanPham(Pageable pageable);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham,ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
             "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+            "left join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "left join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "left join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "left join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "        WHERE (:tenSanPham IS NULL OR ten_san_pham LIKE CONCAT('%', :tenSanPham, '%')) \n" +
             "        AND (:giaBanMin IS NULL OR gia_ban >= :giaBanMin) \n" +
             "        AND (:giaBanMax IS NULL OR gia_ban <= :giaBanMax) \n" +
@@ -80,64 +80,43 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             "ctsp.ngay_tao, ctsp.ngay_sua,  gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
-            "full outer join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "full outer join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "full outer join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "full outer join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "full outer join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
+            "left join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
+            "left join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac\n" +
+            "left join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
+            "left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
+            "left join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
             "where ctsp.id_san_pham = :idSanPham ")
     ArrayList<ChiTietSanPhamView> listCTSPFolowSanPham(@Param("idSanPham") Integer idSanPham);
 
     //=============================== Của Dũng====================================//
     @Query(value = """
-        SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
-                ctsp.so_luong, COALESCE(km_max.gia_sau_giam, ctsp.gia_ban) AS gia_sau_giam, ctsp.trang_thai, ctsp.gia_ban
-        FROM chi_tiet_san_pham ctsp
-        JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
-        JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
-        JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
-        JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-        LEFT JOIN ( SELECT
-                        ctkm.id_chi_tiet_san_pham,
-                        MIN(ctkm.gia_sau_giam) AS gia_sau_giam
-                    FROM chi_tiet_khuyen_mai ctkm
-                    JOIN chi_tiet_san_pham ctsp2 ON ctsp2.id_chi_tiet_san_pham = ctkm.id_chi_tiet_san_pham
-                    JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
-                    WHERE km.trang_thai = N'Đang diễn ra'
-                    AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
-                    GROUP BY ctkm.id_chi_tiet_san_pham
-                    ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
-        WHERE ctsp.trang_thai = N'Hoạt động'
-        ORDER BY ctsp.id_chi_tiet_san_pham
-        """, nativeQuery = true)
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
     Page<ChiTietSanPhamView> getAllCTSP_HD(Pageable pageable);
 
     @Query(value = """
-        SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
-                ctsp.so_luong, COALESCE(km_max.gia_sau_giam, ctsp.gia_ban) AS gia_sau_giam, ctsp.trang_thai, ctsp.gia_ban
-        FROM chi_tiet_san_pham ctsp
-        JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
-        JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
-        JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
-        JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-        LEFT JOIN ( SELECT
-                        ctkm.id_chi_tiet_san_pham,
-                        MIN(ctkm.gia_sau_giam) AS gia_sau_giam
-                    FROM chi_tiet_khuyen_mai ctkm
-                    JOIN chi_tiet_san_pham ctsp2 ON ctsp2.id_chi_tiet_san_pham = ctkm.id_chi_tiet_san_pham
-                    JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
-                    WHERE km.trang_thai = N'Đang diễn ra'
-                    AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
-                    GROUP BY ctkm.id_chi_tiet_san_pham
-                    ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
-        WHERE ctsp.trang_thai = N'Hoạt động'
-        AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
-        ORDER BY ctsp.id_chi_tiet_san_pham
-        """, nativeQuery = true)
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
+                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            FROM chi_tiet_san_pham ctsp
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY ctsp.id_chi_tiet_san_pham
+            """, nativeQuery = true)
     Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
-
     //=============================== Của Dũng====================================//
-    @Query(nativeQuery = true, value = "WITH DanhGiaSanPham AS (\n" +
+    @Query(nativeQuery = true,value = "WITH DanhGiaSanPham AS (\n" +
             "    SELECT\n" +
             "        id_chi_tiet_san_pham,\n" +
             "        AVG(ISNULL(danh_gia, 0) * 1.0) as danh_gia_trung_binh, -- Nhân 1.0 để đảm bảo kết quả là số thực\n" +
@@ -264,11 +243,11 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                 hinh_anh
             FROM chi_tiet_san_pham ctsp
             FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-            FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-            FULL OUTER JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
-            FULL OUTER JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
-            FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
+            left JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+            left JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+            left JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
+            left JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
+            left JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
             FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
             FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
             WHERE ctsp.trang_thai like N'Hoạt động'

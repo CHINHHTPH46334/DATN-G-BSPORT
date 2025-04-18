@@ -35,8 +35,26 @@ public class ChiTietSanPhamService {
     KichThuocRepo kichThuocRepo;
     @Autowired
     SanPhamRepo sanPhamRepo;
+    @Autowired
+    SanPhamService sanPhamService;
 
     public List<ChiTietSanPhamView> getAllCTSP() {
+        ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
+        listCTSP0.clear();
+        for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
+            if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
+                listCTSP0.add(ctspv);
+            }
+        }
+        for (ChiTietSanPhamView ctspXet : listCTSP0) {
+            if (ctspXet.getId_chi_tiet_san_pham() == null || ctspXet.getId_chi_tiet_san_pham().equals("")){
+                continue;
+            }
+            ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
+            ctsp.setTrang_thai("Không hoạt động");
+            chiTietSanPhamRepo.save(ctsp);
+        }
+
         return chiTietSanPhamRepo.listCTSP();
     }
 
@@ -179,6 +197,7 @@ public class ChiTietSanPhamService {
                         ctspSua.setNgay_sua(new Date());
                         System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                         if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
+                            ctspSua.setNgay_sua(new Date());
                             chiTietSanPhamRepo.save(ctspSua);
                             return ResponseEntity.ok("cập nhật số lượng");
                         } else {
@@ -237,21 +256,56 @@ public class ChiTietSanPhamService {
         return "Xóa thành công";
     }
 
-    public String chuyenTrangThai(@PathVariable Integer id) {
+    public ResponseEntity<?> chuyenTrangThai(@RequestParam("id") Integer id) {
         ChiTietSanPham ctspDelete = new ChiTietSanPham();
+        int countHoatDong = 0;
+        ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
+        listTam.clear();
         for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
             if (ctsp.getId_chi_tiet_san_pham() == id) {
                 ctspDelete = ctsp;
             }
         }
-        if (ctspDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
-            ctspDelete.setTrang_thai("Không hoạt động");
-            chiTietSanPhamRepo.save(ctspDelete);
+        SanPham sanPham = sanPhamRepo.findById(ctspDelete.getSanPham().getId_san_pham()).get();
+        if (sanPham.getTrang_thai().equals("Hoạt động")) {
+            if (ctspDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
+                ctspDelete.setTrang_thai("Không hoạt động");
+                chiTietSanPhamRepo.save(ctspDelete);
+            } else {
+                ctspDelete.setTrang_thai("Hoạt động");
+                chiTietSanPhamRepo.save(ctspDelete);
+            }
+            for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+                if (ctsp.getSanPham().getId_san_pham().equals(sanPham.getId_san_pham())) {
+                    listTam.add(ctsp);
+                }
+            }
+            for (ChiTietSanPham ctspLoad : listTam) {
+                if (ctspLoad.getTrang_thai().equals("Hoạt động")) {
+                    countHoatDong++;
+                }
+            }
+            if (countHoatDong == 0) {
+                sanPhamService.chuyenTrangThai(sanPham.getId_san_pham());
+            }
         } else {
-            ctspDelete.setTrang_thai("Hoạt động");
-            chiTietSanPhamRepo.save(ctspDelete);
+            // Nếu người dùng đang cố gắng kích hoạt CTSP
+            if (ctspDelete.getTrang_thai().equalsIgnoreCase("Không hoạt động")) {
+                // Kích hoạt CTSP và sản phẩm cha
+                ctspDelete.setTrang_thai("Hoạt động");
+                chiTietSanPhamRepo.save(ctspDelete);
+                sanPham.setTrang_thai("Hoạt động");
+                sanPhamRepo.save(sanPham);
+            }
+            // Nếu người dùng đang cố gắng vô hiệu hóa CTSP, giữ nguyên trạng thái sản phẩm cha
+            else {
+                ctspDelete.setTrang_thai("Không hoạt động");
+                chiTietSanPhamRepo.save(ctspDelete);
+                // Không thay đổi trạng thái sản phẩm cha
+            }
         }
-        return "Chuyển trạng thái thành công";
+
+        return ResponseEntity.ok(ctspDelete);
     }
 
     public ArrayList<ChiTietSanPhamView> listTimKiem(@RequestParam(name = "keywork") String keyword) {
@@ -285,5 +339,59 @@ public class ChiTietSanPhamService {
 
     public List<ChiTietSanPhamView> getCTSPBySanPhamFull(@RequestParam("idSanPham") Integer idSanPham) {
         return chiTietSanPhamRepo.getCTSPBySanPhamFull(idSanPham);
+    }
+
+    public ResponseEntity<?> changeAllCTSPKhongHoatDong(@RequestParam("id") Integer id) {
+        ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
+        int countCTSP = 0;
+        listTam.clear();
+        System.out.println("Chuyen ctsp khong hoat dong");
+        ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(id).get();
+        System.out.println("idTatCaCTSPKhongHoatDOng" + ctsp.getId_chi_tiet_san_pham());
+        ctsp.setTrang_thai("Không hoạt động");
+        chiTietSanPhamRepo.save(ctsp);
+        SanPham sanPham = sanPhamRepo.findById(ctsp.getSanPham().getId_san_pham()).get();
+        for (ChiTietSanPham ctspXet : chiTietSanPhamRepo.findAll()) {
+            if (ctspXet.getSanPham().getId_san_pham().equals(sanPham.getId_san_pham())) {
+                listTam.add(ctspXet);
+            }
+        }
+        for (ChiTietSanPham ctspChuyen : listTam) {
+            if (ctspChuyen.getTrang_thai().equals("Hoạt động")) {
+                countCTSP++;
+            }
+        }
+        if (countCTSP == 0) {
+            sanPham.setTrang_thai("Không hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
+        return ResponseEntity.ok(ctsp);
+    }
+
+    public ResponseEntity<?> changeAllCTSPHoatDong(@RequestParam("id") Integer id) {
+        ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
+        int countCTSP = 0;
+        listTam.clear();
+        System.out.println("Chuyen ctsp khong hoat dong");
+        ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(id).get();
+        System.out.println("idTatCaCTSPHoatDOng" + ctsp.getId_chi_tiet_san_pham());
+        ctsp.setTrang_thai("Hoạt động");
+        chiTietSanPhamRepo.save(ctsp);
+        SanPham sanPham = sanPhamRepo.findById(ctsp.getSanPham().getId_san_pham()).get();
+        for (ChiTietSanPham ctspXet : chiTietSanPhamRepo.findAll()) {
+            if (ctspXet.getSanPham().getId_san_pham().equals(sanPham.getId_san_pham())) {
+                listTam.add(ctspXet);
+            }
+        }
+        for (ChiTietSanPham ctspChuyen : listTam) {
+            if (ctspChuyen.getTrang_thai().equals("Hoạt động")) {
+                countCTSP++;
+            }
+        }
+        if (countCTSP >= 0) {
+            sanPham.setTrang_thai("Hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
+        return ResponseEntity.ok(ctsp);
     }
 }

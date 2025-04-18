@@ -13,6 +13,7 @@ import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import com.example.gbsports.service.SanPhamService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +39,7 @@ public class SanPhamController {
     ChiTietSanPhamService chiTietSanPhamService;
     @Autowired
     Excelmport excelmport;
-//
+
     @GetMapping("/SanPham")
     public List<SanPhamView> getAll() {
         return sanPhamService.getAll();
@@ -48,7 +49,6 @@ public class SanPhamController {
     public List<SanPham> getAllfindAll() {
         return sanPhamService.getAllFindAll();
     }
-    //
     @GetMapping("/sanPhamTheoNgaySua")
     public List<SanPhamView> getAllSPTheoNgay(){
         return sanPhamService.getAllSPNgaySua();
@@ -78,7 +78,6 @@ public class SanPhamController {
         return sanPhamService.deleteSanPham(id);
     }
 
-    //
     @GetMapping("/timKiemSanPham")
     public List<SanPham> searchSanPham(@RequestParam("search") String search) {
         return sanPhamService.listTimKiem(search);

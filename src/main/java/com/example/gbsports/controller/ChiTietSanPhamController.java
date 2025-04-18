@@ -51,8 +51,9 @@ public class ChiTietSanPhamController {
         return chiTietSanPhamService.deleteChiTietSanPham(id);
     }
 
-    @PostMapping("/changeStatusCTSP/{id}")
-    public String changeStatus(@PathVariable Integer id) {
+    @PutMapping("/changeStatusCTSP")
+    public ResponseEntity<?> changeStatus(@RequestParam("id") Integer id) {
+        System.out.println("Chạy vào đây");
         return chiTietSanPhamService.chuyenTrangThai(id);
     }
 
@@ -106,5 +107,13 @@ public class ChiTietSanPhamController {
     @GetMapping("/CTSPBySanPhamFullWeb")
     public List<ChiTietSanPhamView> ctspBySanPhamFull(@RequestParam("idSanPham")Integer idSanPham){
         return chiTietSanPhamService.getCTSPBySanPhamFull(idSanPham);
+    }
+    @PutMapping("/changeAllCTSPHoatDong")
+    public ResponseEntity<?> allCTSPHoatDong(@RequestParam("id")Integer id){
+        return chiTietSanPhamService.changeAllCTSPHoatDong(id);
+    }
+    @PutMapping("/changeAllCTSPKhongHoatDong")
+    public ResponseEntity<?> allCTSPKhongHoatDong(@RequestParam("id")Integer id){
+        return chiTietSanPhamService.changeAllCTSPKhongHoatDong(id);
     }
 }
