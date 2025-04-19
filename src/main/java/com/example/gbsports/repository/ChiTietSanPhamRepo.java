@@ -91,17 +91,18 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     //=============================== Của Dũng====================================//
     @Query(value = """
         SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
-                ctsp.so_luong, COALESCE(km_max.gia_sau_giam, ctsp.gia_ban) AS gia_sau_giam, ctsp.trang_thai, ctsp.gia_ban
+                ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
+                ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
         FROM chi_tiet_san_pham ctsp
         JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
         JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
         JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
         JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+        LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
         LEFT JOIN ( SELECT
                         ctkm.id_chi_tiet_san_pham,
-                        MIN(ctkm.gia_sau_giam) AS gia_sau_giam
+                        MIN(ctkm.gia_sau_giam) AS giaHienTai
                     FROM chi_tiet_khuyen_mai ctkm
-                    JOIN chi_tiet_san_pham ctsp2 ON ctsp2.id_chi_tiet_san_pham = ctkm.id_chi_tiet_san_pham
                     JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
                     WHERE km.trang_thai = N'Đang diễn ra'
                     AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
@@ -114,17 +115,18 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
 
     @Query(value = """
         SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
-                ctsp.so_luong, COALESCE(km_max.gia_sau_giam, ctsp.gia_ban) AS gia_sau_giam, ctsp.trang_thai, ctsp.gia_ban
+                ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
+                ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
         FROM chi_tiet_san_pham ctsp
         JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
         JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
         JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
         JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+        LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
         LEFT JOIN ( SELECT
                         ctkm.id_chi_tiet_san_pham,
-                        MIN(ctkm.gia_sau_giam) AS gia_sau_giam
+                        MIN(ctkm.gia_sau_giam) AS giaHienTai
                     FROM chi_tiet_khuyen_mai ctkm
-                    JOIN chi_tiet_san_pham ctsp2 ON ctsp2.id_chi_tiet_san_pham = ctkm.id_chi_tiet_san_pham
                     JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
                     WHERE km.trang_thai = N'Đang diễn ra'
                     AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han

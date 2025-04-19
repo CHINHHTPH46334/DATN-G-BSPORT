@@ -350,32 +350,58 @@ public class NhanVienController {
         }
         // Tạo reset token
         String resetToken = jwtUtil.generateResetToken(request.getEmail());
-//        // Tạo liên kết đặt lại mật khẩu
-//        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
-//
-//        // Gửi email
-//        String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
-//                "</div>" +
-//                "<div class='content'>" +
-//                "<h3>Xin chào,</h3>" +
-//                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B SPORTS.</p>" +
-//                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
-//                "<div class='info-box'>" +
-//                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
-//                "</div>" +
-//                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>";
-//
-//        try {
-//            sendEmail(request.getEmail(), content);
-//            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
-//        } catch (Exception e) {
-//            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
-//        }
-        response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
-        response.put("resetToken", resetToken); // Thêm token vào phản hồi
+        // Tạo liên kết đặt lại mật khẩu
+        String resetLink = "http://localhost:5173/login-register/loginAdmin?token=" + resetToken;
+        String emailNV = nhanVienOpt.get().getEmail();
+        // Gửi email
+        String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h3>Xin chào,</h3>" +
+                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B SPORTS.</p>" +
+                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+                "<div class='info-box'>" +
+                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+                "</div>" +
+                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>";
+
+        try {
+            sendEmail(emailNV, content);
+            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
+        } catch (Exception e) {
+            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
+        }
+//        response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
+//        response.put("resetToken", resetToken); // Thêm token vào phản hồi
         return ResponseEntity.ok(response);
     }
+    // Kiểm tra token (GET)
+    @GetMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> validateResetToken(@RequestParam("token") String token) {
+        Map<String, Object> response = new HashMap<>();
 
+        try {
+            String email = jwtUtil.validateResetTokenAndGetEmail(token);
+            Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(email);
+            if (taiKhoanOpt.isEmpty()) {
+                response.put("error", "Email không hợp lệ!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            TaiKhoan taiKhoan = taiKhoanOpt.get();
+            Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (nhanVienOpt.isPresent() && !"Đang hoạt động".equals(nhanVienOpt.get().getTrangThai())) {
+                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response.put("successMessage", "Token hợp lệ, vui lòng nhập mật khẩu mới.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("error", "Token không hợp lệ: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetMKRequest request) {
         Map<String, Object> response = new HashMap<>();
