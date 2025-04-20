@@ -22,7 +22,7 @@ import java.util.*;
 @RestController
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RequestMapping("/admin/qlhd")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')") // Phân quyền cho toàn bộ controller
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") // Phân quyền cho toàn bộ controller
 public class HoaDonController {
 
     @Autowired

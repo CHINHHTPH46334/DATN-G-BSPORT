@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.*;
+import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.service.EmailService;
 import com.example.gbsports.util.JwtUtil;
 import jakarta.mail.MessagingException;
@@ -54,6 +55,8 @@ public class KhachHangController {
 
     @Autowired
     private NhanVienRepo nhanVienRepo;
+    @Autowired
+    private HoaDonRepo hoaDonRepo;
 
     @Autowired
     private EmailService emailServiceDK_DN;
@@ -812,6 +815,7 @@ public class KhachHangController {
 //        response.put("resetToken", resetToken); // Thêm token vào phản hồi
         return ResponseEntity.ok(response);
     }
+
     // Kiểm tra token (GET)
     @GetMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> validateResetToken(@RequestParam("token") String token) {
@@ -839,6 +843,7 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetMKRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -872,5 +877,25 @@ public class KhachHangController {
 
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/hd_kh")
+    public Page<HoaDonResponse> getAllHDbyidKH(
+            @RequestParam(name = "idKH", required = false) Integer idKH,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "3") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return hoaDonRepo.getAllHDByidKH(idKH, pageable);
+    }
+    @GetMapping("/hd_kh_tt")
+    public Page<HoaDonResponse> getAllHDbyidKHandTT(
+            @RequestParam(name = "idKH", required = false) Integer idKH,
+            @RequestParam(name = "trangThai", required = false) String trangThai,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "3") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return (trangThai == null || trangThai.trim().isEmpty())
+                ? hoaDonRepo.getAllHDByidKH(idKH, pageable)
+                : hoaDonRepo.getAllHDByidKHandTT(idKH, trangThai, pageable);
     }
 }

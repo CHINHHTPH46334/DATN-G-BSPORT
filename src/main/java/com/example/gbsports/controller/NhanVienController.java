@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,6 +62,7 @@ public class NhanVienController {
     @Autowired
     private LichSuDangNhapRepo lichSuDangNhapRepo;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/findAll")
     public List<NhanVien> findAll() {
         return nhanVienRepo.findAll();
@@ -71,6 +73,7 @@ public class NhanVienController {
 //    public List<NhanVienResponse> getAll(){
 //        return nhanVienRepo.getAll();
 //    }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'NV')")
     @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                             @RequestParam(value = "size", defaultValue = "5") Integer size) {
@@ -78,11 +81,13 @@ public class NhanVienController {
         return nhanVienRepo.listPT(pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/findById")
     public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
@@ -164,6 +169,7 @@ public class NhanVienController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
@@ -209,6 +215,7 @@ public class NhanVienController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/changeStatus")
     public String changeStatus(@RequestParam("id") Integer id) {
         NhanVien nhanVien = nhanVienRepo.findById(id).get();
@@ -226,6 +233,7 @@ public class NhanVienController {
     }
 //Search NV API
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
@@ -234,6 +242,7 @@ public class NhanVienController {
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
                                               @RequestParam(value = "size", defaultValue = "5") Integer size,
@@ -436,6 +445,7 @@ public class NhanVienController {
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
     }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/listTrangAdmin")
     public List<NhanVienResponse> listTrangAdmin(){
         return nhanVienRepo.listTrangAdmin();

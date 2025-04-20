@@ -189,6 +189,37 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             """, nativeQuery = true)
     String findLatestNonUpdatedStatusByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 
+    @Query(value = """
+        SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, tdh.trang_thai, hd.tong_tien_sau_giam
+                    FROM hoa_don hd
+                    LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                                FROM theo_doi_don_hang t
+                                WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
+                                                        FROM theo_doi_don_hang t2
+                                                        WHERE t2.id_hoa_don = t.id_hoa_don
+                                                        )
+                            ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+                    WHERE hd.trang_thai = N'Hoàn thành'
+        			AND hd.id_khach_hang = :idKH
+                    ORDER BY hd.ngay_tao DESC""", nativeQuery = true)
+    Page<HoaDonResponse> getAllHDByidKH(@Param("idKH") Integer idKH, Pageable pageable);
+
+    @Query(value = """
+        SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, tdh.trang_thai, hd.tong_tien_sau_giam
+                    FROM hoa_don hd
+                    LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                                FROM theo_doi_don_hang t
+                                WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
+                                                        FROM theo_doi_don_hang t2
+                                                        WHERE t2.id_hoa_don = t.id_hoa_don
+                                                        )
+                            ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+                    WHERE hd.trang_thai = N'Hoàn thành'
+                    AND tdh.trang_thai = :trangThai
+        			AND hd.id_khach_hang = :idKH
+                    ORDER BY hd.ngay_tao DESC""", nativeQuery = true)
+    Page<HoaDonResponse> getAllHDByidKHandTT(@Param("idKH") Integer idKH, @Param("trangThai") String trangThai, Pageable pageable);
+
     //Nghía
     @Query(nativeQuery = true, value = """
             select ctsp.id_chi_tiet_san_pham, sp.hinh_anh, sp.ten_san_pham,\s
