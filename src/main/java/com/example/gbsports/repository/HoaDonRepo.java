@@ -231,4 +231,9 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             """, nativeQuery = true)
     List<HoaDon> findExpiredChoHoaDons(@Param("startOfToday") LocalDateTime startOfToday);
 
+    //lenh
+    @Query("SELECT COUNT(h) FROM HoaDon h WHERE h.khachHang.idKhachHang = :idKhachHang")
+    int countByKhachHangId(@Param("idKhachHang") Integer idKhachHang);
+    List<HoaDon> findByKhachHang_IdKhachHang(Integer idKhachHang);
+
 }

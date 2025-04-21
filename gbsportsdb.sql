@@ -156,7 +156,8 @@ CREATE TABLE khach_hang (
     ngay_sinh DATE,
     email VARCHAR(200),
     id_tai_khoan INT REFERENCES tai_khoan(id_tai_khoan),
-    trang_thai NVARCHAR(50)
+    trang_thai NVARCHAR(50),
+	ngay_lap datetime
 );
 
 -- 16. Bảng gio_hang
@@ -182,6 +183,8 @@ CREATE TABLE binh_luan (
     danh_gia FLOAT,
     ngay_binh_luan DATETIME,
     ngay_sua DATETIME,
+	da_sua BIT,
+    da_chinh_sua BIT,
     PRIMARY KEY (id_khach_hang, id_chi_tiet_san_pham)
 );
 
@@ -264,6 +267,31 @@ CREATE TABLE theo_doi_don_hang (
 	noi_dung_doi NVARCHAR(255)
 );
 
+-- 25. Bảng Trả hàng
+CREATE TABLE tra_hang (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    id_hoa_don INT NOT NULL,
+    ly_do NVARCHAR(255) NOT NULL,
+    ghi_chu NVARCHAR(500),
+    nhan_vien_xu_ly NVARCHAR(100),
+    ngay_tao DATETIME NOT NULL,
+    trang_thai NVARCHAR(50) NOT NULL, -- Yêu cầu trả hàng, Đã xác nhận, Đã hoàn tiền
+    tong_tien_hoan DECIMAL(12,2) NOT NULL,
+    FOREIGN KEY (id_hoa_don) REFERENCES hoa_don(id_hoa_don)
+);
+
+-- 26. Bảng Chi tiết trả hàng
+CREATE TABLE chi_tiet_tra_hang (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    id_tra_hang INT NOT NULL,
+    id_chi_tiet_san_pham INT NOT NULL,
+    so_luong INT NOT NULL,
+    tien_hoan DECIMAL(12,2) NOT NULL,
+    FOREIGN KEY (id_tra_hang) REFERENCES tra_hang(id),
+    FOREIGN KEY (id_chi_tiet_san_pham) REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham)
+);
+
+/*
 -- 25. Bảng yeu_cau_doi_hang
 CREATE TABLE yeu_cau_doi_hang (
     id_yeu_cau INT IDENTITY(1,1) PRIMARY KEY,
@@ -293,7 +321,7 @@ CREATE TABLE phieu_doi_hang (
     trang_thai NVARCHAR(50),
     gia_tri_chenh_lech DECIMAL(12,2)
 );
-
+*/
 -- Chèn dữ liệu mẫu
 -- 1. Bảng roles
 INSERT INTO roles (id_roles, ma_roles, ten_roles) VALUES
@@ -592,6 +620,7 @@ INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
 (5, N'Đã xác nhận', '2025-02-03'),
 (6, N'Hoàn thành', '2025-02-04');
 
+/*
 -- 25. Bảng yeu_cau_doi_hang
 INSERT INTO yeu_cau_doi_hang (ma_yeu_cau, id_hoa_don, id_san_pham_moi, trang_thai_san_pham, ngay_yeu_cau, ngay_xu_ly, ly_do_doi) VALUES
 ('YC001', 1, 1, N'Mới', '2025-02-03', '2025-02-04', N'Lỗi sản phẩm'),
@@ -610,3 +639,4 @@ INSERT INTO phieu_doi_hang (id_yeu_cau, ma_phieu_doi, phuong_thuc_thanh_toan, ng
 (1, 'PDH001', N'Tiền mặt', '2025-02-05', N'Đã xuất', 10000),
 (2, 'PDH002', N'Chuyển khoản', '2025-02-06', N'Đã xuất', 20000),
 (3, 'PDH003', N'Tiền mặt', '2025-02-07', N'Đã xuất', 30000);
+*/
