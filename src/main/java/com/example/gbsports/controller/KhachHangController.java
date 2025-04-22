@@ -164,7 +164,7 @@ public class KhachHangController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // Kiểm tra validation
+        // Kiểm tra validation từ DTO
         if (result.hasErrors()) {
             Map<String, String> fieldErrors = new HashMap<>();
             for (FieldError error : result.getFieldErrors()) {
@@ -173,6 +173,16 @@ public class KhachHangController {
             response.put("fieldErrors", fieldErrors);
             return ResponseEntity.badRequest().body(response);
         }
+
+        // Kiểm tra số điện thoại
+        String cleanedPhone = khachHangRequest.getSoDienThoai().replaceAll("\\s+", "");
+        if (!cleanedPhone.matches("^(0)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$")) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            fieldErrors.put("soDienThoai", "Số điện thoại không hợp lệ (VD: 0912345678)");
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        khachHangRequest.setSoDienThoai(cleanedPhone);
 
         // Kiểm tra ngày sinh
         if (khachHangRequest.getNgaySinh() == null) {
@@ -190,6 +200,7 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        // Kiểm tra email đã tồn tại
         Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
         if (existingTaiKhoan.isPresent()) {
             response.put("error", "Email đã được sử dụng!");
@@ -217,13 +228,14 @@ public class KhachHangController {
 
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-            taiKhoan.setMat_khau(matKhau);
+            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau)); // Mã hóa mật khẩu
             taiKhoan.setRoles(rolesRepo.findById(4).get());
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             // Lưu khách hàng
             KhachHang khachHang = new KhachHang();
             BeanUtils.copyProperties(khachHangRequest, khachHang);
+            khachHang.setNgayTao(LocalDateTime.now());
             khachHang.setTaiKhoan(taiKhoan);
             khachHang = khachHangRepo.save(khachHang);
 
@@ -306,6 +318,7 @@ public class KhachHangController {
         }
     }
 
+
     @GetMapping("/edit/{id}")
     public ResponseEntity<Map<String, Object>> getKhachHangForEdit(@PathVariable("id") Integer id) {
         Map<String, Object> response = new HashMap<>();
@@ -338,11 +351,66 @@ public class KhachHangController {
         response.put("khachHang", request);
         return ResponseEntity.ok(response);
     }
-
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateKhachHang(@RequestBody KhachHangRequest request) {
         Map<String, Object> response = new HashMap<>();
 
+        // Kiểm tra validation từ DTO
+        BindingResult result = new org.springframework.validation.BeanPropertyBindingResult(request, "khachHangRequest");
+        if (request.getTenKhachHang() == null || request.getTenKhachHang().trim().isEmpty()) {
+            result.rejectValue("tenKhachHang", "NotBlank", "Tên khách hàng không được để trống");
+        } else if (!request.getTenKhachHang().matches("^[a-zA-Z\\s\\u00C0-\\u1EF9]+$")) {
+            result.rejectValue("tenKhachHang", "Pattern", "Họ tên không được chứa số hoặc ký tự đặc biệt");
+        }
+        if (request.getSoDienThoai() == null || request.getSoDienThoai().trim().isEmpty()) {
+            result.rejectValue("soDienThoai", "NotBlank", "Số điện thoại không được để trống");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            result.rejectValue("email", "NotBlank", "Email không được để trống");
+        } else if (!request.getEmail().matches("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")) {
+            result.rejectValue("email", "Email", "Email không hợp lệ");
+        }
+        // Validate diaChiList
+        if (request.getDiaChiList() != null) {
+            for (int i = 0; i < request.getDiaChiList().size(); i++) {
+                KhachHangRequest.DiaChiRequest diaChi = request.getDiaChiList().get(i);
+                if (diaChi.getSoNha() == null || diaChi.getSoNha().trim().isEmpty()) {
+                    result.rejectValue("diaChiList[" + i + "].soNha", "NotBlank", "Số nhà không được để trống");
+                } else if (!diaChi.getSoNha().matches("^[a-zA-Z0-9\\s\\u00C0-\\u1EF9]+$")) {
+                    result.rejectValue("diaChiList[" + i + "].soNha", "Pattern", "Số nhà, tên đường chỉ được chứa chữ cái và số");
+                }
+                if (diaChi.getXaPhuong() == null || diaChi.getXaPhuong().trim().isEmpty()) {
+                    result.rejectValue("diaChiList[" + i + "].xaPhuong", "NotBlank", "Xã/Phường không được để trống");
+                }
+                if (diaChi.getQuanHuyen() == null || diaChi.getQuanHuyen().trim().isEmpty()) {
+                    result.rejectValue("diaChiList[" + i + "].quanHuyen", "NotBlank", "Quận/Huyện không được để trống");
+                }
+                if (diaChi.getTinhThanhPho() == null || diaChi.getTinhThanhPho().trim().isEmpty()) {
+                    result.rejectValue("diaChiList[" + i + "].tinhThanhPho", "NotBlank", "Tỉnh/Thành phố không được để trống");
+                }
+            }
+        }
+
+        if (result.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (FieldError error : result.getFieldErrors()) {
+                fieldErrors.put(error.getField(), error.getDefaultMessage());
+            }
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Kiểm tra số điện thoại
+        String cleanedPhone = request.getSoDienThoai().replaceAll("\\s+", "");
+        if (!cleanedPhone.matches("^0\\d{9}$")) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            fieldErrors.put("soDienThoai", "Số điện thoại phải bắt đầu bằng 0 và đúng 10 chữ số");
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        request.setSoDienThoai(cleanedPhone);
+
+        // Kiểm tra ngày sinh
         if (request.getNgaySinh() == null) {
             response.put("error", "Ngày sinh không được để trống!");
             return ResponseEntity.badRequest().body(response);
@@ -399,7 +467,7 @@ public class KhachHangController {
 
         KhachHang khachHang = khachHangRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
-
+        System.out.println("🔍 Ngày tạo gửi về JSON: " + khachHang.getNgayTao());
         // Lấy toàn bộ danh sách địa chỉ của khách hàng
         List<DiaChiKhachHang> diaChiList = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
 
@@ -660,17 +728,17 @@ public class KhachHangController {
         }
     }
 
-    @GetMapping("/details")
-    public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
-        Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);
-        if (khachHang.isPresent()) {
-            System.out.println("Thông tin khách hàng tìm được: " + khachHang.get());
-        } else {
-            System.out.println("Không tìm thấy khách hàng với ten_dang_nhap: " + tenDangNhap);
-        }
-        return khachHang.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+//    @GetMapping("/details")
+//    public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
+//        Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);
+//        if (khachHang.isPresent()) {
+//            System.out.println("Thông tin khách hàng tìm được: " + khachHang.get());
+//        } else {
+//            System.out.println("Không tìm thấy khách hàng với ten_dang_nhap: " + tenDangNhap);
+//        }
+//        return khachHang.map(ResponseEntity::ok)
+//                .orElseGet(() -> ResponseEntity.notFound().build());
+//    }
 
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, Object>> changePassword(
@@ -847,5 +915,207 @@ public class KhachHangController {
 
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
+    }
+
+
+    ////dia chi cua lenh
+    @GetMapping("/details")
+    public ResponseEntity<KhachHang> getKhachHangDetails(@RequestParam String tenDangNhap) {
+        Optional<KhachHang> khachHang = taiKhoanRepo.findKhachHangByTenDangNhap(tenDangNhap);
+        if (khachHang.isPresent()) {
+            KhachHang kh = khachHang.get();
+            System.out.println("Thông tin khách hàng tìm được: " + kh);
+            System.out.println("🔍 Khách hàng tìm được:");
+            System.out.println(" - Ngày tạo (ngayTao): " + kh.getNgayTao());
+        } else {
+            System.out.println("Không tìm thấy khách hàng với ten_dang_nhap: " + tenDangNhap);
+        }
+        return khachHang.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/dia-chi/add")
+    public ResponseEntity<Map<String, Object>> addDiaChi(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Integer idKhachHang = Integer.parseInt(request.get("idKhachHang").toString());
+            String soNha = (String) request.get("soNha");
+            String xaPhuong = (String) request.get("xaPhuong");
+            String quanHuyen = (String) request.get("quanHuyen");
+            String tinhThanhPho = (String) request.get("tinhThanhPho");
+            Boolean diaChiMacDinh = (Boolean) request.getOrDefault("diaChiMacDinh", false);
+
+            // Validate input
+            if (soNha == null || xaPhuong == null || quanHuyen == null || tinhThanhPho == null) {
+                response.put("error", true);
+                response.put("message", "Vui lòng điền đầy đủ thông tin địa chỉ");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Find customer
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findById(idKhachHang);
+            if (khachHangOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Không tìm thấy thông tin khách hàng");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            KhachHang khachHang = khachHangOpt.get();
+
+            // Lấy danh sách địa chỉ hiện tại của khách
+            List<DiaChiKhachHang> existingAddresses = diaChiKhachHangRepo.findByKhachHangId(idKhachHang);
+
+            if (existingAddresses.isEmpty()) {
+                // Nếu là địa chỉ đầu tiên => luôn đặt là mặc định
+                diaChiMacDinh = true;
+            } else if (diaChiMacDinh) {
+                // Nếu user chọn đặt mặc định thì unset tất cả địa chỉ cũ
+                for (DiaChiKhachHang addr : existingAddresses) {
+                    addr.setDiaChiMacDinh(false);
+                    diaChiKhachHangRepo.save(addr);
+                }
+            }
+
+            // Tạo mới địa chỉ
+            DiaChiKhachHang diaChi = new DiaChiKhachHang();
+            diaChi.setKhachHang(khachHang);
+            diaChi.setSoNha(soNha);
+            diaChi.setXaPhuong(xaPhuong);
+            diaChi.setQuanHuyen(quanHuyen);
+            diaChi.setTinhThanhPho(tinhThanhPho);
+            diaChi.setDiaChiMacDinh(diaChiMacDinh);
+
+            // Lưu vào DB
+            diaChi = diaChiKhachHangRepo.save(diaChi);
+
+            response.put("success", true);
+            response.put("message", "Thêm địa chỉ thành công");
+            response.put("diaChi", diaChi);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    // Cập nhật địa chỉ
+    @PutMapping("/dia-chi/update")
+    public ResponseEntity<Map<String, Object>> updateDiaChi(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Integer idDiaChi = Integer.parseInt(request.get("idDiaChi").toString());
+            String soNha = (String) request.get("soNha");
+            String xaPhuong = (String) request.get("xaPhuong");
+            String quanHuyen = (String) request.get("quanHuyen");
+            String tinhThanhPho = (String) request.get("tinhThanhPho");
+            Boolean diaChiMacDinh = (Boolean) request.getOrDefault("diaChiMacDinh", false);
+
+            // Validate input
+            if (soNha == null || xaPhuong == null || quanHuyen == null || tinhThanhPho == null) {
+                response.put("error", true);
+                response.put("message", "Vui lòng điền đầy đủ thông tin địa chỉ");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Find address
+            Optional<DiaChiKhachHang> diaChiOpt = diaChiKhachHangRepo.findById(idDiaChi);
+            if (diaChiOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Không tìm thấy địa chỉ");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            DiaChiKhachHang diaChi = diaChiOpt.get();
+            KhachHang khachHang = diaChi.getKhachHang();
+
+            // If this is set as default, update all other addresses
+            if (diaChiMacDinh && !diaChi.getDiaChiMacDinh()) {
+                List<DiaChiKhachHang> existingAddresses = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
+                for (DiaChiKhachHang addr : existingAddresses) {
+                    if (!addr.getIdDiaChiKhachHang().equals(idDiaChi)) {
+                        addr.setDiaChiMacDinh(false);
+                        diaChiKhachHangRepo.save(addr);
+                    }
+                }
+            }
+
+            // Update address
+            diaChi.setSoNha(soNha);
+            diaChi.setXaPhuong(xaPhuong);
+            diaChi.setQuanHuyen(quanHuyen);
+            diaChi.setTinhThanhPho(tinhThanhPho);
+            diaChi.setDiaChiMacDinh(diaChiMacDinh);
+
+            // Save updated address
+            diaChi = diaChiKhachHangRepo.save(diaChi);
+
+            response.put("success", true);
+            response.put("message", "Cập nhật địa chỉ thành công");
+            response.put("diaChi", diaChi);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    // Xóa địa chỉ
+    @DeleteMapping("/dia-chi/delete/{id}")
+    public ResponseEntity<Map<String, Object>> deleteDiaChi(@PathVariable("id") Integer idDiaChi) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Tìm địa chỉ cần xóa
+            Optional<DiaChiKhachHang> diaChiOpt = diaChiKhachHangRepo.findById(idDiaChi);
+            if (diaChiOpt.isEmpty()) {
+                response.put("error", true);
+                response.put("message", "Không tìm thấy địa chỉ");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            DiaChiKhachHang diaChi = diaChiOpt.get();
+            Integer idKhachHang = diaChi.getKhachHang().getIdKhachHang();
+
+            // Lấy toàn bộ địa chỉ của khách hàng
+            List<DiaChiKhachHang> allAddresses = diaChiKhachHangRepo.findByKhachHangId(idKhachHang);
+
+            // Nếu chỉ có 1 địa chỉ thì không được xóa
+            if (allAddresses.size() <= 1) {
+                response.put("error", true);
+                response.put("message", "Phải có ít nhất một địa chỉ. Không thể xóa.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Nếu địa chỉ bị xóa là mặc định thì gán địa chỉ khác làm mặc định
+            if (diaChi.getDiaChiMacDinh()) {
+                List<DiaChiKhachHang> otherAddresses = allAddresses.stream()
+                        .filter(addr -> !addr.getIdDiaChiKhachHang().equals(idDiaChi))
+                        .collect(Collectors.toList());
+
+                if (!otherAddresses.isEmpty()) {
+                    DiaChiKhachHang newDefault = otherAddresses.get(0);
+                    newDefault.setDiaChiMacDinh(true);
+                    diaChiKhachHangRepo.save(newDefault);
+                }
+            }
+
+            // Xóa địa chỉ
+            diaChiKhachHangRepo.delete(diaChi);
+
+            response.put("success", true);
+            response.put("message", "Xóa địa chỉ thành công");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }

@@ -16,7 +16,8 @@ public class KhachHangRequest {
     private String maKhachHang;
 
     @NotBlank(message = "Tên khách hàng không được để trống")
-    @Size(max = 50, message = "Tên khách hàng không được vượt quá 50 ký tự")
+    @Size(max = 100, message = "Tên khách hàng không được vượt quá 100 ký tự") // Cập nhật giới hạn
+    @Pattern(regexp = "^[a-zA-Z\\s\\u00C0-\\u1EF9]+$", message = "Họ tên chỉ được chứa chữ cái")
     private String tenKhachHang;
 
     @NotNull(message = "Giới tính không được để trống")
@@ -28,11 +29,12 @@ public class KhachHangRequest {
 
     @NotNull(message = "Ngày sinh không được để trống")
     @PastOrPresent(message = "Ngày sinh không được là ngày trong tương lai")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) // Chấp nhận định dạng ISO từ frontend
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private Date ngaySinh;
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không đúng định dạng")
+    @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
     private String email;
 
     @NotBlank(message = "Trạng thái không được để trống")
@@ -44,9 +46,31 @@ public class KhachHangRequest {
 
     private List<DiaChiRequest> diaChiList = new ArrayList<>();
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date ngayTao;
+
+    // Setter với trim
+    public void setMaKhachHang(String maKhachHang) {
+        this.maKhachHang = maKhachHang != null ? maKhachHang.trim() : null;
+    }
+
+    public void setTenKhachHang(String tenKhachHang) {
+        this.tenKhachHang = tenKhachHang != null ? tenKhachHang.trim() : null;
+    }
+
+    public void setSoDienThoai(String soDienThoai) {
+        this.soDienThoai = soDienThoai != null ? soDienThoai.replaceAll("\\s+", "") : null;
+    }
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.trim() : null;
+    }
+
     @Data
     public static class DiaChiRequest {
         @NotBlank(message = "Số nhà không được để trống")
+        @Size(max = 255, message = "Số nhà, tên đường không được vượt quá 255 ký tự") // Thêm giới hạn
+        @Pattern(regexp = "^[a-zA-Z0-9\\s\\u00C0-\\u1EF9]+$", message = "Số nhà, tên đường chỉ được chứa số, chữ cái")
         private String soNha;
 
         @NotBlank(message = "Xã/Phường không được để trống")
@@ -58,6 +82,23 @@ public class KhachHangRequest {
         @NotBlank(message = "Tỉnh/Thành phố không được để trống")
         private String tinhThanhPho;
 
-        private Boolean diaChiMacDinh; // Thêm trường này để khớp với logic trong controller
+        private Boolean diaChiMacDinh;
+
+        // Setter với trim
+        public void setSoNha(String soNha) {
+            this.soNha = soNha != null ? soNha.trim() : null;
+        }
+
+        public void setXaPhuong(String xaPhuong) {
+            this.xaPhuong = xaPhuong != null ? xaPhuong.trim() : null;
+        }
+
+        public void setQuanHuyen(String quanHuyen) {
+            this.quanHuyen = quanHuyen != null ? quanHuyen.trim() : null;
+        }
+
+        public void setTinhThanhPho(String tinhThanhPho) {
+            this.tinhThanhPho = tinhThanhPho != null ? tinhThanhPho.trim() : null;
+        }
     }
 }

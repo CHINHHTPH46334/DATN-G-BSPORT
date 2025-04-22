@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.*;
+import com.example.gbsports.service.HoaDonService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -37,6 +38,8 @@ public class HoaDonController {
     private TheoDoiDonHangRepo theoDoiDonHangRepo;
     @Autowired
     private DiaChiKhachHangRepo diaChiKhachHangRepo;
+    @Autowired
+    private HoaDonService hoaDonService;
 
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
@@ -80,7 +83,7 @@ public class HoaDonController {
         return hoaDonRepo.getListHD();
     }
 
-//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
+    //    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -576,4 +579,20 @@ public class HoaDonController {
                     .body("Lỗi khi cập nhật số lượng: " + e.getMessage());
         }
     }
+
+    /////
+//    @GetMapping("khach-hang/{idKhachHang}")
+//    public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer idKhachHang) {
+//        List<HoaDon> hoaDons = (List<HoaDon>) hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+//        System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
+//        return ResponseEntity.ok(hoaDons);
+//    }
+
+    @GetMapping("/count/{idKhachHang}")
+    public ResponseEntity<Integer> countHoaDonByKhachHang(@PathVariable Integer idKhachHang) {
+        int count = hoaDonService.countHoaDonByKhachHangId(idKhachHang);
+        return ResponseEntity.ok(count);
+    }
+
+
 }

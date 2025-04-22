@@ -20,7 +20,7 @@ public class ChiTietSanPham {
     @JoinColumn(name = "id_san_pham")
     @NotNull(message = "Không để trống sản phẩm")
     @Valid
-    SanPham sanPham;
+    private SanPham sanPham;
     private String qr_code;
     private BigDecimal gia_ban;
     private Integer so_luong;
