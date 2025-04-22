@@ -2,12 +2,18 @@ package com.example.gbsports.service;
 
 import com.example.gbsports.entity.DanhMuc;
 import com.example.gbsports.entity.KichThuoc;
+import com.example.gbsports.entity.MauSac;
 import com.example.gbsports.repository.KichThuocRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -46,5 +52,37 @@ public class KichThuocService {
         newKichThuoc.setTrang_thai("Hoạt động");
         kichThuocRepo.save(newKichThuoc);
         return newKichThuoc;
+    }
+
+    public ResponseEntity<?> changeTrangThaiKichThuoc(@RequestParam("idKichThuoc") Integer idKichThuoc) {
+        if (idKichThuoc != null) {
+            KichThuoc kichThuoc = kichThuocRepo.findById(idKichThuoc).get();
+            if (kichThuoc.getTrang_thai().equals("Hoạt động")) {
+                kichThuoc.setTrang_thai("Không hoạt động");
+            } else {
+                kichThuoc.setTrang_thai("Hoạt động");
+            }
+            kichThuocRepo.save(kichThuoc);
+            return ResponseEntity.ok(kichThuoc);
+        } else {
+            Map<String, String> error = new HashMap<>();
+            error.put("messege", "Lỗi null");
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    public ResponseEntity<?> updateKichThuoc(@RequestBody KichThuoc kichThuoc) {
+        System.out.println("idKichThuoc: "+kichThuoc.getId_kich_thuoc());
+        if (kichThuoc.getId_kich_thuoc() != null) {
+            KichThuoc kichThuocSua = kichThuocRepo.findById(kichThuoc.getId_kich_thuoc()).get();
+            kichThuocSua.setGia_tri(kichThuoc.getGia_tri());
+            kichThuocSua.setDon_vi(kichThuoc.getDon_vi());
+            kichThuocRepo.save(kichThuocSua);
+            return ResponseEntity.ok(kichThuocSua);
+        }else {
+            Map<String, String> error = new HashMap<>();
+            error.put("messege","Lỗi id null");
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }

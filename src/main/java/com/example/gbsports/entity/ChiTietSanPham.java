@@ -37,6 +37,11 @@ public class ChiTietSanPham {
     @ManyToOne
     @JoinColumn(name = "id_mau_sac")
     MauSac mauSac;
-
+    @PrePersist @PreUpdate
+    private void checkSoLuong(){
+        if (this.so_luong <= 0){
+            this.trang_thai = "Không hoạt động";
+        }
+    }
 
 }

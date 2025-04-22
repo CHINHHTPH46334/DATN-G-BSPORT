@@ -89,7 +89,8 @@ public class BanHangController {
             @RequestParam("idHD") Integer idHD,
             @RequestParam("diaChi") String diaChi,
             @RequestParam("tenKhachHang") String tenKhachHang,
-            @RequestParam("soDienThoai") String soDienThoai
+            @RequestParam("soDienThoai") String soDienThoai,
+            @RequestParam("email") String email
     ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
@@ -103,11 +104,13 @@ public class BanHangController {
                 hoaDon.setHo_ten(khachHang.getTenKhachHang());
                 hoaDon.setSdt_nguoi_nhan(khachHang.getSoDienThoai());
                 hoaDon.setDia_chi(diaChi);
+                hoaDon.setEmail(khachHang.getEmail());
             } else {
                 hoaDon.setKhachHang(null);
                 hoaDon.setHo_ten(tenKhachHang);
                 hoaDon.setSdt_nguoi_nhan(soDienThoai);
                 hoaDon.setDia_chi(diaChi);
+                hoaDon.setEmail(email);
             }
 
             hoaDonRepo.save(hoaDon);
@@ -278,9 +281,6 @@ public class BanHangController {
                     .body(Map.of("success", false, "message", "Lỗi khi xóa hóa đơn: " + e.getMessage()));
         }
     }
-
-
-
 
 
     @PutMapping("/updateHoaDon")

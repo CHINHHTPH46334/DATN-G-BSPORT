@@ -8,6 +8,7 @@ import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,20 @@ public class SanPhamService {
     ThuongHieuRepo thuongHieuRepo;
     @Autowired
     ChatLieuRepo chatLieuRepo;
-
+//    @Cacheable("products")
     public ArrayList<SanPhamView> getAll() {
+        ArrayList<SanPhamView> newList = new ArrayList<>();
+        for (SanPhamView spv: sanPhamRepo.getAllSanPham()) {
+            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+                newList.add(spv);
+            }
+        }
+        for (SanPhamView spXet: newList) {
+            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+            sanPham.setTrang_thai("Không hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
+
         return sanPhamRepo.getAllSanPham();
     }
 
@@ -52,6 +65,17 @@ public class SanPhamService {
     }
 
     public ArrayList<SanPhamView> getAllSPNgaySua() {
+        ArrayList<SanPhamView> newList = new ArrayList<>();
+        for (SanPhamView spv: sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
+            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+                newList.add(spv);
+            }
+        }
+        for (SanPhamView spXet: newList) {
+            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+            sanPham.setTrang_thai("Không hoạt động");
+            sanPhamRepo.save(sanPham);
+        }
         return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
     }
 
@@ -155,7 +179,7 @@ public class SanPhamService {
 
     }
 
-    public String chuyenTrangThai(@PathVariable Integer id) {
+    public String chuyenTrangThai(@RequestParam("id") Integer id) {
         ArrayList<ChiTietSanPham> list = new ArrayList<>();
         SanPham spDelete = new SanPham();
         for (SanPham sp : sanPhamRepo.findAll()) {
@@ -173,14 +197,14 @@ public class SanPhamService {
         } else {
             if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Hết hàng");
+                    ctspXoa.setTrang_thai("Không hoạt động");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Không hoạt động");
                 sanPhamRepo.save(spDelete);
             } else {
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Còn hàng");
+                    ctspXoa.setTrang_thai("Hoạt động");
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
                 spDelete.setTrang_thai("Hoạt động");
@@ -229,7 +253,7 @@ public class SanPhamService {
     }
 
     public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc,
-            ChatLieu chatLieu) {
+                                             ChatLieu chatLieu) {
         Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
                 .filter(sanPham -> tenSanPham
                         .equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
@@ -272,5 +296,4 @@ public class SanPhamService {
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }
-
 }

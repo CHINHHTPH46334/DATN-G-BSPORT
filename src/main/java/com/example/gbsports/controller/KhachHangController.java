@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.*;
+import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.service.EmailService;
 import com.example.gbsports.util.JwtUtil;
 import jakarta.mail.MessagingException;
@@ -54,6 +55,8 @@ public class KhachHangController {
 
     @Autowired
     private NhanVienRepo nhanVienRepo;
+    @Autowired
+    private HoaDonRepo hoaDonRepo;
 
     @Autowired
     private EmailService emailServiceDK_DN;
@@ -253,6 +256,144 @@ public class KhachHangController {
                     diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
                     diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
                     diaChiKhachHang.setDiaChiMacDinh(diaChiReq.getDiaChiMacDinh() != null && diaChiReq.getDiaChiMacDinh());
+                    diaChiKhachHangRepo.save(diaChiKhachHang);
+                }
+            }
+
+            // Gửi email (không làm thất bại request nếu lỗi)
+            String subject = "Chào mừng bạn đến với GB Sports!";
+            String body = "<!DOCTYPE html>" +
+                    "<html lang='vi'>" +
+                    "<head>" +
+                    "<meta charset='UTF-8'>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: #28a745; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".header h1 { margin: 0; font-size: 24px; }" +
+                    ".content { padding: 20px; }" +
+                    ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                    ".info-box { background-color: #e6f4ea; border-left: 5px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box p { margin: 5px 0; }" +
+                    ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                    ".footer a { color: #007bff; text-decoration: none; }" +
+                    ".footer a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    "<h1>Chào mừng bạn đến với G&B SPORTS</h1>" +
+                    "</div>" +
+                    "<div class='content'>" +
+                    "<h3>Xin chào " + khachHang.getTenKhachHang() + ",</h3>" +
+                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại G&B SPORTS. Tài khoản của bạn đã được tạo thành công!</p>" +
+                    "<div class='info-box'>" +
+                    "<p><strong>Thông tin đăng nhập của bạn:</strong></p>" +
+                    "<p><strong>Tên đăng nhập:</strong> " + taiKhoan.getTen_dang_nhap() + "</p>" +
+                    "<p><strong>Mật khẩu:</strong> " + matKhau + "</p>" +
+                    "</div>" +
+                    "<p>Vui lòng đăng nhập để bắt đầu sử dụng dịch vụ và khám phá các ưu đãi hấp dẫn.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+
+            try {
+                emailService.sendEmail(khachHang.getEmail(), subject, body);
+                response.put("emailMessage", "Email chào mừng đã được gửi thành công!");
+            } catch (MessagingException e) {
+                response.put("warning", "Lưu khách hàng thành công nhưng gửi email thất bại: " + e.getMessage());
+            }
+
+            response.put("successMessage", "Thêm khách hàng thành công!");
+            response.put("khachHang", khachHang);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("error", "Có lỗi xảy ra khi thêm khách hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/addKHMoi")
+    public ResponseEntity<Map<String, Object>> addKhachHangNhanh(
+            @Valid @RequestBody KhachHangRequest khachHangRequest,
+            BindingResult result) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        khachHangRequest.setTrangThai("Đang hoạt động");
+        khachHangRequest.setGioiTinh(true);
+        khachHangRequest.setNgaySinh(new Date());
+        // Kiểm tra số điện thoại
+        String cleanedPhone = khachHangRequest.getSoDienThoai().replaceAll("\\s+", "");
+        if (!cleanedPhone.matches("^(0)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$")) {
+            Map<String, String> fieldErrors = new HashMap<>();
+            fieldErrors.put("soDienThoai", "Số điện thoại không hợp lệ (VD: 0912345678)");
+            response.put("fieldErrors", fieldErrors);
+            return ResponseEntity.badRequest().body(response);
+        }
+        khachHangRequest.setSoDienThoai(cleanedPhone);
+
+        // Kiểm tra email đã tồn tại
+        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+        if (existingTaiKhoan.isPresent()) {
+            response.put("error", "Email đã được sử dụng!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            // Sinh mã khách hàng tự động nếu không có trong request
+            String maKhachHang = khachHangRequest.getMaKhachHang();
+            if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
+                maKhachHang = generateMaKhachHang();
+            } else {
+                // Kiểm tra nếu mã đã tồn tại
+                Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(maKhachHang);
+                if (existingKhachHang.isPresent()) {
+                    response.put("error", "Mã khách hàng đã tồn tại!");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+            khachHangRequest.setMaKhachHang(maKhachHang);
+
+            // Lưu tài khoản
+            String matKhau = generateRandomPassword();
+            khachHangRequest.setMatKhau(matKhau);
+
+            TaiKhoan taiKhoan = new TaiKhoan();
+            taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
+            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau)); // Mã hóa mật khẩu
+            taiKhoan.setRoles(rolesRepo.findById(4).get());
+            taiKhoan = taiKhoanRepo.save(taiKhoan);
+
+            // Lưu khách hàng
+            KhachHang khachHang = new KhachHang();
+            BeanUtils.copyProperties(khachHangRequest, khachHang);
+            khachHang.setNgayTao(LocalDateTime.now());
+            khachHang.setTaiKhoan(taiKhoan);
+            khachHang = khachHangRepo.save(khachHang);
+
+            // Lưu địa chỉ
+            if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
+                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
+                        .filter(this::isValidDiaChi)
+                        .collect(Collectors.toList());
+
+                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
+                    DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
+                    diaChiKhachHang.setKhachHang(khachHang);
+                    diaChiKhachHang.setSoNha(diaChiReq.getSoNha());
+                    diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
+                    diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
+                    diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
+                    diaChiKhachHang.setDiaChiMacDinh(true);
                     diaChiKhachHangRepo.save(diaChiKhachHang);
                 }
             }
@@ -815,7 +956,7 @@ public class KhachHangController {
         // Tìm tài khoản khách hàng theo email
         Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(request.getEmail());
         if (!taiKhoanOpt.isPresent()) {
-            response.put("error", "Email không tồn tại trong hệ thống!");
+            response.put("error", "Tài khoản không tồn tại trong hệ thống!");
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -827,59 +968,86 @@ public class KhachHangController {
         }
         // Tạo reset token
         String resetToken = jwtUtil.generateResetToken(request.getEmail());
-//        // Tạo liên kết đặt lại mật khẩu
-//        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
-//        // Gửi email
-//        String emailContent = "<!DOCTYPE html>" +
-//                "<html lang='vi'>" +
-//                "<head>" +
-//                "<meta charset='UTF-8'>" +
-//                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
-//                "<style>" +
-//                "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
-//                ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
-//                ".header { background-color: #d02c39; color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
-//                ".header h1 { margin: 0; font-size: 24px; }" +
-//                ".content { padding: 20px; }" +
-//                ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
-//                ".info-box { background-color: #fff5f5; border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
-//                ".info-box p { margin: 5px 0; }" +
-//                ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
-//                ".footer a { color: #d02c39; text-decoration: none; }" +
-//                ".footer a:hover { text-decoration: underline; }" +
-//                "</style>" +
-//                "</head>" +
-//                "<body>" +
-//                "<div class='container'>" +
-//                "<div class='header'>" +
-//                "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
-//                "</div>" +
-//                "<div class='content'>" +
-//                "<h3>Xin chào,</h3>" +
-//                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản khách hàng tại G&B SPORTS.</p>" +
-//                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
-//                "<div class='info-box'>" +
-//                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
-//                "</div>" +
-//                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
-//                "</div>" +
-//                "<div class='footer'>" +
-//                "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
-//                "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
-//                "</div>" +
-//                "</div>" +
-//                "</body>" +
-//                "</html>";
-//
-//        try {
-//            emailService.sendEmail(request.getEmail(), "Đặt lại mật khẩu - G&B SPORTS", emailContent);
-//            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
-//        } catch (MessagingException e) {
-//            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
-//        }
-        response.put("successMessage", "Email hợp lệ, vui lòng nhập mật khẩu mới.");
-        response.put("resetToken", resetToken); // Thêm token vào phản hồi
+        // Tạo liên kết đặt lại mật khẩu
+        String resetLink = "http://localhost:5173/login-register/login?token=" + resetToken;
+        // Gửi email
+        String emailContent = "<!DOCTYPE html>" +
+                "<html lang='vi'>" +
+                "<head>" +
+                "<meta charset='UTF-8'>" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                ".header { background-color: #d02c39; color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                ".header h1 { margin: 0; font-size: 24px; }" +
+                ".content { padding: 20px; }" +
+                ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                ".info-box { background-color: #fff5f5; border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                ".info-box p { margin: 5px 0; }" +
+                ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                ".footer a { color: #d02c39; text-decoration: none; }" +
+                ".footer a:hover { text-decoration: underline; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='header'>" +
+                "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h3>Xin chào,</h3>" +
+                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản khách hàng tại G&B SPORTS.</p>" +
+                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+                "<div class='info-box'>" +
+                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+                "</div>" +
+                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
+                "</div>" +
+                "<div class='footer'>" +
+                "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+        try {
+            emailService.sendEmail(request.getEmail(), "Đặt lại mật khẩu - G&B SPORTS", emailContent);
+            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
+        } catch (MessagingException e) {
+            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
+        }
+//        response.put("successMessage", "Email hợp lệ, vui lòng nhập mật khẩu mới.");
+//        response.put("resetToken", resetToken); // Thêm token vào phản hồi
         return ResponseEntity.ok(response);
+    }
+
+    // Kiểm tra token (GET)
+    @GetMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> validateResetToken(@RequestParam("token") String token) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String email = jwtUtil.validateResetTokenAndGetEmail(token);
+            Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(email);
+            if (!taiKhoanOpt.isPresent()) {
+                response.put("error", "Tài khoản không tồn tại!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            TaiKhoan taiKhoan = taiKhoanOpt.get();
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (khachHangOpt.isPresent() && !"Đang hoạt động".equals(khachHangOpt.get().getTrangThai())) {
+                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response.put("successMessage", "Token hợp lệ, vui lòng nhập mật khẩu mới.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("error", "Token không hợp lệ: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @PostMapping("/reset-password")
@@ -1117,5 +1285,24 @@ public class KhachHangController {
             response.put("message", "Có lỗi xảy ra: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
+    }
+    @GetMapping("/hd_kh")
+    public Page<HoaDonResponse> getAllHDbyidKH(
+            @RequestParam(name = "idKH", required = false) Integer idKH,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "3") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return hoaDonRepo.getAllHDByidKH(idKH, pageable);
+    }
+    @GetMapping("/hd_kh_tt")
+    public Page<HoaDonResponse> getAllHDbyidKHandTT(
+            @RequestParam(name = "idKH", required = false) Integer idKH,
+            @RequestParam(name = "trangThai", required = false) String trangThai,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "3") Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return (trangThai == null || trangThai.trim().isEmpty())
+                ? hoaDonRepo.getAllHDByidKH(idKH, pageable)
+                : hoaDonRepo.getAllHDByidKHandTT(idKH, trangThai, pageable);
     }
 }

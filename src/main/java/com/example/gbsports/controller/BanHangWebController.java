@@ -1,9 +1,6 @@
 package com.example.gbsports.controller;
 
-import com.example.gbsports.entity.HoaDon;
-import com.example.gbsports.entity.HoaDonChiTiet;
-import com.example.gbsports.entity.TheoDoiDonHang;
-import com.example.gbsports.entity.Voucher;
+import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
@@ -14,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -61,6 +59,7 @@ public class BanHangWebController {
 
     Integer idHoaDon = 0;
 
+//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") public
     @PostMapping("/taoHoaDonWeb")
     public ResponseEntity<?> taoHoaDonWeb(@RequestBody HoaDon hoaDon) {
         HoaDon hoaDonAdd = new HoaDon();
