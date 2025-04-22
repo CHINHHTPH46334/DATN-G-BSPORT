@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.*;
+import com.example.gbsports.service.HoaDonService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -20,7 +21,8 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
+        RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/admin/qlhd")
 @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')") // Phân quyền cho toàn bộ controller
 public class HoaDonController {
@@ -37,6 +39,8 @@ public class HoaDonController {
     private TheoDoiDonHangRepo theoDoiDonHangRepo;
     @Autowired
     private DiaChiKhachHangRepo diaChiKhachHangRepo;
+    @Autowired
+    private HoaDonService hoaDonService;
 
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
@@ -64,7 +68,7 @@ public class HoaDonController {
 
     @PutMapping("/updateHTTTHD")
     public ResponseEntity<HoaDon> updateHinhThucTTHoaDon(@RequestParam("idHD") Integer id,
-                                                         @RequestParam("hinhThucThanhToan") String httt) {
+            @RequestParam("hinhThucThanhToan") String httt) {
         HoaDon hoaDon = hoaDonRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
@@ -74,13 +78,12 @@ public class HoaDonController {
         return ResponseEntity.ok(hoaDonRepo.save(hoaDon));
     }
 
-
     @GetMapping("/all-hoa-don")
     public List<HoaDonResponse> getListHD() {
         return hoaDonRepo.getListHD();
     }
 
-//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
+    // @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -193,7 +196,8 @@ public class HoaDonController {
                 if (chiTietSanPhamOpt.isPresent()) {
                     ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
                     if (chiTietSanPham.getSo_luong() < soLuong) {
-                        throw new RuntimeException("Số lượng tồn kho không đủ cho sản phẩm: " + chiTiet.getTen_san_pham());
+                        throw new RuntimeException(
+                                "Số lượng tồn kho không đủ cho sản phẩm: " + chiTiet.getTen_san_pham());
                     }
                     chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuong);
                     chiTietSanPhamRepo.save(chiTietSanPham);
@@ -274,8 +278,8 @@ public class HoaDonController {
     @PostMapping("/cancel_order")
     @Transactional
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon,
-                              @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
-                              @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
+            @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
+            @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
@@ -540,7 +544,8 @@ public class HoaDonController {
             hoaDonChiTietRepo.removeSPGHinHDCT(idCTSP, idHoaDon, soLuong);
 
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            String noiDungDoiDefault = noiDungDoi != null ? noiDungDoi : "Xóa sản phẩm khỏi hóa đơn"; // Giá trị mặc định
+            String noiDungDoiDefault = noiDungDoi != null ? noiDungDoi : "Xóa sản phẩm khỏi hóa đơn"; // Giá trị mặc
+                                                                                                      // định
             hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen, nhanVienDoi, noiDungDoiDefault);
 
             return ResponseEntity.ok("Xóa sản phẩm thành công");
@@ -576,4 +581,21 @@ public class HoaDonController {
                     .body("Lỗi khi cập nhật số lượng: " + e.getMessage());
         }
     }
+
+    /////
+    // @GetMapping("khach-hang/{idKhachHang}")
+    // public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer
+    // idKhachHang) {
+    // List<HoaDon> hoaDons = (List<HoaDon>)
+    // hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+    // System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
+    // return ResponseEntity.ok(hoaDons);
+    // }
+
+    @GetMapping("/count/{idKhachHang}")
+    public ResponseEntity<Integer> countHoaDonByKhachHang(@PathVariable Integer idKhachHang) {
+        int count = hoaDonService.countHoaDonByKhachHangId(idKhachHang);
+        return ResponseEntity.ok(count);
+    }
+
 }
