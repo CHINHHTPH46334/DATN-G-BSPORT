@@ -50,4 +50,5 @@ public class NhanVien {
     private TaiKhoan taiKhoan;
 
 
+    // Getter & Setter (Bạn có thể generate tự động trong IDE)
 }

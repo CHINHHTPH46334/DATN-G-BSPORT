@@ -9,17 +9,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = { RequestMethod.GET,
+        RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT })
 @RequestMapping("/gioHangWeb")
 public class GioHangWebController {
     @Autowired
     private GioHangWebRepo gioHangWebRepo;
+
     @GetMapping("/gioHangByKH")
-    public List<GioHangWebResponse> listGHByKH(@RequestParam("idKhachHang") Integer idKhachHang){
+    public List<GioHangWebResponse> listGHByKH(@RequestParam("idKhachHang") Integer idKhachHang) {
         return gioHangWebRepo.listGioHangByKhachHang(idKhachHang);
     }
+
     @GetMapping("/danhSachDiaChi")
-    public List<GioHangWebResponse> listDiaChiByKH(@RequestParam("idKhachHang") Integer idKhachHang){
+    public List<GioHangWebResponse> listDiaChiByKH(@RequestParam("idKhachHang") Integer idKhachHang) {
         return gioHangWebRepo.listDiaChiByKH(idKhachHang);
     }
 }

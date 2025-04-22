@@ -16,18 +16,19 @@ import vn.payos.type.PaymentData;
 import vn.payos.type.PaymentLinkData;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
+        RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/order")
 public class OrderController {
-//    private PayOS payOS;
-//
-//    public OrderController(PayOS payOS) {
-//        super();
-//        this.payOS = payOS;
-//    }
+    // private PayOS payOS;
+    //
+    // public OrderController(PayOS payOS) {
+    // super();
+    // this.payOS = payOS;
+    // }
     private final PayOS payOS = new PayOS("30965015-9adc-4cb9-8afc-073995fe805c",
-        "82ad6f69-754c-4f45-85c8-da89f8423973",
-        "988c02f4c4ab53b04f91c8b9fdbebe860ab12f78b4ec905cc797f1bf44752801");
+            "82ad6f69-754c-4f45-85c8-da89f8423973",
+            "988c02f4c4ab53b04f91c8b9fdbebe860ab12f78b4ec905cc797f1bf44752801");
 
     @PostMapping(path = "/create")
     public ObjectNode createPaymentLink(@RequestBody CreatePaymentLinkRequestBody RequestBody) {

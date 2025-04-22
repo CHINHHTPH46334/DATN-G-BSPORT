@@ -37,7 +37,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = { RequestMethod.GET,
+        RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT })
 @RequestMapping("/admin/quan-ly-nhan-vien")
 public class NhanVienController {
     @Autowired
@@ -66,14 +67,13 @@ public class NhanVienController {
         return nhanVienRepo.findAll();
     }
 
-
-    //    @GetMapping("/quan-ly-nhan-vien")
-//    public List<NhanVienResponse> getAll(){
-//        return nhanVienRepo.getAll();
-//    }
+    // @GetMapping("/quan-ly-nhan-vien")
+    // public List<NhanVienResponse> getAll(){
+    // return nhanVienRepo.getAll();
+    // }
     @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
-                                            @RequestParam(value = "size", defaultValue = "5") Integer size) {
+            @RequestParam(value = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.listPT(pageable);
     }
@@ -131,12 +131,15 @@ public class NhanVienController {
                     "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
                     "<style>" +
                     "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
-                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
-                    ".header { background-color: rgb(217, 27, 27); color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }"
+                    +
+                    ".header { background-color: rgb(217, 27, 27); color: white; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }"
+                    +
                     ".header h1 { margin: 0; font-size: 24px; color: white; }" +
                     ".content { padding: 20px; }" +
                     ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
-                    ".info-box { background-color: rgb(255, 239, 239); border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box { background-color: rgb(255, 239, 239); border-left: 5px solid #d02c39; padding: 15px; margin: 20px 0; border-radius: 5px; }"
+                    +
                     ".info-box p { margin: 5px 0; }" +
                     ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
                     ".footer a { color: rgb(232, 78, 78); text-decoration: none; }" +
@@ -151,7 +154,8 @@ public class NhanVienController {
                     "</div>" +
                     "<div class='footer'>" +
                     "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
-                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>"
+                    +
                     "</div>" +
                     "</div>" +
                     "</body>" +
@@ -219,43 +223,44 @@ public class NhanVienController {
         } else {
             nhanVien.setTrangThai("Đang hoạt động");
 
-
             nhanVienRepo.save(nhanVien);
         }
         return "Chuyển trạng thái thành công";
     }
-//Search NV API
+    // Search NV API
 
     @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
-                                              @RequestParam(value = "size", defaultValue = "5") Integer size,
-                                              @RequestParam(name = "keyword", required = false) String keyword) {
+            @RequestParam(value = "size", defaultValue = "5") Integer size,
+            @RequestParam(name = "keyword", required = false) String keyword) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
     @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
-                                              @RequestParam(value = "size", defaultValue = "5") Integer size,
-                                              @RequestParam(name = "trangThai", required = false) String trangThai) {
+            @RequestParam(value = "size", defaultValue = "5") Integer size,
+            @RequestParam(name = "trangThai", required = false) String trangThai) {
         Pageable pageable = PageRequest.of(page, size);
         return nhanVienRepo.locNhanVienTheoTrangThai(trangThai, pageable);
     }
 
-    //    @PostMapping("addNhanVien")
-//    public ResponseEntity<?> saveNhanVien(@Valid @RequestBody NhanVienRequest nhanVienRequest, BindingResult result) {
-//        if (result.hasErrors()) {
-//            List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
-//                    .collect(Collectors.toList());
-//            return ResponseEntity.badRequest().body(errors);
-//        } else {
-//            NhanVien nv = new NhanVien();
-//            BeanUtils.copyProperties(nhanVienRequest, nv);
-//            nhanVienRepo.save(nv);
-//            return ResponseEntity.ok("Lưu thành công");
-//
-//        }
-//    }
+    // @PostMapping("addNhanVien")
+    // public ResponseEntity<?> saveNhanVien(@Valid @RequestBody NhanVienRequest
+    // nhanVienRequest, BindingResult result) {
+    // if (result.hasErrors()) {
+    // List<String> errors = result.getAllErrors().stream().map(error ->
+    // error.getDefaultMessage())
+    // .collect(Collectors.toList());
+    // return ResponseEntity.badRequest().body(errors);
+    // } else {
+    // NhanVien nv = new NhanVien();
+    // BeanUtils.copyProperties(nhanVienRequest, nv);
+    // nhanVienRepo.save(nv);
+    // return ResponseEntity.ok("Lưu thành công");
+    //
+    // }
+    // }
     @PostMapping("/login_admin")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequest loginRequest,
@@ -288,8 +293,7 @@ public class NhanVienController {
             }
             // Xác thực người dùng bằng AuthenticationManager
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
             // Tạo JWT token
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
             String token = jwtUtil.generateToken(userDetails);
@@ -331,6 +335,7 @@ public class NhanVienController {
         return nhanVien.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody QuenMKRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -350,27 +355,32 @@ public class NhanVienController {
         }
         // Tạo reset token
         String resetToken = jwtUtil.generateResetToken(request.getEmail());
-//        // Tạo liên kết đặt lại mật khẩu
-//        String resetLink = "http://localhost:5173/reset-password?token=" + resetToken;
-//
-//        // Gửi email
-//        String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
-//                "</div>" +
-//                "<div class='content'>" +
-//                "<h3>Xin chào,</h3>" +
-//                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B SPORTS.</p>" +
-//                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
-//                "<div class='info-box'>" +
-//                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
-//                "</div>" +
-//                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>";
-//
-//        try {
-//            sendEmail(request.getEmail(), content);
-//            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
-//        } catch (Exception e) {
-//            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
-//        }
+        // // Tạo liên kết đặt lại mật khẩu
+        // String resetLink = "http://localhost:5173/reset-password?token=" +
+        // resetToken;
+        //
+        // // Gửi email
+        // String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+        // "</div>" +
+        // "<div class='content'>" +
+        // "<h3>Xin chào,</h3>" +
+        // "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B
+        // SPORTS.</p>" +
+        // "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+        // "<div class='info-box'>" +
+        // "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+        // "</div>" +
+        // "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật
+        // khẩu, vui lòng bỏ qua email này.</p>";
+        //
+        // try {
+        // sendEmail(request.getEmail(), content);
+        // response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến
+        // email của bạn!");
+        // } catch (Exception e) {
+        // response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email
+        // thất bại: " + e.getMessage());
+        // }
         response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
         response.put("resetToken", resetToken); // Thêm token vào phản hồi
         return ResponseEntity.ok(response);
@@ -410,8 +420,9 @@ public class NhanVienController {
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/listTrangAdmin")
-    public List<NhanVienResponse> listTrangAdmin(){
+    public List<NhanVienResponse> listTrangAdmin() {
         return nhanVienRepo.listTrangAdmin();
     }
 }
