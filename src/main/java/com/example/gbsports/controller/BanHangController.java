@@ -124,7 +124,8 @@ public class BanHangController {
     @PostMapping("/setTrangThaiNhanHang")
     public ResponseEntity<?> setTrangThaiNhanHang(
             @RequestParam("idHD") Integer idHD,
-            @RequestParam("phuongThucNhanHang") String ptnh
+            @RequestParam("phuongThucNhanHang") String ptnh,
+            @RequestParam("phiVanChuyen") BigDecimal pvc
     ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
@@ -132,11 +133,8 @@ public class BanHangController {
 
             hoaDon.setPhuong_thuc_nhan_hang(ptnh);
 
-            // Set phí vận chuyển
-            BigDecimal phiVanChuyen = BigDecimal.ZERO;
             if ("Giao hàng".equalsIgnoreCase(ptnh)) {
-                phiVanChuyen = BigDecimal.valueOf(30000);
-                hoaDon.setPhi_van_chuyen(phiVanChuyen);
+                hoaDon.setPhi_van_chuyen(pvc);
             } else if ("Nhận tại cửa hàng".equalsIgnoreCase(ptnh)) {
                 hoaDon.setDia_chi(null);
                 hoaDon.setPhi_van_chuyen(BigDecimal.ZERO);
@@ -151,7 +149,7 @@ public class BanHangController {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             // Tổng tiền sau giảm = trước giảm - giảm + phí vận chuyển
-            BigDecimal tongTienSauGiam = tongTienTruocGiam.subtract(phiVanChuyen);
+            BigDecimal tongTienSauGiam = tongTienTruocGiam.subtract(pvc);
 
             hoaDon.setTong_tien_truoc_giam(tongTienTruocGiam);
             hoaDon.setTong_tien_sau_giam(tongTienSauGiam);
