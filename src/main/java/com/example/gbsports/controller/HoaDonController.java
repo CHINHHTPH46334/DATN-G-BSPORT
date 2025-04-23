@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ import java.util.*;
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
         RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/admin/qlhd")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") // Phân quyền cho toàn bộ controller
+
 public class HoaDonController {
 
     @Autowired
@@ -41,7 +42,10 @@ public class HoaDonController {
     private DiaChiKhachHangRepo diaChiKhachHangRepo;
     @Autowired
     private HoaDonService hoaDonService;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/update-status")
     public ResponseEntity<Map<String, Object>> updateInvoiceStatus(
             @RequestBody Map<String, Object> request) {
@@ -66,6 +70,7 @@ public class HoaDonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PutMapping("/updateHTTTHD")
     public ResponseEntity<HoaDon> updateHinhThucTTHoaDon(@RequestParam("idHD") Integer id,
             @RequestParam("hinhThucThanhToan") String httt) {
@@ -78,12 +83,13 @@ public class HoaDonController {
         return ResponseEntity.ok(hoaDonRepo.save(hoaDon));
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/all-hoa-don")
     public List<HoaDonResponse> getListHD() {
         return hoaDonRepo.getListHD();
     }
 
-//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/danh_sach_hoa_don")
     public Page<HoaDonResponse> getAllHD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -99,6 +105,7 @@ public class HoaDonController {
         return list; // Trả về danh sách, kể cả khi rỗng
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/tim_kiem")
     public Page<HoaDonResponse> search(
             @RequestParam(name = "keyword", required = false) String keyword,
@@ -111,6 +118,7 @@ public class HoaDonController {
         return hoaDonRepo.timHoaDon(searchKeyword, pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/loc_ngay")
     public Page<HoaDonResponse> filterHoaDonByDate(
             @RequestParam(value = "tuNgay", required = false) String tuNgayStr,
@@ -137,6 +145,7 @@ public class HoaDonController {
         return hoaDonRepo.findHoaDonByNgay(tuNgay, denNgay, pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/loc_trang_thai_don_hang")
     public Page<HoaDonResponse> filterHoaDonByTrangThai(
             @RequestParam(value = "trangThai", required = false) String trangThai,
@@ -151,6 +160,7 @@ public class HoaDonController {
                 : hoaDonRepo.findHoaDonByTrangThaiGiaoHang(trangThai, pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/hdct")
     public Map<String, Object> getHDCTBymaHD(@RequestParam("id") String maHoaDon) {
         HoaDonResponse hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
@@ -167,6 +177,7 @@ public class HoaDonController {
         return response;
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/chuyen_trang_thai")
     @Transactional
     public String updateTrangThai(
@@ -227,6 +238,7 @@ public class HoaDonController {
         return "Cập nhật trạng thái thành công: " + newTrangThai;
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/quay_lai_trang_thai")
     @Transactional
     public ResponseEntity<Map<String, Object>> revertToInitialStatus(
@@ -287,6 +299,7 @@ public class HoaDonController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/cancel_order")
     @Transactional
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon,
@@ -363,6 +376,7 @@ public class HoaDonController {
         return "Đơn hàng đã được hủy";
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/update_ttkh")
     public ResponseEntity<Map<String, Object>> updateCustomerInfo(
             @RequestBody Map<String, Object> request) {
@@ -423,6 +437,7 @@ public class HoaDonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/update_note")
     public ResponseEntity<Map<String, Object>> updateNote(
             @RequestBody Map<String, Object> request) {
@@ -463,6 +478,7 @@ public class HoaDonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/ctsp_hd")
     public Page<ChiTietSanPhamView> getAllCTSP_HD(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -479,6 +495,7 @@ public class HoaDonController {
         return chiTietSanPhamRepo.getAllCTSP_HD(pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/addSP_HD")
     @Transactional
     public ResponseEntity<Map<String, Object>> addProductsToInvoice(
@@ -539,6 +556,7 @@ public class HoaDonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/removeSP_HD")
     @Transactional
     public ResponseEntity<?> removeProductFromInvoice(
@@ -567,6 +585,7 @@ public class HoaDonController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PostMapping("/update_soLuong")
     @Transactional
     public ResponseEntity<?> updateProductQuantity(
@@ -594,20 +613,100 @@ public class HoaDonController {
         }
     }
 
-    /////
-    // @GetMapping("khach-hang/{idKhachHang}")
-    // public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer
-    // idKhachHang) {
-    // List<HoaDon> hoaDons = (List<HoaDon>)
-    // hoaDonService.getHoaDonByKhachHangId(idKhachHang);
-    // System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
-    // return ResponseEntity.ok(hoaDons);
-    // }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
+    @GetMapping("/khach-hang/{idKhachHang}")
+    public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer idKhachHang) {
+        List<HoaDon> hoaDons = hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+        System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
+        return ResponseEntity.ok(hoaDons);
+    }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
     @GetMapping("/count/{idKhachHang}")
     public ResponseEntity<Integer> countHoaDonByKhachHang(@PathVariable Integer idKhachHang) {
         int count = hoaDonService.countHoaDonByKhachHangId(idKhachHang);
         return ResponseEntity.ok(count);
     }
+    /**
+     * API thay thế cho getHDCTBymaHD khi có lỗi với gia_sau_giam
+     * Sử dụng truy vấn SQL đơn giản hơn không tham chiếu đến cột gia_sau_giam
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
+    @GetMapping("/get-products/{maHoaDon}")
+    public List<Map<String, Object>> getOrderProducts(@PathVariable String maHoaDon) {
+        try {
+            // Lấy ID hóa đơn từ mã hóa đơn
+            HoaDonResponse hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon));
+            Integer idHoaDon = hoaDon.getId_hoa_don();
 
+            // Sử dụng đúng truy vấn SQL như yêu cầu
+            String sql = "select s.hinh_anh, ma_san_pham, ten_san_pham, c.so_luong, don_gia, c.so_luong * don_gia as 'Tong_tien' " +
+                    "from hoa_don h " +
+                    "join hoa_don_chi_tiet c on h.id_hoa_don = c.id_hoa_don " +
+                    "join chi_tiet_san_pham t on c.id_chi_tiet_san_pham = t.id_chi_tiet_san_pham " +
+                    "join san_pham s on s.id_san_pham = t.id_san_pham " +
+                    "where h.id_hoa_don = ?";
+
+            return jdbcTemplate.queryForList(sql, idHoaDon);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi lấy thông tin sản phẩm trong đơn hàng: " + e.getMessage());
+        }
+    }
+
+    /**
+     * API dự phòng cuối cùng chỉ trả về thông tin rất cơ bản của đơn hàng
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
+    @GetMapping("/basic-order-detail")
+    public Map<String, Object> getBasicOrderDetail(@RequestParam("ma_hoa_don") String maHoaDon) {
+        try {
+            // Lấy thông tin cơ bản của hóa đơn
+            HoaDonResponse hoaDon = hoaDonRepo.findByMaHoaDon(maHoaDon)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon));
+            Integer idHoaDon = hoaDon.getId_hoa_don();
+
+            // Truy vấn SQL đơn giản nhất để lấy thông tin sản phẩm
+            String sql = "SELECT sp.ten_san_pham, hdct.so_luong, hdct.don_gia " +
+                    "FROM hoa_don_chi_tiet hdct " +
+                    "JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham " +
+                    "JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham " +
+                    "WHERE hdct.id_hoa_don = ?";
+
+            List<Map<String, Object>> products = jdbcTemplate.queryForList(sql, idHoaDon);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("hoaDon", hoaDon);
+            result.put("san_pham", products);
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi lấy thông tin cơ bản của đơn hàng: " + e.getMessage());
+        }
+    }
+
+    // Lấy phí vận chuyển theo ID hóa đơn
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
+    @GetMapping("/phi-van-chuyen/{idHoaDon}")
+    public ResponseEntity<?> getPhiVanChuyen(@PathVariable Integer idHoaDon) {
+        try {
+            String sql = "select phi_van_chuyen from hoa_don where id_hoa_don = ?";
+            Map<String, Object> result = jdbcTemplate.queryForMap(sql, idHoaDon);
+
+            BigDecimal phiVanChuyen = (BigDecimal) result.get("phi_van_chuyen");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("phi_van_chuyen", phiVanChuyen);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Lỗi khi lấy phí vận chuyển: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

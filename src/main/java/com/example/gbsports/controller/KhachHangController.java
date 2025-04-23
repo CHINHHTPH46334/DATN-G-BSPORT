@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -77,6 +78,7 @@ public class KhachHangController {
     @Autowired
     private LichSuDangNhapRepo lichSuDangNhapRepo;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV', 'ROLE_KH')")
     @GetMapping("/view")
     public ResponseEntity<Map<String, Object>> getKhachHang(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
@@ -161,62 +163,22 @@ public class KhachHangController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addKhachHang(
-            @Valid @RequestBody KhachHangRequest khachHangRequest,
-            BindingResult result) {
-
+    public ResponseEntity<Map<String, Object>> addKhachHang(@RequestBody KhachHangRequest khachHangRequest) {
         Map<String, Object> response = new HashMap<>();
 
-        // Kiểm tra validation từ DTO
-        if (result.hasErrors()) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            for (FieldError error : result.getFieldErrors()) {
-                fieldErrors.put(error.getField(), error.getDefaultMessage());
-            }
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Kiểm tra số điện thoại
-        String cleanedPhone = khachHangRequest.getSoDienThoai().replaceAll("\\s+", "");
-        if (!cleanedPhone.matches("^(0)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$")) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            fieldErrors.put("soDienThoai", "Số điện thoại không hợp lệ (VD: 0912345678)");
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-        khachHangRequest.setSoDienThoai(cleanedPhone);
-
-        // Kiểm tra ngày sinh
-        if (khachHangRequest.getNgaySinh() == null) {
-            response.put("error", "Ngày sinh không được để trống!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        LocalDate ngaySinh = khachHangRequest.getNgaySinh().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate now = LocalDate.now();
-        int tuoi = Period.between(ngaySinh, now).getYears();
-        if (tuoi < 13) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            fieldErrors.put("ngaySinh", "Khách hàng phải đủ 13 tuổi!");
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Kiểm tra email đã tồn tại
-        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
-        if (existingTaiKhoan.isPresent()) {
-            response.put("error", "Email đã được sử dụng!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
         try {
-            // Sinh mã khách hàng tự động nếu không có trong request
+            // Kiểm tra email đã tồn tại
+            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+            if (existingTaiKhoan.isPresent()) {
+                response.put("error", "Email đã được sử dụng!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Sinh mã khách hàng tự động nếu không có
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
                 maKhachHang = generateMaKhachHang();
             } else {
-                // Kiểm tra nếu mã đã tồn tại
                 Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(maKhachHang);
                 if (existingKhachHang.isPresent()) {
                     response.put("error", "Mã khách hàng đã tồn tại!");
@@ -231,8 +193,8 @@ public class KhachHangController {
 
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau)); // Mã hóa mật khẩu
-            taiKhoan.setRoles(rolesRepo.findById(4).get());
+            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau));
+            taiKhoan.setRoles(rolesRepo.findById(4).orElseThrow(() -> new RuntimeException("Role không tồn tại")));
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             // Lưu khách hàng
@@ -244,24 +206,15 @@ public class KhachHangController {
 
             // Lưu địa chỉ
             if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
-                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
-                        .filter(this::isValidDiaChi)
-                        .collect(Collectors.toList());
-
-                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
+                for (KhachHangRequest.DiaChiRequest diaChiReq : khachHangRequest.getDiaChiList()) {
                     DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
                     diaChiKhachHang.setKhachHang(khachHang);
-                    diaChiKhachHang.setSoNha(diaChiReq.getSoNha());
-                    diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
-                    diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
-                    diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-                    diaChiKhachHang
-                            .setDiaChiMacDinh(diaChiReq.getDiaChiMacDinh() != null && diaChiReq.getDiaChiMacDinh());
+                    BeanUtils.copyProperties(diaChiReq, diaChiKhachHang);
                     diaChiKhachHangRepo.save(diaChiKhachHang);
                 }
             }
 
-            // Gửi email (không làm thất bại request nếu lỗi)
+            // Gửi email chào mừng
             String subject = "Chào mừng bạn đến với GB Sports!";
             String body = "<!DOCTYPE html>" +
                     "<html lang='vi'>" +
@@ -270,15 +223,12 @@ public class KhachHangController {
                     "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
                     "<style>" +
                     "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
-                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }"
-                    +
-                    ".header { background-color: #28a745; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }"
-                    +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: #28a745; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
                     ".header h1 { margin: 0; font-size: 24px; }" +
                     ".content { padding: 20px; }" +
                     ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
-                    ".info-box { background-color: #e6f4ea; border-left: 5px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }"
-                    +
+                    ".info-box { background-color: #e6f4ea; border-left: 5px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
                     ".info-box p { margin: 5px 0; }" +
                     ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
                     ".footer a { color: #007bff; text-decoration: none; }" +
@@ -302,8 +252,7 @@ public class KhachHangController {
                     "</div>" +
                     "<div class='footer'>" +
                     "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
-                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>"
-                    +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
                     "</div>" +
                     "</div>" +
                     "</body>" +
@@ -498,104 +447,36 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateKhachHang(@RequestBody KhachHangRequest request) {
         Map<String, Object> response = new HashMap<>();
 
-        // Kiểm tra validation từ DTO
-        BindingResult result = new org.springframework.validation.BeanPropertyBindingResult(request,
-                "khachHangRequest");
-        if (request.getTenKhachHang() == null || request.getTenKhachHang().trim().isEmpty()) {
-            result.rejectValue("tenKhachHang", "NotBlank", "Tên khách hàng không được để trống");
-        } else if (!request.getTenKhachHang().matches("^[a-zA-Z\\s\\u00C0-\\u1EF9]+$")) {
-            result.rejectValue("tenKhachHang", "Pattern", "Họ tên không được chứa số hoặc ký tự đặc biệt");
-        }
-        if (request.getSoDienThoai() == null || request.getSoDienThoai().trim().isEmpty()) {
-            result.rejectValue("soDienThoai", "NotBlank", "Số điện thoại không được để trống");
-        }
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            result.rejectValue("email", "NotBlank", "Email không được để trống");
-        } else if (!request.getEmail().matches(
-                "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")) {
-            result.rejectValue("email", "Email", "Email không hợp lệ");
-        }
-        // Validate diaChiList
-        if (request.getDiaChiList() != null) {
-            for (int i = 0; i < request.getDiaChiList().size(); i++) {
-                KhachHangRequest.DiaChiRequest diaChi = request.getDiaChiList().get(i);
-                if (diaChi.getSoNha() == null || diaChi.getSoNha().trim().isEmpty()) {
-                    result.rejectValue("diaChiList[" + i + "].soNha", "NotBlank", "Số nhà không được để trống");
-                } else if (!diaChi.getSoNha().matches("^[a-zA-Z0-9\\s\\u00C0-\\u1EF9]+$")) {
-                    result.rejectValue("diaChiList[" + i + "].soNha", "Pattern",
-                            "Số nhà, tên đường chỉ được chứa chữ cái và số");
-                }
-                if (diaChi.getXaPhuong() == null || diaChi.getXaPhuong().trim().isEmpty()) {
-                    result.rejectValue("diaChiList[" + i + "].xaPhuong", "NotBlank", "Xã/Phường không được để trống");
-                }
-                if (diaChi.getQuanHuyen() == null || diaChi.getQuanHuyen().trim().isEmpty()) {
-                    result.rejectValue("diaChiList[" + i + "].quanHuyen", "NotBlank", "Quận/Huyện không được để trống");
-                }
-                if (diaChi.getTinhThanhPho() == null || diaChi.getTinhThanhPho().trim().isEmpty()) {
-                    result.rejectValue("diaChiList[" + i + "].tinhThanhPho", "NotBlank",
-                            "Tỉnh/Thành phố không được để trống");
-                }
-            }
-        }
-
-        if (result.hasErrors()) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            for (FieldError error : result.getFieldErrors()) {
-                fieldErrors.put(error.getField(), error.getDefaultMessage());
-            }
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Kiểm tra số điện thoại
-        String cleanedPhone = request.getSoDienThoai().replaceAll("\\s+", "");
-        if (!cleanedPhone.matches("^0\\d{9}$")) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            fieldErrors.put("soDienThoai", "Số điện thoại phải bắt đầu bằng 0 và đúng 10 chữ số");
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-        request.setSoDienThoai(cleanedPhone);
-
-        // Kiểm tra ngày sinh
-        if (request.getNgaySinh() == null) {
-            response.put("error", "Ngày sinh không được để trống!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        LocalDate ngaySinh = request.getNgaySinh().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        if (Period.between(ngaySinh, LocalDate.now()).getYears() < 13) {
-            response.put("error", "Khách hàng phải từ 13 tuổi trở lên!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        KhachHang khachHang = khachHangRepo.findById(request.getIdKhachHang())
-                .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
-
-        if (!khachHang.getMaKhachHang().equals(request.getMaKhachHang())) {
-            Optional<KhachHang> existing = khachHangRepo.findByMaKhachHang(request.getMaKhachHang());
-            if (existing.isPresent()) {
-                response.put("error", "Mã khách hàng đã tồn tại!");
-                return ResponseEntity.badRequest().body(response);
-            }
-        }
-
         try {
+            // Kiểm tra khách hàng tồn tại
+            KhachHang khachHang = khachHangRepo.findById(request.getIdKhachHang())
+                    .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
+
+            // Kiểm tra mã khách hàng trùng lặp (nếu thay đổi)
+            if (!khachHang.getMaKhachHang().equals(request.getMaKhachHang())) {
+                Optional<KhachHang> existing = khachHangRepo.findByMaKhachHang(request.getMaKhachHang());
+                if (existing.isPresent()) {
+                    response.put("error", "Mã khách hàng đã tồn tại!");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+
+            // Cập nhật thông tin khách hàng
             BeanUtils.copyProperties(request, khachHang);
             khachHang = khachHangRepo.save(khachHang);
 
+            // Xóa địa chỉ cũ
             var existingDiaChiList = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
             diaChiKhachHangRepo.deleteAll(existingDiaChiList);
 
+            // Lưu địa chỉ mới
             if (request.getDiaChiList() != null && !request.getDiaChiList().isEmpty()) {
-                List<KhachHangRequest.DiaChiRequest> validDiaChiList = request.getDiaChiList().stream()
-                        .filter(this::isValidDiaChi)
-                        .collect(Collectors.toList());
-                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
+                for (KhachHangRequest.DiaChiRequest diaChiReq : request.getDiaChiList()) {
                     DiaChiKhachHang diaChi = new DiaChiKhachHang();
                     diaChi.setKhachHang(khachHang);
                     BeanUtils.copyProperties(diaChiReq, diaChi);
@@ -608,7 +489,7 @@ public class KhachHangController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("error", "Lỗi khi cập nhật khách hàng: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

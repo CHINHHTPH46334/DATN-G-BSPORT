@@ -143,7 +143,7 @@ CREATE TABLE chi_tiet_khuyen_mai (
 	id_ctkm INT IDENTITY(1,1) PRIMARY KEY,
     id_khuyen_mai INT REFERENCES khuyen_mai(id_khuyen_mai),
     id_chi_tiet_san_pham INT REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham),
-    
+    gia_sau_giam DECIMAL(12,2)
 );
 
 -- 15. Bảng khach_hang
@@ -156,7 +156,8 @@ CREATE TABLE khach_hang (
     ngay_sinh DATE,
     email VARCHAR(200),
     id_tai_khoan INT REFERENCES tai_khoan(id_tai_khoan),
-    trang_thai NVARCHAR(50)
+    trang_thai NVARCHAR(50),
+	ngay_lap datetime
 );
 
 -- 16. Bảng gio_hang
@@ -171,7 +172,7 @@ CREATE TABLE chi_tiet_gio_hang (
     id_gio_hang INT REFERENCES gio_hang(id_gio_hang),
     id_chi_tiet_san_pham INT REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham),
     so_luong INT
-    
+
 );
 
 -- 18. Bảng binh_luan
@@ -182,6 +183,8 @@ CREATE TABLE binh_luan (
     danh_gia FLOAT,
     ngay_binh_luan DATETIME,
     ngay_sua DATETIME,
+	da_sua BIT,
+    da_chinh_sua BIT,
     PRIMARY KEY (id_khach_hang, id_chi_tiet_san_pham)
 );
 
@@ -264,6 +267,31 @@ CREATE TABLE theo_doi_don_hang (
 	noi_dung_doi NVARCHAR(255)
 );
 
+-- 25. Bảng Trả hàng
+CREATE TABLE tra_hang (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    id_hoa_don INT NOT NULL,
+    ly_do NVARCHAR(255) NOT NULL,
+    ghi_chu NVARCHAR(500),
+    nhan_vien_xu_ly NVARCHAR(100),
+    ngay_tao DATETIME NOT NULL,
+    trang_thai NVARCHAR(50) NOT NULL, -- Yêu cầu trả hàng, Đã xác nhận, Đã hoàn tiền
+    tong_tien_hoan DECIMAL(12,2) NOT NULL,
+    FOREIGN KEY (id_hoa_don) REFERENCES hoa_don(id_hoa_don)
+);
+
+-- 26. Bảng Chi tiết trả hàng
+CREATE TABLE chi_tiet_tra_hang (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    id_tra_hang INT NOT NULL,
+    id_chi_tiet_san_pham INT NOT NULL,
+    so_luong INT NOT NULL,
+    tien_hoan DECIMAL(12,2) NOT NULL,
+    FOREIGN KEY (id_tra_hang) REFERENCES tra_hang(id),
+    FOREIGN KEY (id_chi_tiet_san_pham) REFERENCES chi_tiet_san_pham(id_chi_tiet_san_pham)
+);
+
+/*
 -- 25. Bảng yeu_cau_doi_hang
 CREATE TABLE yeu_cau_doi_hang (
     id_yeu_cau INT IDENTITY(1,1) PRIMARY KEY,
@@ -293,14 +321,14 @@ CREATE TABLE phieu_doi_hang (
     trang_thai NVARCHAR(50),
     gia_tri_chenh_lech DECIMAL(12,2)
 );
-
+*/
 -- Chèn dữ liệu mẫu
 -- 1. Bảng roles
 INSERT INTO roles (id_roles, ma_roles, ten_roles) VALUES
-(1, 'AD', N'Admin'),
-(2, 'QL', N'Quản lý'),
-(3, 'NV', N'Nhân viên'),
-(4, 'KH', N'Khách hàng');
+(1, 'ROLE_ADMIN', N'Admin'),
+(2, 'ROLE_QL', N'Quản lý'),
+(3, 'ROLE_NV', N'Nhân viên'),
+(4, 'ROLE_KH', N'Khách hàng');
 
 -- 2. Bảng tai_khoan
 SET IDENTITY_INSERT [dbo].[tai_khoan] ON 
@@ -1220,6 +1248,7 @@ INSERT [dbo].[hinh_anh] ([id_hinh_anh], [id_chi_tiet_san_pham], [anh_chinh], [hi
 SET IDENTITY_INSERT [dbo].[hinh_anh] OFF
 GO
 -- 14. Bảng chi_tiet_khuyen_mai
+/*
 INSERT INTO chi_tiet_khuyen_mai (id_khuyen_mai, id_chi_tiet_san_pham) VALUES
 (1, 1),
 (2, 2),
@@ -1231,7 +1260,7 @@ INSERT INTO chi_tiet_khuyen_mai (id_khuyen_mai, id_chi_tiet_san_pham) VALUES
 (8, 8),
 (9, 9),
 (10, 10);
-
+*/
 -- 15. Bảng khach_hang
 INSERT INTO khach_hang (ma_khach_hang, ten_khach_hang, gioi_tinh, so_dien_thoai, ngay_sinh, email, id_tai_khoan, trang_thai) VALUES
 ( 'KH001', N'Nguyễn Văn Khách 1', 1, '0910000001', '1990-01-01', 'kh1@example.com', 11, N'Đang hoạt động'), -- Khách hàng
@@ -1316,12 +1345,12 @@ INSERT INTO voucher (ma_voucher, ten_voucher, ngay_tao, ngay_het_han, gia_tri_gi
 
 -- 22. Bảng hoa_don
 INSERT INTO hoa_don (ma_hoa_don, id_nhan_vien, id_khach_hang, ngay_tao, ngay_sua, trang_thai, id_voucher, sdt_nguoi_nhan, dia_chi, email, tong_tien_truoc_giam, phi_van_chuyen, ho_ten, tong_tien_sau_giam, hinh_thuc_thanh_toan, phuong_thuc_nhan_hang, loai_hoa_don) VALUES
-('HD001', 1, 1, '2025-02-01', '2025-02-01', N'Chưa thanh toán', 1, '0910000001', N'123 Đường A, Hà Nội', 'kh1@example.com', 100000, 30000, N'Nguyễn Văn M', 130000, N'Tiền mặt', N'Giao hàng', N'Online'),
-('HD002', 2, 2, '2025-02-02', '2025-02-02', N'Chưa thanh toán', 2, '0910000002', N'456 Đường B, Hồ Chí Minh', 'kh2@example.com', 400000, 50000, N'Phạm Thị N', 450000, N'Chuyển khoản', N'Nhận tại cửa hàng', N'Offline'),
-('HD003', 3, 3, '2025-02-03', '2025-02-03', N'Đã thanh toán', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 300000, 50000, N'Lê Văn O', 350000, N'Tiền mặt', N'Giao hàng', N'Offline'),
-('HD004', 3, 3, '2025-02-03', '2025-02-03', N'Đã thanh toán', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 900000, 50000, N'Lê Văn O', 950000, N'Tiền mặt', N'Nhận tại cửa hàng', N'Offline'),
-('HD005', 3, 3, '2025-02-03', '2025-02-03', N'Đã thanh toán', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 4900000, 100000, N'Lê Văn O', 5000000, N'Chuyển khoản', N'Giao hàng', N'Online'),
-('HD006', 3, 3, '2025-02-03', '2025-02-03', N'Đã thanh toán', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 4700000, 100000, N'Lê Văn O', 4800000, N'Tiền mặt', N'Giao hàng', N'Online');
+('HD001', 1, 1, '2025-02-01', '2025-02-01', N'Hoàn thành', 1, '0910000001', N'123 Đường A, Hà Nội', 'kh1@example.com', 100000, 30000, N'Nguyễn Văn M', 130000, N'Tiền mặt', N'Giao hàng', N'Online'),
+('HD002', 2, 2, '2025-02-02', '2025-02-02', N'Hoàn thành', 2, '0910000002', N'456 Đường B, Hồ Chí Minh', 'kh2@example.com', 400000, 50000, N'Phạm Thị N', 450000, N'Chuyển khoản', N'Nhận tại cửa hàng', N'Offline'),
+('HD003', 3, 3, '2025-02-03', '2025-02-03', N'Hoàn thành', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 300000, 50000, N'Lê Văn O', 350000, N'Tiền mặt', N'Giao hàng', N'Offline'),
+('HD004', 3, 3, '2025-02-03', '2025-02-03', N'Hoàn thành', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 900000, 50000, N'Lê Văn O', 950000, N'Tiền mặt', N'Nhận tại cửa hàng', N'Offline'),
+('HD005', 3, 3, '2025-02-03', '2025-02-03', N'Hoàn thành', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 4900000, 100000, N'Lê Văn O', 5000000, N'Chuyển khoản', N'Giao hàng', N'Online'),
+('HD006', 3, 3, '2025-02-03', '2025-02-03', N'Hoàn thành', 3, '0910000003', N'789 Đường C, Đà Nẵng', 'kh3@example.com', 4700000, 100000, N'Lê Văn O', 4800000, N'Tiền mặt', N'Giao hàng', N'Online');
 
 -- 23. Bảng hoa_don_chi_tiet
 INSERT INTO hoa_don_chi_tiet (id_hoa_don, id_chi_tiet_san_pham, so_luong, don_gia) VALUES
@@ -1345,22 +1374,3 @@ INSERT INTO theo_doi_don_hang (id_hoa_don, trang_thai, ngay_chuyen) VALUES
 (4, N'Hoàn thành', '2025-02-03'),
 (5, N'Đã xác nhận', '2025-02-03'),
 (6, N'Hoàn thành', '2025-02-04');
-
--- 25. Bảng yeu_cau_doi_hang
-INSERT INTO yeu_cau_doi_hang (ma_yeu_cau, id_hoa_don, id_san_pham_moi, trang_thai_san_pham, ngay_yeu_cau, ngay_xu_ly, ly_do_doi) VALUES
-('YC001', 1, 1, N'Mới', '2025-02-03', '2025-02-04', N'Lỗi sản phẩm'),
-('YC002', 2, 2, N'Mới', '2025-02-04', '2025-02-05', N'Lỗi sản phẩm'),
-('YC003', 3, 3, N'Mới', '2025-02-05', '2025-02-06', N'Lỗi sản phẩm');
-
--- 26. Bảng hinh_anh_doi_hang
-INSERT INTO hinh_anh_doi_hang (id_yeu_cau, hinh_anh) VALUES
-(1, 'doi_img1.jpg'),
-(2, 'doi_img2.jpg'),
-(3, 'doi_img3.jpg');
-
-
--- 27. Bảng phieu_doi_hang
-INSERT INTO phieu_doi_hang (id_yeu_cau, ma_phieu_doi, phuong_thuc_thanh_toan, ngay_xuat_phieu, trang_thai, gia_tri_chenh_lech) VALUES
-(1, 'PDH001', N'Tiền mặt', '2025-02-05', N'Đã xuất', 10000),
-(2, 'PDH002', N'Chuyển khoản', '2025-02-06', N'Đã xuất', 20000),
-(3, 'PDH003', N'Tiền mặt', '2025-02-07', N'Đã xuất', 30000);
