@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,7 +40,7 @@ public class SanPhamController {
     ChiTietSanPhamService chiTietSanPhamService;
     @Autowired
     Excelmport excelmport;
-    //
+
     @GetMapping("/SanPham")
     public List<SanPhamView> getAll() {
         return sanPhamService.getAll();
@@ -49,7 +50,7 @@ public class SanPhamController {
     public List<SanPham> getAllfindAll() {
         return sanPhamService.getAllFindAll();
     }
-    //
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/sanPhamTheoNgaySua")
     public List<SanPhamView> getAllSPTheoNgay(){
         return sanPhamService.getAllSPNgaySua();
@@ -60,31 +61,34 @@ public class SanPhamController {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/sanPhamDetail")
     public SanPham spDetail(@RequestParam ("id") Integer id){
         return sanPhamService.detailSP(id);
     }
+
     @PostMapping("/saveSanPham2")
     public ResponseEntity<?> addSanPham2(@Valid @RequestBody SanPhamRequest sanPhamRequest, BindingResult bindingResult) {
         return sanPhamService.saveSanPham2(sanPhamRequest, bindingResult);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/saveSanPham")
     public ResponseEntity<?> addSanPham(@RequestBody SanPhamRequest sanPhamRequest) {
         return sanPhamService.saveSanPham(sanPhamRequest);
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/xoaSanPham")
     public String xoaSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.deleteSanPham(id);
     }
 
-    //
     @GetMapping("/timKiemSanPham")
     public List<SanPham> searchSanPham(@RequestParam("search") String search) {
         return sanPhamService.listTimKiem(search);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/chuyenTrangThaiSanPham")
     public String chuyenTrangThaiSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.chuyenTrangThai(id);
@@ -109,6 +113,7 @@ public class SanPhamController {
         return sanPhamService.sapXep(pageable).getContent();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/exportExcel")
     public ResponseEntity<byte[]> exportExcel() {
         List<ChiTietSanPhamView> list = chiTietSanPhamService.getAllCTSP();
@@ -118,6 +123,7 @@ public class SanPhamController {
                 .body(in.readAllBytes());
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/listImport")
     public ResponseEntity<?> getListImport(@RequestParam("file") MultipartFile file) throws IOException {
         ArrayList<ChiTietSanPham> list = excelmport.readExcel(file);
@@ -136,6 +142,7 @@ public class SanPhamController {
     @Autowired
     ExcelSaveDB excelSaveDB;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/save")
     public ResponseEntity<?> saveToDB(@RequestBody List<ChiTietSanPham> list) {
         excelSaveDB.saveToDB(list);

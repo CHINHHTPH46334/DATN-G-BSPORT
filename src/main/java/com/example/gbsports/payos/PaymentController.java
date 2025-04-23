@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.*;
 import vn.payos.PayOS;
+import vn.payos.type.PaymentLinkData;
 import vn.payos.type.Webhook;
 import vn.payos.type.WebhookData;
 
@@ -33,13 +34,35 @@ public class PaymentController {
             response.set("data", null);
 
             WebhookData data = payOS.verifyPaymentWebhookData(webhookBody);
-            System.out.println(data);
+            System.out.println("webhook"+data);
             return response;
         } catch (Exception e) {
             e.printStackTrace();
             response.put("error", -1);
             response.put("message", e.getMessage());
             response.set("data", null);
+            return response;
+        }
+    }
+    @GetMapping(path = "/payment-status")
+    public ObjectNode getPaymentStatus(@RequestParam("orderId") long orderId) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode response = objectMapper.createObjectNode();
+
+        try {
+            // Hiện tại chỉ gọi API PayOS để kiểm tra (sau này có thể dùng database)
+            PaymentLinkData paymentInfo = payOS.getPaymentLinkInformation(orderId);
+            String status = paymentInfo.getStatus();
+
+            response.put("error", 0);
+            response.put("message", "success");
+            response.put("status", status);
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("error", -1);
+            response.put("message", e.getMessage());
+            response.put("status", "UNKNOWN");
             return response;
         }
     }
