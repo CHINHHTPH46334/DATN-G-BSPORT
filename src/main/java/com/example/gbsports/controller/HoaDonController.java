@@ -206,6 +206,18 @@ public class HoaDonController {
                 }
             }
         }
+        // Xử lý khi trạng thái là "Hoàn thành"
+        if ("Hoàn thành".equals(newTrangThai)) {
+            Optional<HoaDon> optHD = hoaDonRepo.findById(idHoaDon);
+            if (optHD.isPresent()) {
+                HoaDon hoaDon = optHD.get();
+                hoaDon.setPhu_thu(BigDecimal.valueOf(0)); // Reset so_tien_thanh_toan_them về 0
+                hoaDon.setNgay_sua(LocalDateTime.now());
+                hoaDonRepo.save(hoaDon);
+            } else {
+                throw new RuntimeException("Không tìm thấy hóa đơn với ID: " + idHoaDon);
+            }
+        }
         // Cập nhật trạng thái đơn hàng với nhan_vien_doi và noi_dung_doi
         hoaDonRepo.insertTrangThaiDonHang(maHoaDon, newTrangThai, ngayChuyen, nhanVienDoi, noiDungDoi);
         return "Cập nhật trạng thái thành công: " + newTrangThai;
