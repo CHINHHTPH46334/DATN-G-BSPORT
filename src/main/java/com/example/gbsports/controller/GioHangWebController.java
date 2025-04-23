@@ -17,7 +17,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET,
         RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
 @RequestMapping("/gioHangWeb")
-@PreAuthorize("hasAnyRole('ROLE_KH')")
+//@PreAuthorize("hasAnyRole('ROLE_KH')")
 public class GioHangWebController {
     @Autowired
     private GioHangWebRepo gioHangWebRepo;
@@ -85,4 +85,90 @@ public class GioHangWebController {
         return gioHang;
 
     }
+
+    @DeleteMapping("/deleteGHByIdKH")
+    public GioHang deleteGHByIdKH(@RequestParam("idKH") Integer idKH,
+                                  @RequestParam("idCTSP") Integer idCTSP,
+                                  @RequestParam("soLuong") Integer soLuong) {
+
+        if (idKH == null || idCTSP == null || soLuong == null || soLuong <= 0) {
+            throw new IllegalArgumentException("Thông tin đầu vào không hợp lệ.");
+        }
+
+        // Tìm giỏ hàng của khách
+        GioHang gioHang = gioHangRepository.findAll().stream()
+                .filter(gh -> gh.getKhachHang().getIdKhachHang().equals(idKH))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giỏ hàng cho khách hàng này."));
+
+        // Tạo khóa composite
+        ChiTietGioHangId chiTietGioHangId = new ChiTietGioHangId();
+        chiTietGioHangId.setIdGioHang(gioHang.getId_gio_hang());
+        chiTietGioHangId.setIdChiTietSanPham(idCTSP);
+
+        // Kiểm tra sản phẩm có trong giỏ hàng chưa
+        ChiTietGioHang ctgh = chiTietGioHangRepository.findById(chiTietGioHangId)
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không có trong giỏ hàng."));
+
+        // Xử lý giảm số lượng
+        int soLuongHienTai = ctgh.getSoLuong();
+        if (soLuong >= soLuongHienTai) {
+            // Nếu số lượng sau giảm <= 0, xóa luôn chi tiết
+            chiTietGioHangRepository.delete(ctgh);
+        } else {
+            // Nếu vẫn còn, cập nhật lại
+            ctgh.setSoLuong(soLuongHienTai - soLuong);
+            chiTietGioHangRepository.save(ctgh);
+        }
+
+        return gioHang;
+    }
+    @PostMapping("/addGHByIdKH")
+    public GioHang addGHByIdKH(@RequestParam("idKH") Integer idKH,
+                               @RequestParam("idCTSP") Integer idCTSP,
+                               @RequestParam("soLuong") Integer soLuong) {
+
+        if (idKH == null || idCTSP == null || soLuong == null || soLuong <= 0) {
+            throw new IllegalArgumentException("Thông tin đầu vào không hợp lệ.");
+        }
+
+        // Tìm hoặc tạo giỏ hàng cho khách
+        GioHang gioHang = gioHangRepository.findAll().stream()
+                .filter(gh -> gh.getKhachHang().getIdKhachHang().equals(idKH))
+                .findFirst()
+                .orElseGet(() -> {
+                    GioHang ghMoi = new GioHang();
+                    ghMoi.setKhachHang(khachHangRepo.findById(idKH)
+                            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng")));
+                    return gioHangRepository.save(ghMoi);
+                });
+
+        // Tạo khóa composite
+        ChiTietGioHangId chiTietGioHangId = new ChiTietGioHangId();
+        chiTietGioHangId.setIdGioHang(gioHang.getId_gio_hang());
+        chiTietGioHangId.setIdChiTietSanPham(idCTSP);
+
+        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
+        Optional<ChiTietGioHang> optionalCTGH = chiTietGioHangRepository.findById(chiTietGioHangId);
+
+        if (optionalCTGH.isPresent()) {
+            // Nếu đã có => cộng thêm số lượng
+            ChiTietGioHang ctgh = optionalCTGH.get();
+            ctgh.setSoLuong(ctgh.getSoLuong() + soLuong);
+            chiTietGioHangRepository.save(ctgh);
+        } else {
+            // Nếu chưa có => thêm mới
+            ChiTietGioHang ctghMoi = new ChiTietGioHang();
+            ctghMoi.setId(chiTietGioHangId);
+            ctghMoi.setGioHang(gioHang);
+            ctghMoi.setChiTietSanPham(chiTietSanPhamRepo.findById(idCTSP)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi tiết sản phẩm")));
+            ctghMoi.setSoLuong(soLuong);
+            chiTietGioHangRepository.save(ctghMoi);
+        }
+
+        return gioHang;
+    }
+
+
 }
