@@ -34,7 +34,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT})
+@CrossOrigin(origins = "http://localhost:5173/", allowedHeaders = "*", methods = { RequestMethod.GET,
+        RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT })
 @RequestMapping("/api/khach-hang")
 public class KhachHangController {
 
@@ -159,7 +160,6 @@ public class KhachHangController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addKhachHang(
             @Valid @RequestBody KhachHangRequest khachHangRequest,
@@ -255,7 +255,8 @@ public class KhachHangController {
                     diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
                     diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
                     diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-                    diaChiKhachHang.setDiaChiMacDinh(diaChiReq.getDiaChiMacDinh() != null && diaChiReq.getDiaChiMacDinh());
+                    diaChiKhachHang
+                            .setDiaChiMacDinh(diaChiReq.getDiaChiMacDinh() != null && diaChiReq.getDiaChiMacDinh());
                     diaChiKhachHangRepo.save(diaChiKhachHang);
                 }
             }
@@ -269,12 +270,15 @@ public class KhachHangController {
                     "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
                     "<style>" +
                     "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
-                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
-                    ".header { background-color: #28a745; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }"
+                    +
+                    ".header { background-color: #28a745; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }"
+                    +
                     ".header h1 { margin: 0; font-size: 24px; }" +
                     ".content { padding: 20px; }" +
                     ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
-                    ".info-box { background-color: #e6f4ea; border-left: 5px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box { background-color: #e6f4ea; border-left: 5px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }"
+                    +
                     ".info-box p { margin: 5px 0; }" +
                     ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
                     ".footer a { color: #007bff; text-decoration: none; }" +
@@ -298,7 +302,8 @@ public class KhachHangController {
                     "</div>" +
                     "<div class='footer'>" +
                     "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
-                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>"
+                    +
                     "</div>" +
                     "</div>" +
                     "</body>" +
@@ -492,12 +497,14 @@ public class KhachHangController {
         response.put("khachHang", request);
         return ResponseEntity.ok(response);
     }
+
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateKhachHang(@RequestBody KhachHangRequest request) {
         Map<String, Object> response = new HashMap<>();
 
         // Kiểm tra validation từ DTO
-        BindingResult result = new org.springframework.validation.BeanPropertyBindingResult(request, "khachHangRequest");
+        BindingResult result = new org.springframework.validation.BeanPropertyBindingResult(request,
+                "khachHangRequest");
         if (request.getTenKhachHang() == null || request.getTenKhachHang().trim().isEmpty()) {
             result.rejectValue("tenKhachHang", "NotBlank", "Tên khách hàng không được để trống");
         } else if (!request.getTenKhachHang().matches("^[a-zA-Z\\s\\u00C0-\\u1EF9]+$")) {
@@ -508,7 +515,8 @@ public class KhachHangController {
         }
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             result.rejectValue("email", "NotBlank", "Email không được để trống");
-        } else if (!request.getEmail().matches("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")) {
+        } else if (!request.getEmail().matches(
+                "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")) {
             result.rejectValue("email", "Email", "Email không hợp lệ");
         }
         // Validate diaChiList
@@ -518,7 +526,8 @@ public class KhachHangController {
                 if (diaChi.getSoNha() == null || diaChi.getSoNha().trim().isEmpty()) {
                     result.rejectValue("diaChiList[" + i + "].soNha", "NotBlank", "Số nhà không được để trống");
                 } else if (!diaChi.getSoNha().matches("^[a-zA-Z0-9\\s\\u00C0-\\u1EF9]+$")) {
-                    result.rejectValue("diaChiList[" + i + "].soNha", "Pattern", "Số nhà, tên đường chỉ được chứa chữ cái và số");
+                    result.rejectValue("diaChiList[" + i + "].soNha", "Pattern",
+                            "Số nhà, tên đường chỉ được chứa chữ cái và số");
                 }
                 if (diaChi.getXaPhuong() == null || diaChi.getXaPhuong().trim().isEmpty()) {
                     result.rejectValue("diaChiList[" + i + "].xaPhuong", "NotBlank", "Xã/Phường không được để trống");
@@ -527,7 +536,8 @@ public class KhachHangController {
                     result.rejectValue("diaChiList[" + i + "].quanHuyen", "NotBlank", "Quận/Huyện không được để trống");
                 }
                 if (diaChi.getTinhThanhPho() == null || diaChi.getTinhThanhPho().trim().isEmpty()) {
-                    result.rejectValue("diaChiList[" + i + "].tinhThanhPho", "NotBlank", "Tỉnh/Thành phố không được để trống");
+                    result.rejectValue("diaChiList[" + i + "].tinhThanhPho", "NotBlank",
+                            "Tỉnh/Thành phố không được để trống");
                 }
             }
         }
@@ -614,7 +624,8 @@ public class KhachHangController {
 
         response.put("khachHang", khachHang);
         response.put("diaChiList", diaChiList); // Trả về danh sách địa chỉ đầy đủ
-        response.put("matKhau", khachHang.getTaiKhoan() != null ? khachHang.getTaiKhoan().getMat_khau() : "Không có mật khẩu");
+        response.put("matKhau",
+                khachHang.getTaiKhoan() != null ? khachHang.getTaiKhoan().getMat_khau() : "Không có mật khẩu");
         return ResponseEntity.ok(response);
     }
 
@@ -709,7 +720,8 @@ public class KhachHangController {
         }
         try {
             // Kiểm tra email đã tồn tại
-            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhapAndKhachHangRole(registerRequest.getEmail());
+            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo
+                    .findByTenDangNhapAndKhachHangRole(registerRequest.getEmail());
             if (existingTaiKhoan.isPresent()) {
                 response.put("error", "Email đã được sử dụng!");
                 return ResponseEntity.badRequest().body(response);
@@ -752,11 +764,14 @@ public class KhachHangController {
                     "<head>" +
                     "<style>" +
                     "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
-                    ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f9f9f9; }" +
-                    ".header { background-color: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }" +
+                    ".container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f9f9f9; }"
+                    +
+                    ".header { background-color: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }"
+                    +
                     ".content { padding: 20px; background-color: white; border-radius: 0 0 10px 10px; }" +
                     ".highlight { color: #4CAF50; font-weight: bold; }" +
-                    ".info-box { background-color: #e8f5e9; padding: 15px; border-left: 5px solid #4CAF50; margin: 15px 0; }" +
+                    ".info-box { background-color: #e8f5e9; padding: 15px; border-left: 5px solid #4CAF50; margin: 15px 0; }"
+                    +
                     ".footer { text-align: center; margin-top: 20px; font-size: 14px; color: #777; }" +
                     "a { color: #4CAF50; text-decoration: none; }" +
                     "a:hover { text-decoration: underline; }" +
@@ -769,7 +784,8 @@ public class KhachHangController {
                     "</div>" +
                     "<div class='content'>" +
                     "<h3>Xin chào <span class='highlight'>" + khachHang.getTenKhachHang() + "</span>,</h3>" +
-                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>G&B SPORTS</strong>. Tài khoản của bạn đã được tạo thành công!</p>" +
+                    "<p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>G&B SPORTS</strong>. Tài khoản của bạn đã được tạo thành công!</p>"
+                    +
                     "<div class='info-box'>" +
                     "<h4>Thông tin đăng nhập của bạn:</h4>" +
                     "<ul>" +
@@ -777,11 +793,13 @@ public class KhachHangController {
                     "<li>Mật khẩu: <strong>" + registerRequest.getPassword() + "</strong></li>" +
                     "</ul>" +
                     "</div>" +
-                    "<p>Vui lòng <a href='http://localhost:5173/login-register/login'>đăng nhập</a> để bắt đầu sử dụng dịch vụ và khám phá các ưu đãi hấp dẫn.</p>" +
+                    "<p>Vui lòng <a href='http://localhost:5173/login-register/login'>đăng nhập</a> để bắt đầu sử dụng dịch vụ và khám phá các ưu đãi hấp dẫn.</p>"
+                    +
                     "</div>" +
                     "<div class='footer'>" +
                     "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
-                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website của chúng tôi</a> | <a href='mailto:support@gbsports.com'>Liên hệ hỗ trợ</a></p>"
+                    +
                     "</div>" +
                     "</div>" +
                     "</body>" +
@@ -834,8 +852,7 @@ public class KhachHangController {
             }
             // Xác thực người dùng bằng AuthenticationManager
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
             // Tạo JWT token
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
@@ -919,7 +936,8 @@ public class KhachHangController {
         // Kiểm tra trạng thái tài khoản
         boolean isActive = false;
         if (taiKhoanToUpdate.getRoles().getId_roles() == 4) { // Khách hàng
-            Optional<KhachHang> khachHangOpt = khachHangRepo.findByTaiKhoanIdTaiKhoan(taiKhoanToUpdate.getId_tai_khoan());
+            Optional<KhachHang> khachHangOpt = khachHangRepo
+                    .findByTaiKhoanIdTaiKhoan(taiKhoanToUpdate.getId_tai_khoan());
             if (khachHangOpt.isPresent() && "Đang hoạt động".equals(khachHangOpt.get().getTrangThai())) {
                 isActive = true;
             }
@@ -1169,7 +1187,6 @@ public class KhachHangController {
         }
     }
 
-
     // Cập nhật địa chỉ
     @PutMapping("/dia-chi/update")
     public ResponseEntity<Map<String, Object>> updateDiaChi(@RequestBody Map<String, Object> request) {
@@ -1203,7 +1220,8 @@ public class KhachHangController {
 
             // If this is set as default, update all other addresses
             if (diaChiMacDinh && !diaChi.getDiaChiMacDinh()) {
-                List<DiaChiKhachHang> existingAddresses = diaChiKhachHangRepo.findByKhachHangId(khachHang.getIdKhachHang());
+                List<DiaChiKhachHang> existingAddresses = diaChiKhachHangRepo
+                        .findByKhachHangId(khachHang.getIdKhachHang());
                 for (DiaChiKhachHang addr : existingAddresses) {
                     if (!addr.getIdDiaChiKhachHang().equals(idDiaChi)) {
                         addr.setDiaChiMacDinh(false);

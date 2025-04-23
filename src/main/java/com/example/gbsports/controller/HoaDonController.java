@@ -21,7 +21,8 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
+        RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/admin/qlhd")
 @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") // Phân quyền cho toàn bộ controller
 public class HoaDonController {
@@ -67,7 +68,7 @@ public class HoaDonController {
 
     @PutMapping("/updateHTTTHD")
     public ResponseEntity<HoaDon> updateHinhThucTTHoaDon(@RequestParam("idHD") Integer id,
-                                                         @RequestParam("hinhThucThanhToan") String httt) {
+            @RequestParam("hinhThucThanhToan") String httt) {
         HoaDon hoaDon = hoaDonRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
@@ -76,7 +77,6 @@ public class HoaDonController {
 
         return ResponseEntity.ok(hoaDonRepo.save(hoaDon));
     }
-
 
     @GetMapping("/all-hoa-don")
     public List<HoaDonResponse> getListHD() {
@@ -196,7 +196,8 @@ public class HoaDonController {
                 if (chiTietSanPhamOpt.isPresent()) {
                     ChiTietSanPham chiTietSanPham = chiTietSanPhamOpt.get();
                     if (chiTietSanPham.getSo_luong() < soLuong) {
-                        throw new RuntimeException("Số lượng tồn kho không đủ cho sản phẩm: " + chiTiet.getTen_san_pham());
+                        throw new RuntimeException(
+                                "Số lượng tồn kho không đủ cho sản phẩm: " + chiTiet.getTen_san_pham());
                     }
                     chiTietSanPham.setSo_luong(chiTietSanPham.getSo_luong() - soLuong);
                     chiTietSanPhamRepo.save(chiTietSanPham);
@@ -277,8 +278,8 @@ public class HoaDonController {
     @PostMapping("/cancel_order")
     @Transactional
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon,
-                              @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
-                              @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
+            @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
+            @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
@@ -543,7 +544,8 @@ public class HoaDonController {
             hoaDonChiTietRepo.removeSPGHinHDCT(idCTSP, idHoaDon, soLuong);
 
             LocalDateTime ngayChuyen = LocalDateTime.now();
-            String noiDungDoiDefault = noiDungDoi != null ? noiDungDoi : "Xóa sản phẩm khỏi hóa đơn"; // Giá trị mặc định
+            String noiDungDoiDefault = noiDungDoi != null ? noiDungDoi : "Xóa sản phẩm khỏi hóa đơn"; // Giá trị mặc
+                                                                                                      // định
             hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen, nhanVienDoi, noiDungDoiDefault);
 
             return ResponseEntity.ok("Xóa sản phẩm thành công");
@@ -581,18 +583,19 @@ public class HoaDonController {
     }
 
     /////
-//    @GetMapping("khach-hang/{idKhachHang}")
-//    public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer idKhachHang) {
-//        List<HoaDon> hoaDons = (List<HoaDon>) hoaDonService.getHoaDonByKhachHangId(idKhachHang);
-//        System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
-//        return ResponseEntity.ok(hoaDons);
-//    }
+    // @GetMapping("khach-hang/{idKhachHang}")
+    // public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer
+    // idKhachHang) {
+    // List<HoaDon> hoaDons = (List<HoaDon>)
+    // hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+    // System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
+    // return ResponseEntity.ok(hoaDons);
+    // }
 
     @GetMapping("/count/{idKhachHang}")
     public ResponseEntity<Integer> countHoaDonByKhachHang(@PathVariable Integer idKhachHang) {
         int count = hoaDonService.countHoaDonByKhachHangId(idKhachHang);
         return ResponseEntity.ok(count);
     }
-
 
 }

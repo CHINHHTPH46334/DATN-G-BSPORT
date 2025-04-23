@@ -16,12 +16,14 @@ import java.util.List;
 public class GioHangWebController {
     @Autowired
     private GioHangWebRepo gioHangWebRepo;
+
     @GetMapping("/gioHangByKH")
-    public List<GioHangWebResponse> listGHByKH(@RequestParam("idKhachHang") Integer idKhachHang){
+    public List<GioHangWebResponse> listGHByKH(@RequestParam("idKhachHang") Integer idKhachHang) {
         return gioHangWebRepo.listGioHangByKhachHang(idKhachHang);
     }
+
     @GetMapping("/danhSachDiaChi")
-    public List<GioHangWebResponse> listDiaChiByKH(@RequestParam("idKhachHang") Integer idKhachHang){
+    public List<GioHangWebResponse> listDiaChiByKH(@RequestParam("idKhachHang") Integer idKhachHang) {
         return gioHangWebRepo.listDiaChiByKH(idKhachHang);
     }
 }

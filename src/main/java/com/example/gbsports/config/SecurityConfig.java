@@ -49,15 +49,16 @@ public class SecurityConfig {
                     .requestMatchers("/admin/qlhd/**", "/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
                     .requestMatchers("/api/khach-hang/change-password", "/api/khach-hang/hd_kh", "/api/khach-hang/hd_kh_tt").hasAnyRole( "ADMIN", "QL", "NV", "KH")
                     .anyRequest().authenticated()
-//                    .anyRequest().denyAll()
+                // .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -77,7 +78,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
