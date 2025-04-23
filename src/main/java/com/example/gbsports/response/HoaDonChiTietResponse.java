@@ -42,6 +42,7 @@ public interface HoaDonChiTietResponse {
     String getTrang_thai();
     BigDecimal getGia_ban();
     BigDecimal getGia_sau_giam();
+    BigDecimal getPhu_thu();
     Integer getSo_luong_ton();
     String getLoai_hoa_don();
     String getTrang_thai_thanh_toan();
