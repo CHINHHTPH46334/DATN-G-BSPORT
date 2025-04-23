@@ -47,16 +47,16 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
             SELECT
                 hd.id_hoa_don,
                 v.id_voucher,
-                CASE\s
-                    WHEN v.kieu_giam_gia = N'Phần trăm' THEN\s
-                        CASE\s
-                            WHEN (hd.tong_tien_truoc_giam * v.gia_tri_giam / 100) >= COALESCE(v.gia_tri_toi_da, hd.tong_tien_truoc_giam)\s
+                CASE
+                    WHEN v.kieu_giam_gia = N'Phần trăm' THEN
+                        CASE
+                            WHEN (hd.tong_tien_truoc_giam * v.gia_tri_giam / 100) >= COALESCE(v.gia_tri_toi_da, hd.tong_tien_truoc_giam)
                             THEN COALESCE(v.gia_tri_toi_da, hd.tong_tien_truoc_giam)
                             ELSE (hd.tong_tien_truoc_giam * v.gia_tri_giam / 100)
                         END
-                    WHEN v.kieu_giam_gia = N'Tiền mặt' THEN\s
-                        CASE\s
-                            WHEN hd.tong_tien_truoc_giam > COALESCE(v.gia_tri_giam, 0)\s
+                    WHEN v.kieu_giam_gia = N'Tiền mặt' THEN
+                        CASE
+                            WHEN hd.tong_tien_truoc_giam > COALESCE(v.gia_tri_giam, 0)
                             THEN COALESCE(v.gia_tri_giam, 0)
                             ELSE 0
                         END
@@ -66,11 +66,12 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
             FROM hoa_don hd
             CROSS JOIN voucher v
             WHERE v.trang_thai = N'Đang diễn ra'
-            AND hd.trang_thai = N'Chưa thanh toán'
+            AND hd.trang_thai = N'Đang chờ'
             AND v.gia_tri_toi_thieu <= hd.tong_tien_truoc_giam
             AND hd.id_hoa_don = :idHD
             ORDER BY gia_tri_giam_thuc_te DESC
             """, nativeQuery = true)
     List<VoucherBHResponse> giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
+
 
 }

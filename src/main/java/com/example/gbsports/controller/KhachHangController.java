@@ -146,6 +146,7 @@ public class KhachHangController {
 
         Map<String, Object> response = new HashMap<>();
 
+        // Kiểm tra validation
         if (result.hasErrors()) {
             Map<String, String> fieldErrors = new HashMap<>();
             for (FieldError error : result.getFieldErrors()) {
@@ -155,6 +156,7 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        // Kiểm tra ngày sinh
         if (khachHangRequest.getNgaySinh() == null) {
             response.put("error", "Ngày sinh không được để trống!");
             return ResponseEntity.badRequest().body(response);
@@ -177,10 +179,12 @@ public class KhachHangController {
         }
 
         try {
+            // Sinh mã khách hàng tự động nếu không có trong request
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
                 maKhachHang = generateMaKhachHang();
             } else {
+                // Kiểm tra nếu mã đã tồn tại
                 Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(maKhachHang);
                 if (existingKhachHang.isPresent()) {
                     response.put("error", "Mã khách hàng đã tồn tại!");
@@ -189,6 +193,7 @@ public class KhachHangController {
             }
             khachHangRequest.setMaKhachHang(maKhachHang);
 
+            // Lưu tài khoản
             String matKhau = generateRandomPassword();
             khachHangRequest.setMatKhau(matKhau);
 
@@ -198,11 +203,13 @@ public class KhachHangController {
             taiKhoan.setRoles(rolesRepo.findById(4).get());
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
+            // Lưu khách hàng
             KhachHang khachHang = new KhachHang();
             BeanUtils.copyProperties(khachHangRequest, khachHang);
             khachHang.setTaiKhoan(taiKhoan);
             khachHang = khachHangRepo.save(khachHang);
 
+            // Lưu địa chỉ
             if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
                 List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
                         .filter(this::isValidDiaChi)
@@ -220,6 +227,7 @@ public class KhachHangController {
                 }
             }
 
+            // Gửi email (không làm thất bại request nếu lỗi)
             String subject = "Chào mừng bạn đến với GB Sports!";
             String body = "<!DOCTYPE html>" +
                     "<html lang='vi'>" +
@@ -279,6 +287,8 @@ public class KhachHangController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
     @GetMapping("/edit/{id}")
     public ResponseEntity<Map<String, Object>> getKhachHangForEdit(@PathVariable("id") Integer id) {
         Map<String, Object> response = new HashMap<>();

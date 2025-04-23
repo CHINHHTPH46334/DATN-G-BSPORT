@@ -41,6 +41,7 @@ public interface HoaDonChiTietResponse {
     String getMa_voucher();
     String getTrang_thai();
     BigDecimal getGia_ban();
+    BigDecimal getGia_sau_giam();
     Integer getSo_luong_ton();
     String getLoai_hoa_don();
     String getTrang_thai_thanh_toan();
@@ -50,6 +51,10 @@ public interface HoaDonChiTietResponse {
     String getDon_vi();
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_chuyen();
+    // Trường mới liên quan đến trả hàng
+    Integer getSo_luong_da_tra();
+    String getTrang_thai_tra_hang();
+    String getLy_do_tra_hang();
 
 
 
