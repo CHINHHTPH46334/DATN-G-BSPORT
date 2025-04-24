@@ -1,5 +1,6 @@
 package com.example.gbsports.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class GioHang {
     private KhachHang khachHang;
 
     @OneToMany(mappedBy = "gioHang", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ChiTietGioHang> chiTietGioHangs = new ArrayList<>();
 
 }

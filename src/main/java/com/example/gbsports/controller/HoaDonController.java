@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
         RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/admin/qlhd")
-
 public class HoaDonController {
 
     @Autowired

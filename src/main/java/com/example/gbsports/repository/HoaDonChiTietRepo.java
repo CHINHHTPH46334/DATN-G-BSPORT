@@ -771,7 +771,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
 
                 -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
-
+            
                 -- Kiểm tra xem sản phẩm có áp dụng khuyến mãi không và lấy giá sau giảm (nếu có)
                 SELECT @GIASAUGIAM = MIN(ctkm.gia_sau_giam)
                 FROM chi_tiet_khuyen_mai ctkm
@@ -779,16 +779,16 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 WHERE ctkm.id_chi_tiet_san_pham = @IDCTSP
                   AND km.trang_thai = N'Đang diễn ra'
                   AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han;
-
+            
                 -- Nếu không có khuyến mãi, sử dụng giá bán gốc
                 IF @GIASAUGIAM IS NULL
                 BEGIN
                     SET @GIASAUGIAM = @GIABAN;
                 END
-
+            
                 DECLARE @PHIVANCHUYEN DECIMAL(18, 2);
                 SELECT @PHIVANCHUYEN = phi_van_chuyen FROM hoa_don WHERE id_hoa_don = @IDHD;
-
+            
                 -- Kiểm tra trạng thái gần nhất (bỏ qua "Đã cập nhật")
                 DECLARE @TRANGTHAI NVARCHAR(50);
                 SELECT TOP 1 @TRANGTHAI = trang_thai
@@ -796,30 +796,30 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 WHERE id_hoa_don = @IDHD
                   AND trang_thai != N'Đã cập nhật'
                 ORDER BY ngay_chuyen DESC;
-
+            
                 -- Lấy số lượng hiện tại trong chi tiết hóa đơn
                 DECLARE @SOLUONGHIENTAI INT;
                 SELECT @SOLUONGHIENTAI = so_luong
                 FROM hoa_don_chi_tiet
                 WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
-
+            
                 -- Tính số lượng mới sau khi cập nhật
                 DECLARE @SOLUONGMOI INT;
                 SET @SOLUONGMOI = @SOLUONGHIENTAI + @QUANTITYCHANGE;
-
+            
                 -- Kiểm tra số lượng mới không được âm
                 IF @SOLUONGMOI < 0
                 BEGIN
                     ROLLBACK;
                     THROW 50002, 'Số lượng không thể âm!', 1;
                 END
-
+            
                 -- Điều chỉnh số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
                 IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói')
                 BEGIN
                     DECLARE @SOLUONGTON INT;
                     SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
-
+            
                     -- Nếu tăng số lượng, kiểm tra tồn kho
                     IF @QUANTITYCHANGE > 0
                     BEGIN
@@ -854,13 +854,13 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 SET so_luong = so_luong + @QUANTITYCHANGE,
                     don_gia = (so_luong + @QUANTITYCHANGE) * @GIASAUGIAM
                 WHERE id_hoa_don = @IDHD AND id_chi_tiet_san_pham = @IDCTSP;
-
+            
                 -- Tính tổng tiền trước giảm
                 DECLARE @TONGTIENTRUOCGIAM DECIMAL(18, 2);
                 SELECT @TONGTIENTRUOCGIAM = COALESCE(SUM(don_gia), 0)
                 FROM hoa_don_chi_tiet
                 WHERE id_hoa_don = @IDHD;
-
+            
                 -- Hoàn lại voucher cũ
                 DECLARE @OLDIDVOUCHER INT;
                 SELECT @OLDIDVOUCHER = id_voucher FROM hoa_don WHERE id_hoa_don = @IDHD;
@@ -933,10 +933,11 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 END
                 ELSE
                 BEGIN
+                    SET @IDVOUCHER = NULL;
                     SET @TIENGIAM = 0;
                     SET @IDVOUCHER = NULL;
                 END
-
+            
                 -- Cập nhật hóa đơn
                 IF @HINHTHUCTHANHTOAN = N'Chuyển khoản'
                 BEGIN
