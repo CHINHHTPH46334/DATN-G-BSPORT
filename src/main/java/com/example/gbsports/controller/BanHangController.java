@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.VoucherBHResponse;
@@ -448,7 +449,13 @@ public class BanHangController {
             chiTietSP.setSo_luong(soLuongTonKhoCapNhat - chenhLech);
 
             // Cập nhật chi tiết hóa đơn
-            BigDecimal donGiaLe = chiTietSP.getGia_ban();
+
+            BigDecimal donGiaLe = BigDecimal.ZERO;
+            for (ChiTietSanPhamView ctspv: chiTietSanPhamRepo.getAllCTSPKM()) {
+                if (ctspv.getId_chi_tiet_san_pham() == chiTietSP.getId_chi_tiet_san_pham()) {
+                    donGiaLe = BigDecimal.valueOf(ctspv.getGia_ban());
+                }
+            }
             if (optionalCT.isPresent()) {
                 chiTiet = optionalCT.get();
             } else {
