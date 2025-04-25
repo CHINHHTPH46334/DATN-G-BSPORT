@@ -18,4 +18,5 @@ public class HinhAnhController {
                                                  @RequestParam(name = "anhChinh", required = false) Boolean anhChinh){
         return hinhAnhService.listAnhTheoCTSP(id,anhChinh);
     }
+
 }

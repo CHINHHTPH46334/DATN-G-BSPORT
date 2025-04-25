@@ -109,10 +109,10 @@
             <version>1.0</version>
         </dependency>
 
-<!--        <repository>-->
-<!--            <id>ossrh</id>-->
-<!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--        </repository>-->
+        <!--        <repository>-->
+        <!--            <id>ossrh</id>-->
+        <!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
+        <!--        </repository>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -151,11 +151,18 @@
             <artifactId>payos-java</artifactId>
             <version>1.0.3</version>
         </dependency>
-        <!-- mã hoá mật khẩu-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-security</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -168,14 +175,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-<!--                <configuration>-->
-<!--                    <excludes>-->
-<!--                        <exclude>-->
-<!--                            <groupId>org.projectlombok</groupId>-->
-<!--                            <artifactId>lombok</artifactId>-->
-<!--                        </exclude>-->
-<!--                    </excludes>-->
-<!--                </configuration>-->
+                <!--                <configuration>-->
+                <!--                    <excludes>-->
+                <!--                        <exclude>-->
+                <!--                            <groupId>org.projectlombok</groupId>-->
+                <!--                            <artifactId>lombok</artifactId>-->
+                <!--                        </exclude>-->
+                <!--                    </excludes>-->
+                <!--                </configuration>-->
             </plugin>
         </plugins>
     </build>

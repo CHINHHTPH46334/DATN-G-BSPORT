@@ -13,12 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RequestMapping("/admin/quan_ly_san_pham")
 public class ChiTietSanPhamController {
     @Autowired
@@ -104,16 +105,24 @@ public class ChiTietSanPhamController {
     public List<ChiTietSanPhamView> ctspTheoSanPham(@RequestParam(name = "id") Integer id) {
         return chiTietSanPhamService.listCTSPTheoSanPham(id);
     }
+
     @GetMapping("/CTSPBySanPhamFullWeb")
-    public List<ChiTietSanPhamView> ctspBySanPhamFull(@RequestParam("idSanPham")Integer idSanPham){
+    public List<ChiTietSanPhamView> ctspBySanPhamFull(@RequestParam("idSanPham") Integer idSanPham) {
         return chiTietSanPhamService.getCTSPBySanPhamFull(idSanPham);
     }
+
     @PutMapping("/changeAllCTSPHoatDong")
-    public ResponseEntity<?> allCTSPHoatDong(@RequestParam("id")Integer id){
+    public ResponseEntity<?> allCTSPHoatDong(@RequestParam("id") Integer id) {
         return chiTietSanPhamService.changeAllCTSPHoatDong(id);
     }
+
     @PutMapping("/changeAllCTSPKhongHoatDong")
-    public ResponseEntity<?> allCTSPKhongHoatDong(@RequestParam("id")Integer id){
+    public ResponseEntity<?> allCTSPKhongHoatDong(@RequestParam("id") Integer id) {
         return chiTietSanPhamService.changeAllCTSPKhongHoatDong(id);
+    }
+
+    @GetMapping("/giaLonNhat")
+    public BigDecimal getGiaLonNhat() {
+        return chiTietSanPhamService.getMaxGiaBan();
     }
 }
