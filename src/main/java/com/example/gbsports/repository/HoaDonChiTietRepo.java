@@ -1,6 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.HoaDonChiTiet;
+import com.example.gbsports.response.ChiTietTraHangResponse;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -142,10 +143,6 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     void removeSPGH(@Param("idCTSP") Integer idCTSP, @Param("idHoaDon") Integer idHoaDon,
                     @Param("soLuong") Integer soLuong);
 
-    // @Query(value = """
-    //
-    // """, nativeQuery = true)
-    // void addSPHD();
 
     @Query(value = """
             select top 1 sum(don_gia) from hoa_don_chi_tiet hdct where hdct.id_hoa_don = :idHD
@@ -160,66 +157,34 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
     BigDecimal sumDonGiaByHoaDonId(@Param("idHoaDon") Integer idHoaDon);
 
     @Query(value = """
-                            SELECT
-                            hdct.id_hoa_don_chi_tiet,
-                            hdct.id_hoa_don,
-                            ctsp.id_chi_tiet_san_pham,
-                            sp.ma_san_pham,
-                            sp.ten_san_pham,
-                            ha.hinh_anh,
-                            hdct.so_luong,
-                            ctsp.so_luong AS so_luong_ton,
-                            COALESCE(
-                                (
-                                    SELECT
-                                        CASE
-                                            WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN
-                                                IIF(
-                                                    ctsp.gia_ban - IIF(
-                                                        (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)
-                                                    ) < 0,
-                                                    0,
-                                                    ctsp.gia_ban - IIF(
-                                                        (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        (ctsp.gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)
-                                                    )
-                                                )
-                                            WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN
-                                                IIF(
-                                                    ctsp.gia_ban - IIF(
-                                                        COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_giam, 0)
-                                                    ) < 0,
-                                                    0,
-                                                    ctsp.gia_ban - IIF(
-                                                        COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_toi_da, ctsp.gia_ban),
-                                                        COALESCE(km.gia_tri_giam, 0)
-                                                    )
-                                                )
-                                            ELSE ctsp.gia_ban
-                                        END
-                                    FROM chi_tiet_khuyen_mai ctkm
-                                    FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-                                    WHERE ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                                ),
-                                ctsp.gia_ban
-                            ) AS gia_ban,
-                            hdct.don_gia,
-                            ms.ten_mau_sac,
-                            kt.gia_tri
-                        FROM hoa_don_chi_tiet hdct
-                        FULL OUTER JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
-                        FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-                        FULL OUTER JOIN hinh_anh ha ON ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                        FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-                        FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-                        FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
-                        WHERE hdct.id_hoa_don = :idHD
+            SELECT
+            	hdct.id_hoa_don_chi_tiet,
+            	hdct.id_hoa_don,
+            	ctsp.id_chi_tiet_san_pham,
+            	sp.ma_san_pham,
+            	sp.ten_san_pham,
+            	ha.hinh_anh,
+            	hdct.so_luong,
+            	ctsp.so_luong AS so_luong_ton,
+            	COALESCE((
+            		SELECT MIN(ctkm.gia_sau_giam)
+            		FROM chi_tiet_khuyen_mai ctkm
+            		JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+            		WHERE ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            		AND km.trang_thai = N'Đang diễn ra'
+            		AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+                ), ctsp.gia_ban) AS gia_ban,
+            	hdct.don_gia,
+            	ms.ten_mau_sac,
+            	kt.gia_tri
+            FROM hoa_don_chi_tiet hdct
+            FULL OUTER JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
+            FULL OUTER JOIN hinh_anh ha ON ha.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            FULL OUTER JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+            FULL OUTER JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+            FULL OUTER JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
+            WHERE hdct.id_hoa_don = :idHD
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> getSPGH(Integer idHD);
 
@@ -919,7 +884,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 IF @SOLUONGTON < @QUANTITYCHANGE
                 BEGIN
                     ROLLBACK;
-                    THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                    THROW 50002, 'Số lượng không thể âm!', 1;
                 END
                 -- Trừ số lượng tồn kho
                 UPDATE chi_tiet_san_pham
@@ -1041,15 +1006,30 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 SET @PHUTHU_FINAL = (@PHUTHU + @TIENTHANHTOANTHEM) - @TIENGIAM;
                 IF @PHUTHU_FINAL <= 0
                 BEGIN
-                    SET @PHUTHU_FINAL = 0;
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+            
+                    -- Nếu tăng số lượng, kiểm tra tồn kho
+                    IF @QUANTITYCHANGE > 0
+                    BEGIN
+                        IF @SOLUONGTON < @QUANTITYCHANGE
+                        BEGIN
+                            ROLLBACK;
+                            THROW 50001, 'Số lượng tồn kho không đủ!', 1;
+                        END
+                        -- Trừ số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong - @QUANTITYCHANGE
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                    ELSE IF @QUANTITYCHANGE < 0
+                    BEGIN
+                        -- Hoàn lại số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong + ABS(@QUANTITYCHANGE)
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
                 END
-            END
-        END
-        ELSE
-        BEGIN
-            SET @TIENGIAM = 0;
-            SET @IDVOUCHER = NULL;
-        END
 
         -- Cập nhật hóa đơn
         IF @APPLY_PHUTHU = 1

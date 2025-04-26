@@ -19,5 +19,4 @@ public class TinNhan {
     @JoinColumn(name = "id_hoi_thoai")
     private HoiThoai hoiThoai;
 
-
 }

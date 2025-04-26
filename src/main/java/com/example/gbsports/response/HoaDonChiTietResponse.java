@@ -52,6 +52,10 @@ public interface HoaDonChiTietResponse {
     String getDon_vi();
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime getNgay_chuyen();
+    // Trường mới liên quan đến trả hàng
+    Integer getSo_luong_da_tra();
+    String getTrang_thai_tra_hang();
+    String getLy_do_tra_hang();
 
 
 

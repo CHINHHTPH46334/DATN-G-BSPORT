@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.VoucherBHResponse;
@@ -89,7 +90,8 @@ public class BanHangController {
             @RequestParam("idHD") Integer idHD,
             @RequestParam("diaChi") String diaChi,
             @RequestParam("tenKhachHang") String tenKhachHang,
-            @RequestParam("soDienThoai") String soDienThoai
+            @RequestParam("soDienThoai") String soDienThoai,
+            @RequestParam("email") String email
     ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
@@ -103,11 +105,13 @@ public class BanHangController {
                 hoaDon.setHo_ten(khachHang.getTenKhachHang());
                 hoaDon.setSdt_nguoi_nhan(khachHang.getSoDienThoai());
                 hoaDon.setDia_chi(diaChi);
+                hoaDon.setEmail(khachHang.getEmail());
             } else {
                 hoaDon.setKhachHang(null);
                 hoaDon.setHo_ten(tenKhachHang);
                 hoaDon.setSdt_nguoi_nhan(soDienThoai);
                 hoaDon.setDia_chi(diaChi);
+                hoaDon.setEmail(email);
             }
 
             hoaDonRepo.save(hoaDon);
@@ -121,7 +125,8 @@ public class BanHangController {
     @PostMapping("/setTrangThaiNhanHang")
     public ResponseEntity<?> setTrangThaiNhanHang(
             @RequestParam("idHD") Integer idHD,
-            @RequestParam("phuongThucNhanHang") String ptnh
+            @RequestParam("phuongThucNhanHang") String ptnh,
+            @RequestParam("phiVanChuyen") BigDecimal pvc
     ) {
         try {
             HoaDon hoaDon = hoaDonRepo.findById(idHD)
@@ -129,11 +134,8 @@ public class BanHangController {
 
             hoaDon.setPhuong_thuc_nhan_hang(ptnh);
 
-            // Set phí vận chuyển
-            BigDecimal phiVanChuyen = BigDecimal.ZERO;
             if ("Giao hàng".equalsIgnoreCase(ptnh)) {
-                phiVanChuyen = BigDecimal.valueOf(30000);
-                hoaDon.setPhi_van_chuyen(phiVanChuyen);
+                hoaDon.setPhi_van_chuyen(pvc);
             } else if ("Nhận tại cửa hàng".equalsIgnoreCase(ptnh)) {
                 hoaDon.setDia_chi(null);
                 hoaDon.setPhi_van_chuyen(BigDecimal.ZERO);
@@ -148,7 +150,7 @@ public class BanHangController {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             // Tổng tiền sau giảm = trước giảm - giảm + phí vận chuyển
-            BigDecimal tongTienSauGiam = tongTienTruocGiam.subtract(phiVanChuyen);
+            BigDecimal tongTienSauGiam = tongTienTruocGiam.subtract(pvc);
 
             hoaDon.setTong_tien_truoc_giam(tongTienTruocGiam);
             hoaDon.setTong_tien_sau_giam(tongTienSauGiam);
@@ -278,9 +280,6 @@ public class BanHangController {
                     .body(Map.of("success", false, "message", "Lỗi khi xóa hóa đơn: " + e.getMessage()));
         }
     }
-
-
-
 
 
     @PutMapping("/updateHoaDon")
@@ -450,7 +449,13 @@ public class BanHangController {
             chiTietSP.setSo_luong(soLuongTonKhoCapNhat - chenhLech);
 
             // Cập nhật chi tiết hóa đơn
-            BigDecimal donGiaLe = chiTietSP.getGia_ban();
+
+            BigDecimal donGiaLe = BigDecimal.ZERO;
+            for (ChiTietSanPhamView ctspv: chiTietSanPhamRepo.getAllCTSPKM()) {
+                if (ctspv.getId_chi_tiet_san_pham() == chiTietSP.getId_chi_tiet_san_pham()) {
+                    donGiaLe = BigDecimal.valueOf(ctspv.getGia_ban());
+                }
+            }
             if (optionalCT.isPresent()) {
                 chiTiet = optionalCT.get();
             } else {

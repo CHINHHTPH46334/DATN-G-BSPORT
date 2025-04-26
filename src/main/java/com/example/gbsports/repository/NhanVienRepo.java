@@ -80,4 +80,7 @@ public interface NhanVienRepo extends JpaRepository<NhanVien, Integer> {
     @Query("SELECT nv FROM NhanVien nv WHERE nv.taiKhoan.id_tai_khoan = :idTaiKhoan")
     Optional<NhanVien> findByTaiKhoanIdTaiKhoan(Integer idTaiKhoan);
 
+
+    @Query("SELECT nv FROM NhanVien nv WHERE nv.tenNhanVien = :tenNhanVien")
+    Optional<NhanVien> findByTenNhanVien(@Param("tenNhanVien") String tenNhanVien);
 }

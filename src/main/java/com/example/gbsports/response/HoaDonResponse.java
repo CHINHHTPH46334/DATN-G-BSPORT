@@ -1,12 +1,10 @@
 package com.example.gbsports.response;
 
-import com.example.gbsports.entity.NhanVien;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface HoaDonResponse {
     Integer getId_hoa_don();
@@ -75,5 +73,10 @@ public interface HoaDonResponse {
     BigDecimal getGia_tri_giam();
 
     String getKieu_giam_gia();
+    // Trường mới liên quan đến trả hàng
+    String getTrang_thai_tra_hang();
+    // New fields for return details
+    BigDecimal getTong_tien_hoan();
 
+    List<ChiTietTraHangResponse> getChiTietTraHangs();
 }

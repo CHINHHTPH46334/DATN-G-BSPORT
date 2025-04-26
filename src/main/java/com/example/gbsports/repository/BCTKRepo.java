@@ -12,21 +12,35 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
-    @Query(nativeQuery = true, value = "select sum(tong_tien_sau_giam) as [Doanh thu] from hoa_don hd\n" +
-            "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don where tddh.trang_thai = 'Hoàn thành'\n" +
-            "and cast(tddh.ngay_chuyen as date)  between :startDate AND :endDate")
-    BigDecimal getDoanhThu(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+        @Query(nativeQuery = true, value = "SELECT \n" +
+                "    SUM(hd.tong_tien_sau_giam) - ISNULL(SUM(th.tong_tien_hoan), 0) AS [Doanh thu] " +
+                "FROM hoa_don hd\n" +
+                "JOIN theo_doi_don_hang tddh ON hd.id_hoa_don = tddh.id_hoa_don\n" +
+                "LEFT JOIN tra_hang th ON hd.id_hoa_don = th.id_hoa_don\n" +
+                "WHERE tddh.trang_thai = N'Hoàn thành'\n" +
+                "  AND CAST(tddh.ngay_chuyen AS DATE) BETWEEN :startDate AND :endDate")
+        BigDecimal getDoanhThu(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query(nativeQuery = true, value = "select count(hd.id_hoa_don) as [Đơn hàng] from hoa_don hd\n" +
             "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don\n" +
             "where tddh.trang_thai = N'Hoàn thành' and cast(tddh.ngay_chuyen as date) BETWEEN :startDate AND :endDate")
     Integer getTongDonHang(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query(nativeQuery = true, value = "select sum(hdct.so_luong) as [Sản phẩm] from hoa_don_chi_tiet hdct \n" +
-            "join hoa_don hd on hdct.id_hoa_don = hd.id_hoa_don\n" +
-            "join theo_doi_don_hang tddh on tddh.id_hoa_don = hd.id_hoa_don where tddh.trang_thai = N'Hoàn thành'\n" +
-            "and cast(tddh.ngay_chuyen as date) BETWEEN :startDate AND :endDate")
-    Integer getTongSanPham(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+        @Query(nativeQuery = true, value = "SELECT \n" +
+                "    SUM(hdct.so_luong) \n" +
+                "    - ISNULL((\n" +
+                "        SELECT SUM(ctth.so_luong)\n" +
+                "        FROM tra_hang th\n" +
+                "        JOIN chi_tiet_tra_hang ctth ON th.id = ctth.id_tra_hang\n" +
+                "        WHERE th.trang_thai = N'Trả hàng'\n" +
+                "          AND CAST(th.ngay_tao AS DATE) BETWEEN :startDate AND :endDate\n" +
+                "    ), 0) AS so_luong_ban_thuc_te\n" +
+                "FROM hoa_don hd\n" +
+                "JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don\n" +
+                "JOIN theo_doi_don_hang tddh ON hd.id_hoa_don = tddh.id_hoa_don\n" +
+                "WHERE tddh.trang_thai = N'Hoàn thành'\n" +
+                "  AND CAST(tddh.ngay_chuyen AS DATE) BETWEEN :startDate AND :endDate")
+        Integer getTongSanPham(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 
     @Query(nativeQuery = true, value = """
