@@ -1,5 +1,6 @@
 package com.example.gbsports.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,6 +16,7 @@ public class TheoDoiDonHang {
     private Integer id_don_hang;
     @ManyToOne
     @JoinColumn(name = "id_hoa_don")
+    @JsonBackReference
     private HoaDon hoaDon;
     private String trang_thai;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

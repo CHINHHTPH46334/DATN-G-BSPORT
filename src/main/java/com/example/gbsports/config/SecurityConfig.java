@@ -47,7 +47,7 @@ public class SecurityConfig {
                         "/send", "/admin/quan_ly_san_pham/validate", "/admin/quan_ly_san_pham/SanPham", "/admin/quan_ly_san_pham/timKiemSanPham",
                         "/admin/quan_ly_san_pham/getAllCTSPKM", "/admin/quan_ly_san_pham/getSanPhamByTenSanPham","/api/reviews/**", "/order/**", "/payment/**",
                             "/api/ghtk/**").permitAll()
-                    .requestMatchers("/admin/qlhd/**", "/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
+                    .requestMatchers("/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
                     .requestMatchers("/api/khach-hang/change-password", "/api/khach-hang/hd_kh", "/api/khach-hang/hd_kh_tt").hasAnyRole( "ADMIN", "QL", "NV", "KH")
                     .anyRequest().authenticated()
                 // .anyRequest().denyAll()

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST,
         RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/admin/qlhd")
+
 public class HoaDonController {
 
     @Autowired
@@ -78,7 +79,7 @@ public class HoaDonController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @PutMapping("/updateHTTTHD")
     public ResponseEntity<HoaDon> updateHinhThucTTHoaDon(@RequestParam("idHD") Integer id,
-            @RequestParam("hinhThucThanhToan") String httt) {
+                                                         @RequestParam("hinhThucThanhToan") String httt) {
         HoaDon hoaDon = hoaDonRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
@@ -305,8 +306,8 @@ public class HoaDonController {
     @PostMapping("/cancel_order")
     @Transactional
     public String cancelOrder(@RequestParam("maHoaDon") String maHoaDon,
-            @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
-            @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
+                              @RequestParam(value = "nhanVienDoi", required = false) String nhanVienDoi, // Thêm tham số
+                              @RequestParam(value = "noiDungDoi", required = false) String noiDungDoi) { // Thêm tham số
         Optional<HoaDonResponse> hoaDonOpt = hoaDonRepo.findByMaHoaDon(maHoaDon);
         if (!hoaDonOpt.isPresent()) {
             throw new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon);
@@ -565,7 +566,7 @@ public class HoaDonController {
 
             LocalDateTime ngayChuyen = LocalDateTime.now();
             String noiDungDoiDefault = noiDungDoi != null ? noiDungDoi : "Xóa sản phẩm khỏi hóa đơn"; // Giá trị mặc
-                                                                                                      // định
+            // định
             hoaDonRepo.insertTrangThaiDonHang(maHoaDon, "Đã cập nhật", ngayChuyen, nhanVienDoi, noiDungDoiDefault);
 
             return ResponseEntity.ok("Xóa sản phẩm thành công");
@@ -606,9 +607,15 @@ public class HoaDonController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
     @GetMapping("/khach-hang/{idKhachHang}")
     public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer idKhachHang) {
-        List<HoaDon> hoaDons = hoaDonService.getHoaDonByKhachHangId(idKhachHang);
-        System.out.println("✅ Số đơn hàng tìm thấy: " + hoaDons.size());
-        return ResponseEntity.ok(hoaDons);
+        try {
+            List<HoaDon> hoaDons = hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+            System.out.println("✅ Số đơn hàng tìm thấy cho idKhachHang " + idKhachHang + ": " + hoaDons.size());
+            return ResponseEntity.ok(hoaDons);
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy đơn hàng cho idKhachHang " + idKhachHang + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy danh sách đơn hàng: " + e.getMessage());
+        }
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
@@ -834,5 +841,69 @@ public class HoaDonController {
         response.put("traHangs", traHangs);
         return response;
     }
+
+    ///Của lềnh
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
+    @PutMapping("/huy-don/{idHoaDon}")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable Integer idHoaDon) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<HoaDon> hoaDonOpt = hoaDonRepo.findById(idHoaDon);
+
+            if (!hoaDonOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy hóa đơn!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            HoaDon hoaDon = hoaDonOpt.get();
+
+            // Kiểm tra trạng thái hiện tại của đơn hàng
+            if (!"Chờ xác nhận".equals(hoaDon.getTrang_thai())) {
+                response.put("success", false);
+                response.put("message", "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Hoàn lại số lượng sản phẩm
+            List<HoaDonChiTiet> chiTietList = hoaDon.getDanhSachChiTiet();
+            for (HoaDonChiTiet chiTiet : chiTietList) {
+                ChiTietSanPham ctsp = chiTiet.getChiTietSanPham();
+                ctsp.setSo_luong(ctsp.getSo_luong() + chiTiet.getSo_luong());
+                chiTietSanPhamRepo.save(ctsp);
+            }
+
+            // Hoàn lại voucher nếu có
+            if (hoaDon.getVoucher() != null) {
+                Voucher voucher = hoaDon.getVoucher();
+                voucher.setSoLuong(voucher.getSoLuong() + 1);
+                voucherRepo.save(voucher);
+            }
+
+            // Cập nhật trạng thái đơn hàng
+            hoaDon.setTrang_thai("Đã hủy");
+            hoaDon.setNgay_sua(LocalDateTime.now());
+            hoaDonRepo.save(hoaDon);
+
+            // Thêm vào lịch sử theo dõi đơn hàng
+            TheoDoiDonHang theoDoiDonHang = new TheoDoiDonHang();
+            theoDoiDonHang.setHoaDon(hoaDon);
+            theoDoiDonHang.setTrang_thai("Đã hủy");
+            theoDoiDonHang.setNgay_chuyen(LocalDateTime.now());
+            theoDoiDonHangRepo.save(theoDoiDonHang);
+
+            response.put("success", true);
+            response.put("message", "Hủy đơn hàng thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi khi hủy đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    //// hết
+
 }
 
