@@ -19,24 +19,27 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     hd.dia_chi, hd.email, hd.tong_tien_truoc_giam, hd.phi_van_chuyen,
                     hd.tong_tien_sau_giam, hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang,
                     tdh.trang_thai, hdct.id_hoa_don_chi_tiet, hdct.so_luong, hdct.don_gia,
-                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp.gia_ban, hd.phu_thu,
+                    sp.ten_san_pham, sp.ma_san_pham, nv.ten_nhan_vien, ctsp2.gia_ban, hd.phu_thu,
                     COALESCE((
                         SELECT MIN(ctkm.gia_sau_giam)
                         FROM chi_tiet_khuyen_mai ctkm
                         JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
-                        WHERE ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+                        WHERE ctkm.id_chi_tiet_san_pham = ctsp2.id_chi_tiet_san_pham
                           AND km.trang_thai = N'Đang diễn ra'
                           AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
-                    ), ctsp.gia_ban) AS gia_sau_giam,
-                    ctsp.so_luong AS so_luong_con_lai, kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan,
-                    hd.loai_hoa_don, hd.ghi_chu, ms.ten_mau_sac, ctsp.id_chi_tiet_san_pham, ha.hinh_anh, ha.anh_chinh
+                            ), ctsp2.gia_ban) AS gia_sau_giam,
+                    ctsp1.so_luong AS so_luong_con_lai, kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan,
+                    hd.loai_hoa_don, hd.ghi_chu, ms.ten_mau_sac, ctsp2.id_chi_tiet_san_pham, ha.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
                 FULL OUTER JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
-                FULL OUTER JOIN chi_tiet_san_pham ctsp ON hdct.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-                FULL OUTER JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+                FULL OUTER JOIN (SELECT id_chi_tiet_san_pham, so_luong FROM chi_tiet_san_pham ct
+                				WHERE ct.trang_thai = N'Hoạt động'
+                				) ctsp1 ON hdct.id_chi_tiet_san_pham = ctsp1.id_chi_tiet_san_pham
+                FULL OUTER JOIN chi_tiet_san_pham ctsp2 ON ctsp2.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+                FULL OUTER JOIN san_pham sp ON ctsp2.id_san_pham = sp.id_san_pham
                 FULL OUTER JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
-                FULL OUTER JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-                FULL OUTER JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+                FULL OUTER JOIN kich_thuoc kt ON ctsp2.id_kich_thuoc = kt.id_kich_thuoc
+                FULL OUTER JOIN mau_sac ms ON ctsp2.id_mau_sac = ms.id_mau_sac
                 FULL OUTER JOIN (SELECT t.id_hoa_don, t.trang_thai
                             FROM theo_doi_don_hang t
                             WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
@@ -44,7 +47,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                                                     WHERE t2.id_hoa_don = t.id_hoa_don
                                                     )
                             ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-                FULL OUTER JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+                FULL OUTER JOIN hinh_anh ha ON ctsp2.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
                 WHERE hd.id_hoa_don = :idHoaDon
             """, nativeQuery = true)
     List<HoaDonChiTietResponse> findHoaDonChiTietById(
@@ -508,14 +511,26 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 DECLARE @GIABAN DECIMAL(18, 2);
                 DECLARE @GIASAUGIAM DECIMAL(18, 2);
                 DECLARE @HINHTHUCTHANHTOAN NVARCHAR(50);
+                DECLARE @LOAIHOADON NVARCHAR(50);
+                DECLARE @PHUONGTHUCNHANHANG NVARCHAR(50);
                 DECLARE @PHUTHU DECIMAL(18, 2) = 0;
+                DECLARE @APPLY_PHUTHU BIT = 0; -- Cờ để xác định có áp dụng phụ thu hay không
             
-                -- Lấy hình thức thanh toán và phụ thu hiện tại
+                -- Lấy thông tin hóa đơn
                 SELECT @HINHTHUCTHANHTOAN = hinh_thuc_thanh_toan,
+                       @LOAIHOADON = loai_hoa_don,
+                       @PHUONGTHUCNHANHANG = phuong_thuc_nhan_hang,
                        @PHUTHU = COALESCE(phu_thu, 0)
                 FROM hoa_don
                 WHERE id_hoa_don = @IDHD;
 
+                -- Kiểm tra điều kiện áp dụng phụ thu
+                IF (@LOAIHOADON = N'Online' AND @HINHTHUCTHANHTOAN = N'Chuyển khoản')
+                   OR (@LOAIHOADON = N'Offline' AND @PHUONGTHUCNHANHANG = N'Giao hàng')
+                BEGIN
+                    SET @APPLY_PHUTHU = 1;
+                END
+            
                 -- Lấy giá bán gốc từ chi_tiet_san_pham
                 SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
 
@@ -559,6 +574,15 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     UPDATE chi_tiet_san_pham
                     SET so_luong = so_luong - @SOLUONG
                     WHERE id_chi_tiet_san_pham = @IDCTSP;
+            
+                    -- Kiểm tra số lượng tồn kho sau khi trừ, nếu bằng 0 thì cập nhật trạng thái
+                    SET @SOLUONGTON = @SOLUONGTON - @SOLUONG;
+                    IF @SOLUONGTON = 0
+                    BEGIN
+                        UPDATE chi_tiet_san_pham
+                        SET trang_thai = N'Không hoạt động'
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
                 END
 
                 -- Tính số tiền tăng thêm ban đầu dựa trên giá sản phẩm (có khuyến mãi hoặc không)
@@ -596,12 +620,18 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
 
                 DECLARE @IDVOUCHER INT;
                 DECLARE @TIENGIAM DECIMAL(18, 2) = 0;
-                DECLARE @PHUTHU_FINAL DECIMAL(18, 2) = @PHUTHU + @TIENTHANHTOANTHEM; -- Phụ thu ban đầu, cộng dồn
+                DECLARE @PHUTHU_FINAL DECIMAL(18, 2) = @PHUTHU; -- Khởi tạo phụ thu
                 DECLARE @IS_FIRST_VOUCHER_APPLY BIT = 0; -- Cờ kiểm tra lần đầu áp dụng voucher
                 -- Kiểm tra xem hóa đơn đã áp dụng voucher trước đó chưa
                 IF @OLDIDVOUCHER IS NULL
                 BEGIN
                     SET @IS_FIRST_VOUCHER_APPLY = 1;
+                END
+            
+                -- Cộng dồn số tiền tăng thêm vào phụ thu nếu thỏa mãn điều kiện
+                IF @APPLY_PHUTHU = 1
+                BEGIN
+                    SET @PHUTHU_FINAL = @PHUTHU + @TIENTHANHTOANTHEM;
                 END
             
                 -- Tìm và áp dụng voucher hợp lệ
@@ -637,8 +667,8 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                     SET so_luong = so_luong - 1
                     WHERE id_voucher = @IDVOUCHER;
             
-                    -- Nếu là lần đầu áp dụng voucher, giảm thẳng giá trị giảm vào phụ thu
-                    IF @HINHTHUCTHANHTOAN = N'Chuyển khoản' AND @IS_FIRST_VOUCHER_APPLY = 1
+                    -- Nếu là lần đầu áp dụng voucher và thỏa mãn điều kiện, giảm thẳng giá trị giảm vào phụ thu
+                    IF @APPLY_PHUTHU = 1 AND @IS_FIRST_VOUCHER_APPLY = 1
                     BEGIN
                         SET @PHUTHU_FINAL = (@PHUTHU + @TIENTHANHTOANTHEM) - @TIENGIAM;
                         IF @PHUTHU_FINAL <= 0
@@ -654,7 +684,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 END
             
                 -- Cập nhật hóa đơn
-                IF @HINHTHUCTHANHTOAN = N'Chuyển khoản'
+                IF @APPLY_PHUTHU = 1
                 BEGIN
                     UPDATE hoa_don
                     SET tong_tien_truoc_giam = @TONGTIENTRUOCGIAM,
@@ -709,9 +739,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 -- Hoàn lại số lượng tồn kho nếu trạng thái là "Đã xác nhận" hoặc "Chờ đóng gói"
                 IF @TRANGTHAI IN (N'Đã xác nhận', N'Chờ đóng gói') AND @SOLUONGHIENTAI IS NOT NULL
                 BEGIN
-                    UPDATE chi_tiet_san_pham
-                    SET so_luong = so_luong + @SOLUONGHIENTAI
-                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    DECLARE @SOLUONGTON INT;
+                    SELECT @SOLUONGTON = so_luong FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                    -- Kiểm tra số lượng tồn kho trước khi xóa
+                    IF @SOLUONGTON = 0
+                    BEGIN
+                        -- Cập nhật số lượng tồn kho và trạng thái thành "Hoạt động"
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = @SOLUONGHIENTAI,
+                            trang_thai = N'Hoạt động'
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
+                    ELSE
+                    BEGIN
+                        -- Hoàn lại số lượng tồn kho
+                        UPDATE chi_tiet_san_pham
+                        SET so_luong = so_luong + @SOLUONGHIENTAI
+                        WHERE id_chi_tiet_san_pham = @IDCTSP;
+                    END
                 END
             
                 -- Xóa sản phẩm
@@ -796,13 +842,25 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
         DECLARE @GIABAN DECIMAL(18, 2);
         DECLARE @GIASAUGIAM DECIMAL(18, 2);
         DECLARE @HINHTHUCTHANHTOAN NVARCHAR(50);
+        DECLARE @LOAIHOADON NVARCHAR(50);
+        DECLARE @PHUONGTHUCNHANHANG NVARCHAR(50);
         DECLARE @PHUTHU DECIMAL(18, 2) = 0;
+        DECLARE @APPLY_PHUTHU BIT = 0;
 
-        -- Lấy hình thức thanh toán và phụ thu hiện tại
+        -- Lấy thông tin hóa đơn
         SELECT @HINHTHUCTHANHTOAN = hinh_thuc_thanh_toan,
+               @LOAIHOADON = loai_hoa_don,
+               @PHUONGTHUCNHANHANG = phuong_thuc_nhan_hang,
                @PHUTHU = COALESCE(phu_thu, 0)
         FROM hoa_don
         WHERE id_hoa_don = @IDHD;
+
+        -- Kiểm tra điều kiện áp dụng phụ thu
+        IF (@LOAIHOADON = N'Online' AND @HINHTHUCTHANHTOAN = N'Chuyển khoản')
+           OR (@LOAIHOADON = N'Offline' AND @PHUONGTHUCNHANHANG = N'Giao hàng')
+        BEGIN
+            SET @APPLY_PHUTHU = 1;
+        END
 
         -- Lấy giá bán gốc từ chi_tiet_san_pham
         SELECT @GIABAN = gia_ban FROM chi_tiet_san_pham WHERE id_chi_tiet_san_pham = @IDCTSP;
@@ -867,13 +925,34 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                 UPDATE chi_tiet_san_pham
                 SET so_luong = so_luong - @QUANTITYCHANGE
                 WHERE id_chi_tiet_san_pham = @IDCTSP;
+
+                -- Kiểm tra số lượng tồn kho sau khi trừ, nếu bằng 0 thì cập nhật trạng thái
+                SET @SOLUONGTON = @SOLUONGTON - @QUANTITYCHANGE;
+                IF @SOLUONGTON = 0
+                BEGIN
+                    UPDATE chi_tiet_san_pham
+                    SET trang_thai = N'Không hoạt động'
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
             END
             ELSE IF @QUANTITYCHANGE < 0
             BEGIN
-                -- Hoàn lại số lượng tồn kho
-                UPDATE chi_tiet_san_pham
-                SET so_luong = so_luong + ABS(@QUANTITYCHANGE)
-                WHERE id_chi_tiet_san_pham = @IDCTSP;
+                -- Kiểm tra số lượng tồn kho trước khi giảm
+                IF @SOLUONGTON = 0
+                BEGIN
+                    -- Cập nhật số lượng tồn kho và trạng thái thành "Hoạt động"
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = ABS(@QUANTITYCHANGE),
+                        trang_thai = N'Hoạt động'
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
+                ELSE
+                BEGIN
+                    -- Hoàn lại số lượng tồn kho
+                    UPDATE chi_tiet_san_pham
+                    SET so_luong = so_luong + ABS(@QUANTITYCHANGE)
+                    WHERE id_chi_tiet_san_pham = @IDCTSP;
+                END
             END
         END
 
@@ -917,8 +996,8 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             SET @IS_FIRST_VOUCHER_APPLY = 1;
         END
 
-        -- Cộng dồn số tiền tăng thêm vào phụ thu
-        IF @QUANTITYCHANGE > 0
+        -- Cộng dồn số tiền tăng thêm vào phụ thu nếu thỏa mãn điều kiện
+        IF @APPLY_PHUTHU = 1 AND @QUANTITYCHANGE > 0
         BEGIN
             SET @PHUTHU_FINAL = @PHUTHU + @TIENTHANHTOANTHEM;
         END
@@ -956,8 +1035,8 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             SET so_luong = so_luong - 1
             WHERE id_voucher = @IDVOUCHER;
 
-            -- Nếu là lần đầu áp dụng voucher, giảm thẳng giá trị giảm vào phụ thu
-            IF @HINHTHUCTHANHTOAN = N'Chuyển khoản' AND @IS_FIRST_VOUCHER_APPLY = 1 AND @QUANTITYCHANGE > 0
+            -- Nếu là lần đầu áp dụng voucher và thỏa mãn điều kiện, giảm thẳng giá trị giảm vào phụ thu
+            IF @APPLY_PHUTHU = 1 AND @IS_FIRST_VOUCHER_APPLY = 1 AND @QUANTITYCHANGE > 0
             BEGIN
                 SET @PHUTHU_FINAL = (@PHUTHU + @TIENTHANHTOANTHEM) - @TIENGIAM;
                 IF @PHUTHU_FINAL <= 0
@@ -973,7 +1052,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
         END
 
         -- Cập nhật hóa đơn
-        IF @HINHTHUCTHANHTOAN = N'Chuyển khoản'
+        IF @APPLY_PHUTHU = 1
         BEGIN
             UPDATE hoa_don
             SET tong_tien_truoc_giam = @TONGTIENTRUOCGIAM,

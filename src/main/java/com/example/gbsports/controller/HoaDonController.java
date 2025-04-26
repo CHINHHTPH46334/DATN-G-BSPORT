@@ -103,8 +103,7 @@ public class HoaDonController {
             @RequestParam(value = "size", defaultValue = "3") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         String searchKeyword = null;
-        String trimmedKeyword = keyword.trim();
-        searchKeyword = "%" + trimmedKeyword.replaceAll("[^a-zA-Z0-9\\s]", "") + "%";
+        searchKeyword = keyword.trim();
         return hoaDonRepo.timHoaDon(searchKeyword, pageable);
     }
 

@@ -109,7 +109,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                     GROUP BY ctkm.id_chi_tiet_san_pham
                     ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
         WHERE ctsp.trang_thai = N'Hoạt động'
-        ORDER BY ctsp.id_chi_tiet_san_pham
+        ORDER BY ctsp.id_chi_tiet_san_pham DESC
         """, nativeQuery = true)
     Page<ChiTietSanPhamView> getAllCTSP_HD(Pageable pageable);
 
@@ -134,7 +134,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                     ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
         WHERE ctsp.trang_thai = N'Hoạt động'
         AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
-        ORDER BY ctsp.id_chi_tiet_san_pham
+        ORDER BY ctsp.id_chi_tiet_san_pham DESC
         """, nativeQuery = true)
     Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
 

@@ -21,43 +21,55 @@ import java.util.Optional;
 
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query(nativeQuery = true, value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+                                hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
+                                hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                                hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                    ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            LEFT JOIN (
+                    SELECT t1.id_hoa_don, t1.trang_thai, t1.ngay_chuyen
+                    FROM theo_doi_don_hang t1
+                    WHERE t1.trang_thai != N'Đã cập nhật'
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM theo_doi_don_hang t2
+                        WHERE t2.id_hoa_don = t1.id_hoa_don
+                          AND t2.trang_thai != N'Đã cập nhật'
+                          AND t2.ngay_chuyen > t1.ngay_chuyen
+                    )
+            ) AS tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
             """)
     Page<HoaDonResponse> getAllHD(Pageable pageable);
 
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+                                hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
+                                hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                                hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
             LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            LEFT JOIN (
+                    SELECT t1.id_hoa_don, t1.trang_thai, t1.ngay_chuyen
+                    FROM theo_doi_don_hang t1
+                    WHERE t1.trang_thai != N'Đã cập nhật'
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM theo_doi_don_hang t2
+                        WHERE t2.id_hoa_don = t1.id_hoa_don
+                          AND t2.trang_thai != N'Đã cập nhật'
+                          AND t2.ngay_chuyen > t1.ngay_chuyen
+                    )
+            ) AS tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE (
                     :keyword IS NULL
-                    OR hd.ma_hoa_don LIKE %:keyword%
-                    OR nv.ma_nhan_vien LIKE %:keyword%
-                    OR hd.ho_ten LIKE %:keyword%
-                    OR hd.sdt_nguoi_nhan LIKE %:keyword%
+                    OR hd.ma_hoa_don LIKE CONCAT('%', :keyword, '%')
+                    OR nv.ma_nhan_vien LIKE CONCAT('%', :keyword, '%')
+                    OR hd.ho_ten LIKE CONCAT('%', :keyword, '%')
+                    OR hd.sdt_nguoi_nhan LIKE CONCAT('%', :keyword, '%')
                 )
             AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
@@ -68,18 +80,24 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
 
     // Lọc theo khoảng ngày
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+                                hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
+                                hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                                hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            LEFT JOIN (
+                    SELECT t1.id_hoa_don, t1.trang_thai, t1.ngay_chuyen
+                    FROM theo_doi_don_hang t1
+                    WHERE t1.trang_thai != N'Đã cập nhật'
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM theo_doi_don_hang t2
+                        WHERE t2.id_hoa_don = t1.id_hoa_don
+                          AND t2.trang_thai != N'Đã cập nhật'
+                          AND t2.ngay_chuyen > t1.ngay_chuyen
+                    )
+            ) AS tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE hd.ngay_tao BETWEEN :tuNgay AND :denNgay
             AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
@@ -91,18 +109,24 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
 
     // Lọc theo trạng thái theo dõi đơn hàng
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+                                hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
+                                hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                                hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            LEFT JOIN (
+                    SELECT t1.id_hoa_don, t1.trang_thai, t1.ngay_chuyen
+                    FROM theo_doi_don_hang t1
+                    WHERE t1.trang_thai != N'Đã cập nhật'
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM theo_doi_don_hang t2
+                        WHERE t2.id_hoa_don = t1.id_hoa_don
+                          AND t2.trang_thai != N'Đã cập nhật'
+                          AND t2.ngay_chuyen > t1.ngay_chuyen
+                    )
+            ) AS tdh ON hd.id_hoa_don = tdh.id_hoa_don
             WHERE tdh.trang_thai = :trangThai
             AND hd.trang_thai = N'Hoàn thành'
             ORDER BY hd.ngay_tao DESC
