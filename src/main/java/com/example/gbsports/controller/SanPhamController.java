@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173",allowedHeaders = "*",methods = {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @RequestMapping("/admin/quan_ly_san_pham/")
 public class SanPhamController {
     @Autowired
@@ -50,20 +51,23 @@ public class SanPhamController {
     public List<SanPham> getAllfindAll() {
         return sanPhamService.getAllFindAll();
     }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/sanPhamTheoNgaySua")
-    public List<SanPhamView> getAllSPTheoNgay(){
+    public List<SanPhamView> getAllSPTheoNgay() {
         return sanPhamService.getAllSPNgaySua();
     }
+
     @GetMapping("/allSanPham")
     public List<SanPhamView> getAll(@RequestParam(name = "page", defaultValue = "0") Integer page,
                                     @RequestParam(name = "size", defaultValue = "5") Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return sanPhamService.getAllPhanTrang(pageable).getContent();
     }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/sanPhamDetail")
-    public SanPham spDetail(@RequestParam ("id") Integer id){
+    public SanPham spDetail(@RequestParam("id") Integer id) {
         return sanPhamService.detailSP(id);
     }
 
@@ -77,6 +81,7 @@ public class SanPhamController {
     public ResponseEntity<?> addSanPham(@RequestBody SanPhamRequest sanPhamRequest) {
         return sanPhamService.saveSanPham(sanPhamRequest);
     }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/xoaSanPham")
     public String xoaSanPham(@RequestParam("id") Integer id) {
@@ -148,10 +153,22 @@ public class SanPhamController {
         excelSaveDB.saveToDB(list);
         return ResponseEntity.ok("ok");
     }
+
     @GetMapping("/getSanPhamByTenSanPham")
-    public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham")String tenSanPham){
+    public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamService.getSanPhamTheoTen(tenSanPham);
     }
+
+    @GetMapping("/getSanPhamByTenSP")
+    public List<SanPhamView> getSanPhamByTenSP(@RequestParam("tenSanPham") String tenSanPham) {
+        return sanPhamService.getSanPhamTheoTenSP(tenSanPham);
+    }
+
+    @GetMapping("/getSanPhamByTenDM")
+    public List<SanPhamView> getSanPhamByTenDM(@RequestParam("tenDanhMuc") String tenDanhMuc) {
+        return sanPhamService.getSanPhamTheoTenDM(tenDanhMuc);
+    }
+
     @GetMapping("/getAllCTSPKM")
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return sanPhamService.getAllCTSPKM();

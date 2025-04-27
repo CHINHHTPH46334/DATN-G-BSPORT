@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,15 +36,16 @@ public class SanPhamService {
     ThuongHieuRepo thuongHieuRepo;
     @Autowired
     ChatLieuRepo chatLieuRepo;
-//    @Cacheable("products")
+
+    //    @Cacheable("products")
     public ArrayList<SanPhamView> getAll() {
         ArrayList<SanPhamView> newList = new ArrayList<>();
-        for (SanPhamView spv: sanPhamRepo.getAllSanPham()) {
-            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+        for (SanPhamView spv : sanPhamRepo.getAllSanPham()) {
+            if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
                 newList.add(spv);
             }
         }
-        for (SanPhamView spXet: newList) {
+        for (SanPhamView spXet : newList) {
             SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
             sanPham.setTrang_thai("Không hoạt động");
             sanPhamRepo.save(sanPham);
@@ -66,12 +68,12 @@ public class SanPhamService {
 
     public ArrayList<SanPhamView> getAllSPNgaySua() {
         ArrayList<SanPhamView> newList = new ArrayList<>();
-        for (SanPhamView spv: sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
-            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
+        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
+            if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
                 newList.add(spv);
             }
         }
-        for (SanPhamView spXet: newList) {
+        for (SanPhamView spXet : newList) {
             SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
             sanPham.setTrang_thai("Không hoạt động");
             sanPhamRepo.save(sanPham);
@@ -291,6 +293,14 @@ public class SanPhamService {
 
     public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
+    }
+
+    public List<SanPhamView> getSanPhamTheoTenSP(@RequestParam("tenSanPham") String tenSanPham) {
+        return sanPhamRepo.listSanPhamByTenSP(tenSanPham);
+    }
+
+    public List<SanPhamView> getSanPhamTheoTenDM(@RequestParam("tenDanhMuc") String tenDanhMuc) {
+        return sanPhamRepo.listSanPhamByTenDM(tenDanhMuc);
     }
 
     public List<ChiTietSanPhamView> getAllCTSPKM() {
