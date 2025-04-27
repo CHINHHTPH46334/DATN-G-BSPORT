@@ -2,6 +2,7 @@ package com.example.gbsports.controller;
 
 import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
+import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.VoucherBHResponse;
@@ -428,39 +429,40 @@ public class BanHangController {
             ChiTietSanPham chiTietSP = chiTietSanPhamRepo.findById(idCTSP)
                     .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
 
-            Optional<HoaDonChiTiet> optionalCT = hoaDonChiTietRepo.findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHD);
-            HoaDonChiTiet chiTiet;
+            Optional<HoaDonChiTiet> optionalCT = hoaDonChiTietRepo
+                    .findByChiTietSanPhamIdAndHoaDonId(idCTSP, idHD);
 
             int soLuongTrongHD = optionalCT.map(HoaDonChiTiet::getSo_luong).orElse(0);
-            int soLuongTonKhoCapNhat = chiTietSP.getSo_luong(); // Lấy mới nhất trong DB
+            int soLuongTonKho = chiTietSP.getSo_luong();
 
-            // Tổng tối đa có thể nhập = tồn kho + trong hóa đơn
-            int tongToiDa = soLuongTrongHD + soLuongTonKhoCapNhat;
-
+            int tongToiDa = soLuongTonKho + soLuongTrongHD;
             if (soLuongMoi > tongToiDa) {
                 return ResponseEntity.badRequest().body("Vượt quá số lượng tồn kho cho phép!");
             }
 
-            // Tính chênh lệch
+            // Cập nhật tồn kho
             int chenhLech = soLuongMoi - soLuongTrongHD;
+            chiTietSP.setSo_luong(soLuongTonKho - chenhLech);
 
-            // ✅ Trừ/tăng tồn kho chính xác
-            chiTietSP.setSo_luong(soLuongTonKhoCapNhat - chenhLech);
+            // Tìm đơn giá (ưu tiên giá khuyến mãi)
+            BigDecimal donGiaLe = chiTietSanPhamRepo.getAllCTSPKM().stream()
+                    .filter(ct -> ct.getId_chi_tiet_san_pham().equals(chiTietSP.getId_chi_tiet_san_pham()))
+                    .map(ct -> BigDecimal.valueOf(ct.getGia_ban()))
+                    .findFirst()
+                    .orElse(BigDecimal.ZERO);
 
-            // Cập nhật chi tiết hóa đơn
-            BigDecimal donGiaLe = chiTietSP.getGia_ban();
-            if (optionalCT.isPresent()) {
-                chiTiet = optionalCT.get();
-            } else {
-                chiTiet = new HoaDonChiTiet();
-                chiTiet.setHoaDon(hoaDon);
-                chiTiet.setChiTietSanPham(chiTietSP);
-            }
+            // Tạo hoặc cập nhật chi tiết hóa đơn
+            HoaDonChiTiet chiTiet = optionalCT.orElseGet(() -> {
+                HoaDonChiTiet newCT = new HoaDonChiTiet();
+                newCT.setHoaDon(hoaDon);
+                newCT.setChiTietSanPham(chiTietSP);
+                return newCT;
+            });
 
             chiTiet.setSo_luong(soLuongMoi);
-            chiTiet.setDon_gia(donGiaLe.multiply(BigDecimal.valueOf(soLuongMoi)));
+            chiTiet.setDon_gia(donGiaLe);
 
-            // Lưu
+            // Lưu lại DB
             chiTietSanPhamRepo.save(chiTietSP);
             hoaDonChiTietRepo.save(chiTiet);
             capNhatTongTienVaVoucher(hoaDon);
@@ -471,6 +473,7 @@ public class BanHangController {
                     .body("Lỗi khi cập nhật số lượng: " + e.getMessage());
         }
     }
+
 
 
     @PostMapping("/giamSPHD")
@@ -547,7 +550,7 @@ public class BanHangController {
     private void capNhatTongTienVaVoucher(HoaDon hoaDon) {
         List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepo.findByIdHoaDon(hoaDon.getId_hoa_don());
         BigDecimal tongTien = chiTietList.stream()
-                .map(HoaDonChiTiet::getDon_gia)
+                .map(ct -> ct.getDon_gia().multiply(BigDecimal.valueOf(ct.getSo_luong())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(hoaDon.getPhi_van_chuyen());
 
@@ -563,7 +566,7 @@ public class BanHangController {
         List<HoaDonChiTietResponse> dsSanPham = hoaDonChiTietRepo.findHoaDonChiTietById(idHD);
 
         BigDecimal tongTienSanPham = dsSanPham.stream()
-                .map(HoaDonChiTietResponse::getDon_gia)
+                .map(ct -> ct.getDon_gia().multiply(BigDecimal.valueOf(ct.getSo_luong())))
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

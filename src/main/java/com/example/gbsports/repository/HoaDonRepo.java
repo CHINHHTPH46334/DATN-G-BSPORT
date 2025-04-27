@@ -1,6 +1,7 @@
 package com.example.gbsports.repository;
 
 import com.example.gbsports.entity.HoaDon;
+import com.example.gbsports.response.ChiTietTraHangResponse;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
 import com.example.gbsports.response.TheoDoiDonHangResponse;
@@ -14,9 +15,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
@@ -270,5 +273,95 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     @Query("SELECT COUNT(h) FROM HoaDon h WHERE h.khachHang.idKhachHang = :idKhachHang")
     int countByKhachHangId(@Param("idKhachHang") Integer idKhachHang);
     List<HoaDon> findByKhachHang_IdKhachHang(Integer idKhachHang);
+
+    // Phương thức mới cho trả hàng
+
+    @Query("SELECT h FROM HoaDon h WHERE h.ma_hoa_don = :maHoaDon")
+    Optional<HoaDon> TimMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+    @Query(value = """
+         SELECT
+             hd.id_hoa_don AS id_hoa_don,
+             hd.ma_hoa_don,
+             hd.id_nhan_vien,
+             nv.ten_nhan_vien,
+             hd.ngay_tao,
+             hd.ngay_sua,
+             hd.trang_thai,
+             hd.sdt_nguoi_nhan,
+             hd.dia_chi,
+             v.ma_voucher,
+             hd.email,
+             hd.tong_tien_truoc_giam,
+             hd.phi_van_chuyen,
+             hd.ho_ten,
+             COALESCE(hd.tong_tien_sau_giam, hd.tong_tien_truoc_giam + hd.phi_van_chuyen) AS tong_tien_sau_giam,
+             hd.hinh_thuc_thanh_toan,
+             hd.phuong_thuc_nhan_hang,
+             hd.id_khach_hang,
+             kh.ten_khach_hang,
+             v.id_voucher,
+             v.ten_voucher,
+             hd.ghi_chu,
+             hd.loai_hoa_don,
+             v.gia_tri_giam,
+             v.kieu_giam_gia,
+             (SELECT TOP 1 tdh.trang_thai
+              FROM theo_doi_don_hang tdh
+              WHERE tdh.id_hoa_don = hd.id_hoa_don
+              ORDER BY tdh.ngay_chuyen DESC) AS trang_thai_don_hang,
+             (SELECT TOP 1 th.trang_thai
+              FROM tra_hang th
+              WHERE th.id_hoa_don = hd.id_hoa_don
+              ORDER BY th.ngay_tao DESC) AS trang_thai_tra_hang
+         FROM hoa_don hd
+         LEFT JOIN nhan_vien nv ON nv.id_nhan_vien = hd.id_nhan_vien
+         LEFT JOIN khach_hang kh ON kh.id_khach_hang = hd.id_khach_hang
+         LEFT JOIN voucher v ON v.id_voucher = hd.id_voucher
+         WHERE hd.ma_hoa_don =:maHoaDon
+            """, nativeQuery = true)
+    HoaDonResponse getHoaDonWithReturnInfoByMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+    @Query(value = """
+            SELECT
+                hdct.id_chi_tiet_san_pham,
+                sp.ten_san_pham,
+                hdct.so_luong,
+                COALESCE(ctth.so_luong, 0) AS so_luong_da_tra,
+                COALESCE(th.trang_thai, 'Chưa yêu cầu') AS trang_thai_tra_hang,
+                th.ly_do AS ly_do_tra_hang,
+                sp.hinh_anh,
+                kt.gia_tri AS kich_thuoc,
+                ms.ten_mau_sac,
+                hdct.don_gia
+            FROM hoa_don_chi_tiet hdct
+            JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+            JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
+            JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+            JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+            JOIN hoa_don hd ON hd.id_hoa_don = hdct.id_hoa_don
+            LEFT JOIN tra_hang th ON th.id_hoa_don = hd.id_hoa_don
+            LEFT JOIN chi_tiet_tra_hang ctth ON ctth.id_tra_hang = th.id AND ctth.id_chi_tiet_san_pham = hdct.id_chi_tiet_san_pham
+            WHERE hd.ma_hoa_don = :maHoaDon
+            """, nativeQuery = true)
+    List<HoaDonChiTietResponse> getChiTietHoaDonByMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+    @Query(value = """
+            SELECT
+                hd.ho_ten,
+                hd.dia_chi,
+                hd.sdt_nguoi_nhan,
+                COALESCE(th.trang_thai, 'Chưa yêu cầu') AS trang_thai_tra_hang,
+                th.ly_do AS ly_do_tra_hang,
+                kh.ten_khach_hang
+            FROM hoa_don hd
+            LEFT JOIN khach_hang kh ON kh.id_khach_hang = hd.id_khach_hang
+            LEFT JOIN tra_hang th ON th.id_hoa_don = hd.id_hoa_don
+            WHERE hd.ma_hoa_don = :maHoaDon
+            """, nativeQuery = true)
+    HoaDonChiTietResponse getKhachHangInfoByMaHoaDon(@Param("maHoaDon") String maHoaDon);
+
+
+
 
 }
