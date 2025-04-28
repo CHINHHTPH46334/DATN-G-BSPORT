@@ -160,16 +160,21 @@ public class GioHangService {
     @Transactional
     public void xoaSanPhamKhoiGioHang(Integer idKhachHang, Integer idChiTietSanPham) {
         if (idKhachHang != null) {
-            GioHang gioHang = gioHangRepository.findByKhachHangId(idKhachHang)
-                    .orElseThrow(() -> new RuntimeException("Giỏ hàng không tồn tại"));
+            Optional<GioHang> gioHangOP = gioHangRepository.findByKhachHangId(idKhachHang);
+            if (gioHangOP.isEmpty()) {
+                return;
+            }
 
+            GioHang gioHang = gioHangOP.get();
             ChiTietGioHangId chiTietGioHangId = new ChiTietGioHangId();
             chiTietGioHangId.setIdGioHang(gioHang.getId_gio_hang());
             chiTietGioHangId.setIdChiTietSanPham(idChiTietSanPham);
 
-            ChiTietGioHang chiTietGioHang = chiTietGioHangRepository.findById(chiTietGioHangId)
-                    .orElseThrow(() -> new RuntimeException("Sản phẩm không có trong giỏ hàng"));
-
+            Optional<ChiTietGioHang> chiTietGioHangOptional = chiTietGioHangRepository.findById(chiTietGioHangId);
+            if (chiTietGioHangOptional.isEmpty()) {
+                return;
+            }
+            ChiTietGioHang chiTietGioHang = chiTietGioHangOptional.get();
             chiTietGioHangRepository.delete(chiTietGioHang);
         } else {
             GioHangTam gioHangTam = (GioHangTam) session.getAttribute("gioHangTam");
@@ -237,4 +242,6 @@ public class GioHangService {
             session.removeAttribute("gioHangTam"); // Xóa giỏ tạm sau khi đồng bộ
         }
     }
+
+
 }
