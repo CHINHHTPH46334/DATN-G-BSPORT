@@ -91,33 +91,56 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
 
     //=============================== Của Dũng====================================//
     @Query(value = """
-            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
-                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
+                    ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
+                    ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
             FROM chi_tiet_san_pham ctsp
             JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
             JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
             JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
             JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+            LEFT JOIN ( SELECT
+                            ctkm.id_chi_tiet_san_pham,
+                            MIN(ctkm.gia_sau_giam) AS giaHienTai
+                        FROM chi_tiet_khuyen_mai ctkm
+                        JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                        WHERE km.trang_thai = N'Đang diễn ra'
+                        AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+                        GROUP BY ctkm.id_chi_tiet_san_pham
+                        ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
             WHERE ctsp.trang_thai = N'Hoạt động'
             ORDER BY ctsp.id_chi_tiet_san_pham
             """, nativeQuery = true)
     Page<ChiTietSanPhamView> getAllCTSP_HD(Pageable pageable);
 
     @Query(value = """
-            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri, 
-                   ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai
+            SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
+                    ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
+                    ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
             FROM chi_tiet_san_pham ctsp
             JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
             JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
             JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
             JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+            LEFT JOIN ( SELECT
+                            ctkm.id_chi_tiet_san_pham,
+                            MIN(ctkm.gia_sau_giam) AS giaHienTai
+                        FROM chi_tiet_khuyen_mai ctkm
+                        JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                        WHERE km.trang_thai = N'Đang diễn ra'
+                        AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+                        GROUP BY ctkm.id_chi_tiet_san_pham
+                        ) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
             WHERE ctsp.trang_thai = N'Hoạt động'
             AND (sp.ten_san_pham LIKE CONCAT('%', :keyword, '%') OR dm.ten_danh_muc LIKE CONCAT('%', :keyword, '%'))
             ORDER BY ctsp.id_chi_tiet_san_pham
             """, nativeQuery = true)
     Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
+
     //=============================== Của Dũng====================================//
-    @Query(nativeQuery = true,value = "WITH DanhGiaSanPham AS (\n" +
+    @Query(nativeQuery = true, value = "WITH DanhGiaSanPham AS (\n" +
             "    SELECT\n" +
             "        id_chi_tiet_san_pham,\n" +
             "        AVG(ISNULL(danh_gia, 0) * 1.0) as danh_gia_trung_binh, -- Nhân 1.0 để đảm bảo kết quả là số thực\n" +
@@ -211,47 +234,34 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                               @RequestParam("soLuong") Integer soLuong);
 
     @Query(value = """
-            SELECT\s
-                ctsp.id_chi_tiet_san_pham,
-                ma_san_pham,
-                ten_san_pham,
-                CASE\s
-                    WHEN km.kieu_giam_gia = N'Phần trăm' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)) < 0,\s
-                            0,\s
-                            gia_ban - IIF((gia_ban * COALESCE(km.gia_tri_giam, 0) / 100) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                (gia_ban * COALESCE(km.gia_tri_giam, 0) / 100)))
-                    WHEN km.kieu_giam_gia = N'Tiền mặt' AND km.trang_thai = N'Đang diễn ra' THEN\s
-                        IIF(gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                            COALESCE(km.gia_tri_giam, 0)) < 0,\s
-                            0,\s
-                            gia_ban - IIF(COALESCE(km.gia_tri_giam, 0) > COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_toi_da, gia_ban),\s
-                                COALESCE(km.gia_tri_giam, 0)))
-                    ELSE gia_ban
-                END AS gia_ban,
-                so_luong,
-                ctsp.trang_thai AS trang_thai,
-                gia_tri,
-                ten_mau_sac AS ten_mau,
-                ten_danh_muc,
-                ten_thuong_hieu,
-                ten_chat_lieu,
-                hinh_anh
+            SELECT ctsp.id_chi_tiet_san_pham,
+            ma_san_pham, 
+            sp.ten_san_pham, 
+            dm.ten_danh_muc, 
+            ms.ten_mau_sac AS ten_mau, 
+            kt.gia_tri,
+            ctsp.so_luong, 
+            COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS gia_ban,
+            ctsp.trang_thai,
+            ha.hinh_anh, 
+            ha.anh_chinh
             FROM chi_tiet_san_pham ctsp
-            FULL OUTER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
-            left JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
-            left JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
-            left JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
-            left JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
-            left JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
-            FULL OUTER JOIN chi_tiet_khuyen_mai ctkm ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
-            FULL OUTER JOIN khuyen_mai km ON km.id_khuyen_mai = ctkm.id_khuyen_mai
-            WHERE ctsp.trang_thai like N'Hoạt động'
+            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+            LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+            LEFT JOIN ( SELECT
+            	ctkm.id_chi_tiet_san_pham,
+                MIN(ctkm.gia_sau_giam) AS giaHienTai
+            	FROM chi_tiet_khuyen_mai ctkm
+            	JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+            	WHERE km.trang_thai = N'Đang diễn ra'
+            	AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+            	GROUP BY ctkm.id_chi_tiet_san_pham
+            	) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
+            WHERE ctsp.trang_thai = N'Hoạt động'
+            ORDER BY ctsp.id_chi_tiet_san_pham
             """, nativeQuery = true)
     List<ChiTietSanPhamView> getAllCTSPKM();
     //////

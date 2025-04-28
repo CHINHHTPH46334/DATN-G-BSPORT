@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -77,6 +78,7 @@ public class BanHangWebController {
     Integer idKhachHang = 0;
     Boolean xacNhan = false;
 
+//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") public
     @PostMapping("/taoHoaDonWeb")
     public ResponseEntity<?> taoHoaDonWeb(@RequestBody HoaDonRequest hoaDon) {
         HoaDon hoaDonAdd = new HoaDon();

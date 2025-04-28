@@ -6,6 +6,8 @@ import com.itextpdf.text.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 public class HoaDonService {
@@ -13,9 +15,9 @@ public class HoaDonService {
     private HoaDonRepo hoaDonRepo;
 
 
-//    public List<HoaDon> getHoaDonByKhachHangId(Integer idKhachHang) {
-//        return (List<HoaDon>) hoaDonRepo.findByKhachHang_IdKhachHang(idKhachHang);
-//    }
+    public List<HoaDon> getHoaDonByKhachHangId(Integer idKhachHang) {
+        return hoaDonRepo.findByKhachHang_IdKhachHang(idKhachHang);
+    }
 
     public int countHoaDonByKhachHangId(Integer idKhachHang) {
         return hoaDonRepo.countByKhachHangId(idKhachHang);

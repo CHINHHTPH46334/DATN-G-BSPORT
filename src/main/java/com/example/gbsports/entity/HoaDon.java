@@ -2,6 +2,7 @@ package com.example.gbsports.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -53,12 +54,13 @@ public class HoaDon {
     @Column(name = "loai_hoa_don")
     private String loai_hoa_don;
     private String ghi_chu;
+    private BigDecimal phu_thu;
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-
+    @JsonManagedReference
     private List<TheoDoiDonHang> lichSuTrangThai = new ArrayList<>();
 
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  
+    @JsonManagedReference(value = "hoaDon-chiTiet")
     private List<HoaDonChiTiet> danhSachChiTiet = new ArrayList<>();
 
 }

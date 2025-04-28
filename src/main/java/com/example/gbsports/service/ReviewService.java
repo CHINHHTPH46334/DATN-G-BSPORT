@@ -123,7 +123,7 @@ public class ReviewService {
      * @param idChiTietSanPham ID của chi tiết sản phẩm
      * @return true nếu khách hàng đã mua sản phẩm với trạng thái hợp lệ, false nếu không
      */
-    private boolean canCustomerReviewProduct(Integer idKhachHang, Integer idChiTietSanPham) {
+    public boolean canCustomerReviewProduct(Integer idKhachHang, Integer idChiTietSanPham) {
         try {
             logger.info("Kiểm tra xem khách hàng ID {} có thể đánh giá sản phẩm ID {} không", idKhachHang, idChiTietSanPham);
 

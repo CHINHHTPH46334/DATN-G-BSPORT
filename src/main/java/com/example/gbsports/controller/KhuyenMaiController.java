@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/khuyen-mai")
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
 @RequiredArgsConstructor
 public class KhuyenMaiController {
 

@@ -8,6 +8,7 @@ import com.example.gbsports.service.DanhMucService;
 import com.example.gbsports.service.ThuongHieuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,19 +19,23 @@ import java.util.List;
 public class ThuongHieuController {
     @Autowired
     ThuongHieuService thuongHieuService;
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')")
     @GetMapping("/ThuongHieu")
     public List<ThuongHieu> getAllThuongHieu(){
         return thuongHieuService.listFindAllThuongHieu();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/addThuongHieu")
     public ResponseEntity<?> addThuongHieu(@RequestParam("tenThuongHieu") String tenThuongHieu){
         return ResponseEntity.ok(thuongHieuService.getThuongHieuOrCreateThuongHieu(tenThuongHieu));
     }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/changeTrangThaiThuongHieu")
     public ResponseEntity<?> changeTrangThaiThuongHieu(@RequestParam("idThuongHieu") Integer idThuongHieu){
         return thuongHieuService.changeTrangThaiThuongHieu(idThuongHieu);
     }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/updateThuongHieu")
     public ResponseEntity<?> updateThuongHieu(@RequestBody ThuongHieu thuongHieu){
         return thuongHieuService.updateThuongHieu(thuongHieu);

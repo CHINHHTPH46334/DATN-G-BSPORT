@@ -3,6 +3,7 @@ package com.example.gbsports.repository;
 import com.example.gbsports.entity.TheoDoiDonHang;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface TheoDoiDonHangRepo extends JpaRepository<TheoDoiDonHang, Intege
             WHERE hd.ma_hoa_don = :maHoaDon AND tddh.trang_thai = N'Đã cập nhật'
             """, nativeQuery = true)
     Optional<TheoDoiDonHang> findByMaHDAndTrangThai(String maHoaDon);
+    @Query("SELECT t FROM TheoDoiDonHang t WHERE t.hoaDon.id_hoa_don = :idHoaDon ORDER BY t.ngay_chuyen DESC")
+    List<TheoDoiDonHang> findByIdHoaDonOrderByNgayChuyenDesc(@Param("idHoaDon") Integer idHoaDon);
 }

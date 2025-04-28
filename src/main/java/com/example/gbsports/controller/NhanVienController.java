@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -62,15 +63,18 @@ public class NhanVienController {
     @Autowired
     private LichSuDangNhapRepo lichSuDangNhapRepo;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/findAll")
     public List<NhanVien> findAll() {
         return nhanVienRepo.findAll();
     }
 
-    // @GetMapping("/quan-ly-nhan-vien")
-    // public List<NhanVienResponse> getAll(){
-    // return nhanVienRepo.getAll();
-    // }
+
+    //    @GetMapping("/quan-ly-nhan-vien")
+//    public List<NhanVienResponse> getAll(){
+//        return nhanVienRepo.getAll();
+//    }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'NV')")
     @GetMapping("/phanTrang")
     public Page<NhanVienResponse> phanTrang(@RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "5") Integer size) {
@@ -78,11 +82,13 @@ public class NhanVienController {
         return nhanVienRepo.listPT(pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/findById")
     public NhanVien findById(@RequestParam("id") Integer id) {
         return nhanVienRepo.findById(id).get();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PostMapping("/add")
     public String add(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
@@ -168,6 +174,7 @@ public class NhanVienController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/update")
     public String update(@RequestBody NhanVienRequest nhanVienRequest) {
         System.out.println("Request nhận được: " + nhanVienRequest);
@@ -213,6 +220,7 @@ public class NhanVienController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/changeStatus")
     public String changeStatus(@RequestParam("id") Integer id) {
         NhanVien nhanVien = nhanVienRepo.findById(id).get();
@@ -229,6 +237,7 @@ public class NhanVienController {
     }
     // Search NV API
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/search")
     public Page<NhanVienResponse> timNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "5") Integer size,
@@ -237,6 +246,7 @@ public class NhanVienController {
         return nhanVienRepo.timNhanVien(keyword, pageable);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/locTrangThai")
     public Page<NhanVienResponse> locNhanVien(@RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "5") Integer size,
@@ -355,37 +365,58 @@ public class NhanVienController {
         }
         // Tạo reset token
         String resetToken = jwtUtil.generateResetToken(request.getEmail());
-        // // Tạo liên kết đặt lại mật khẩu
-        // String resetLink = "http://localhost:5173/reset-password?token=" +
-        // resetToken;
-        //
-        // // Gửi email
-        // String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
-        // "</div>" +
-        // "<div class='content'>" +
-        // "<h3>Xin chào,</h3>" +
-        // "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B
-        // SPORTS.</p>" +
-        // "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
-        // "<div class='info-box'>" +
-        // "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
-        // "</div>" +
-        // "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật
-        // khẩu, vui lòng bỏ qua email này.</p>";
-        //
-        // try {
-        // sendEmail(request.getEmail(), content);
-        // response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến
-        // email của bạn!");
-        // } catch (Exception e) {
-        // response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email
-        // thất bại: " + e.getMessage());
-        // }
-        response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
-        response.put("resetToken", resetToken); // Thêm token vào phản hồi
+        // Tạo liên kết đặt lại mật khẩu
+        String resetLink = "http://localhost:5173/login-register/loginAdmin?token=" + resetToken;
+        String emailNV = nhanVienOpt.get().getEmail();
+        // Gửi email
+        String content = "<h1>Đặt lại mật khẩu - G&B SPORTS</h1>" +
+                "</div>" +
+                "<div class='content'>" +
+                "<h3>Xin chào,</h3>" +
+                "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản nhân viên tại G&B SPORTS.</p>" +
+                "<p>Vui lòng nhấp vào liên kết sau để đặt lại mật khẩu:</p>" +
+                "<div class='info-box'>" +
+                "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>" +
+                "</div>" +
+                "<p>Liên kết này có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>";
+
+        try {
+            sendEmail(emailNV, content);
+            response.put("successMessage", "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!");
+        } catch (Exception e) {
+            response.put("warning", "Yêu cầu đặt lại mật khẩu thành công nhưng gửi email thất bại: " + e.getMessage());
+        }
+//        response.put("successMessage", "Tên đăng nhập hợp lệ, vui lòng nhập mật khẩu mới.");
+//        response.put("resetToken", resetToken); // Thêm token vào phản hồi
         return ResponseEntity.ok(response);
     }
+    // Kiểm tra token (GET)
+    @GetMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> validateResetToken(@RequestParam("token") String token) {
+        Map<String, Object> response = new HashMap<>();
 
+        try {
+            String email = jwtUtil.validateResetTokenAndGetEmail(token);
+            Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepo.findByTenDangNhapAndNhanVienRoles(email);
+            if (taiKhoanOpt.isEmpty()) {
+                response.put("error", "Email không hợp lệ!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            TaiKhoan taiKhoan = taiKhoanOpt.get();
+            Optional<NhanVien> nhanVienOpt = nhanVienRepo.findByTaiKhoanIdTaiKhoan(taiKhoan.getId_tai_khoan());
+            if (nhanVienOpt.isPresent() && !"Đang hoạt động".equals(nhanVienOpt.get().getTrangThai())) {
+                response.put("error", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response.put("successMessage", "Token hợp lệ, vui lòng nhập mật khẩu mới.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("error", "Token không hợp lệ: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetMKRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -420,7 +451,7 @@ public class NhanVienController {
         response.put("successMessage", "Đặt lại mật khẩu thành công!");
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @GetMapping("/listTrangAdmin")
     public List<NhanVienResponse> listTrangAdmin() {
         return nhanVienRepo.listTrangAdmin();

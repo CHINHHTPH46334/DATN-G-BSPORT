@@ -60,4 +60,24 @@ public class ReviewController {
             return ResponseEntity.badRequest().body(Map.of("error", true, "message", e.getMessage()));
         }
     }
+
+    // code mới
+    @GetMapping("/can-review")
+    public ResponseEntity<?> canReviewProduct(
+            @RequestParam("idKhachHang") Integer idKhachHang,
+            @RequestParam("idChiTietSanPham") Integer idChiTietSanPham) {
+        try {
+            boolean canReview = reviewService.canCustomerReviewProduct(idKhachHang, idChiTietSanPham);
+            return ResponseEntity.ok(Map.of(
+                    "canReview", canReview,
+                    "message", canReview ? "Bạn có thể đánh giá sản phẩm này" : "Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua và nhận hàng thành công"
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of(
+                    "canReview", false,
+                    "message", "Lỗi: " + e.getMessage()
+            ));
+        }
+    }
 }
