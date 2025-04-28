@@ -3,6 +3,7 @@ package com.example.gbsports.service;
 import com.example.gbsports.entity.Voucher;
 import com.example.gbsports.repository.VoucherRepository;
 import com.example.gbsports.request.VoucherRequetst;
+import com.example.gbsports.response.VoucherBHResponse;
 import com.example.gbsports.response.VoucherResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -13,10 +14,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -279,10 +285,19 @@ public class VoucherService {
         voucherRepository.save(voucher);
         return "Tắt voucher thành công!";
     }
+
     public Page<VoucherResponse> locTheoKieuGiamGia(String kieuGiamGia, Pageable pageable) {
         if (kieuGiamGia == null || kieuGiamGia.equals("Tất cả")) {
             return getAllVouchers(pageable);
         }
         return voucherRepository.findByKieuGiamGia(kieuGiamGia, pageable).map(this::toResponse);
+    }
+
+    public List<VoucherBHResponse> listVoucherTheoGiaTruyen(@RequestParam("giaTruyen") BigDecimal giaTruyen) {
+        ArrayList<VoucherBHResponse> listVc = new ArrayList<>();
+        listVc = (ArrayList<VoucherBHResponse>) voucherRepository.listVoucherHopLeTheoGia(giaTruyen).stream()
+                .sorted(Comparator.comparing(VoucherBHResponse::getSo_tien_giam).reversed())
+                .collect(Collectors.toList());
+        return listVc;
     }
 }

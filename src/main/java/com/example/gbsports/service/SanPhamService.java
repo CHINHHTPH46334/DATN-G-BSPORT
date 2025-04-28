@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,20 +40,35 @@ public class SanPhamService {
     @Autowired
     ChatLieuRepo chatLieuRepo;
 
-    //    @Cacheable(value = "products", key = "'allSanPham'")
+    @Cacheable(value = "products", key = "'allSanPham'")
     public ArrayList<SanPhamView> getAll() {
-        ArrayList<SanPhamView> newList = new ArrayList<>();
-        for (SanPhamView spv : sanPhamRepo.getAllSanPham()) {
+//        ArrayList<SanPhamView> newList = new ArrayList<>();
+        System.out.println("Lấy dữ liệu từ database không phải từ cache");
+
+        return sanPhamRepo.getAllSanPham();
+    }
+    @CacheEvict(value = "products", key = "'allSanPham'")
+    public void updateProductStatus() {
+        ArrayList<SanPhamView> allProducts = sanPhamRepo.getAllSanPham();
+        boolean hasUpdates = false;
+
+        for (SanPhamView spv : allProducts) {
             if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
-                newList.add(spv);
+                SanPham sanPham = sanPhamRepo.findById(spv.getId_san_pham()).get();
+                if (!"Không hoạt động".equals(sanPham.getTrang_thai())) {
+                    sanPham.setTrang_thai("Không hoạt động");
+                    sanPhamRepo.save(sanPham);
+                    hasUpdates = true;
+                }
             }
         }
-        for (SanPhamView spXet : newList) {
-            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
-            sanPham.setTrang_thai("Không hoạt động");
-            sanPhamRepo.save(sanPham);
+
+        // Nếu không có cập nhật nào, không cần phải làm mới cache
+        if (!hasUpdates) {
+            System.out.println("Không có sản phẩm nào cần cập nhật trạng thái");
+        } else {
+            System.out.println("Đã cập nhật trạng thái sản phẩm và làm mới cache");
         }
-        return sanPhamRepo.getAllSanPham();
     }
 
     public List<SanPham> getAllFindAll() {

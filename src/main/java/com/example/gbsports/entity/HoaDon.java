@@ -26,7 +26,7 @@ public class HoaDon {
     private NhanVien nhanVien;
     @ManyToOne
     @JoinColumn(name = "id_khach_hang")
-    @JsonIgnore
+
     private KhachHang khachHang;
     @Column(name = "ngay_tao")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -64,33 +64,20 @@ public class ChiTietSanPhamController {
     }
 
     @GetMapping("/locCTSP")
-    public ArrayList<ChiTietSanPhamView> locCTSP(@RequestParam(name = "tenSanPham", required = false) String tenSanPham,
-                                                 @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
-                                                 @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
-                                                 @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
-                                                 @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
-                                                 @RequestParam(name = "trangThai", required = false) String trangThai,
-                                                 @RequestParam(name = "tenMauSac", required = false) String tenMauSac,
-                                                 @RequestParam(name = "tenDanhMuc", required = false) String tenDanhMuc,
-                                                 @RequestParam(name = "tenThuongHieu", required = false) String tenThuongHieu,
-                                                 @RequestParam(name = "tenChatLieu", required = false) String tenChatLieu) {
-        System.out.println("Giá max" + giaBanMax);
-        if (giaBanMin == null || giaBanMin < 0) {
-            giaBanMin = (float) 0;
-        }
-        if (giaBanMax == null || giaBanMax < 0) {
-            giaBanMax = Float.MAX_VALUE;
-            System.out.println("Giá max" + giaBanMax);
-        }
-        if (giaBanMin >= giaBanMax) {
-            float giaTrungGian;
-            giaTrungGian = giaBanMin;
-            giaBanMin = giaBanMax;
-            giaBanMax = giaTrungGian;
-        }
-
-        return chiTietSanPhamService.listLocCTSP(tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax,
-                trangThai, tenMauSac, tenDanhMuc, tenThuongHieu, tenChatLieu);
+    public ResponseEntity<List<ChiTietSanPhamView>>  locCTSP(@RequestParam(name = "keyword", required = false) String keyword,
+                                                            @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
+                                                            @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
+                                                            @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
+                                                            @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
+                                                            @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
+                                                            @RequestParam(name = "trangThai", required = false) String trangThai,
+                                                            @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
+                                                            @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
+                                                            @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
+                                                            @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
+                                                            @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
+        return chiTietSanPhamService.timKiemVaLoc(keyword, tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax, trangThai, listMauSac, listDanhMuc, listThuongHieu
+                , listChatLieu, listKichThuoc);
     }
 
     @GetMapping("/sapXepCTSP")

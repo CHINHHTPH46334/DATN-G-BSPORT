@@ -4,6 +4,8 @@ import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.HoaDonChiTietResponse;
 import com.example.gbsports.response.HoaDonResponse;
+import com.example.gbsports.response.VoucherBHResponse;
+import com.example.gbsports.service.VoucherService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.BeanUtils;
@@ -13,6 +15,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,10 @@ public class BanHangWebController {
     TheoDoiDonHangRepo theoDoiDonHangRepo;
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private VoucherService voucherService;
+    @Autowired
+    private KhachHangRepo khachHangRepo;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     private String generateUniqueMaHoaDon() {
@@ -68,6 +75,7 @@ public class BanHangWebController {
         hoaDonAdd.setNgay_sua(LocalDateTime.now());
         hoaDonAdd.setPhuong_thuc_nhan_hang("Giao hàng");
         hoaDonAdd.setVoucher(hoaDon.getVoucher().getId() != null ? voucherRepository.findById(hoaDon.getVoucher().getId()).get() : null);
+        hoaDonAdd.setKhachHang(hoaDon.getKhachHang().getIdKhachHang() == 0? null : khachHangRepo.findById(hoaDon.getKhachHang().getIdKhachHang()).get());
         hoaDonRepo.save(hoaDonAdd);
         idHoaDon = hoaDonAdd.getId_hoa_don();
         TheoDoiDonHang theoDoiDonHang = new TheoDoiDonHang();
@@ -107,7 +115,7 @@ public class BanHangWebController {
         for (HoaDonChiTiet hdct : hoaDonChiTiets) {
             HoaDonChiTiet hoaDonChiTietAdd = new HoaDonChiTiet();
             hoaDonChiTietAdd.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
-            System.out.println("id Hoá đơn: fdfdfd: "+idHoaDon);
+            System.out.println("id Hoá đơn: fdfdfd: " + idHoaDon);
             hoaDonChiTietAdd.setChiTietSanPham(
                     chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).orElseThrow()
             );
@@ -119,10 +127,11 @@ public class BanHangWebController {
         }
         return ResponseEntity.ok(listHdct);
     }
+
     //
     @PostMapping("/suaHoaDon")
-    public ResponseEntity<?> suaHoaDon(@RequestBody HoaDon hoaDon){
-        System.out.println("idHoaDonSua"+hoaDon.getId_hoa_don());
+    public ResponseEntity<?> suaHoaDon(@RequestBody HoaDon hoaDon) {
+        System.out.println("idHoaDonSua" + hoaDon.getId_hoa_don());
         HoaDon hoaDonAdd = new HoaDon();
         BeanUtils.copyProperties(hoaDon, hoaDonAdd);
         hoaDonAdd.setMa_hoa_don(generateUniqueMaHoaDon());
@@ -183,4 +192,8 @@ public class BanHangWebController {
         return hoaDonRepo.getHoaDonByMaHoaDon(maHoaDon);
     }
 
+    @GetMapping("/voucherTheoGiaTruyen")
+    public List<VoucherBHResponse> voucherTheoGiaTruyen(@RequestParam("giaTruyen") BigDecimal giaTruyen) {
+        return voucherService.listVoucherTheoGiaTruyen(giaTruyen);
+    }
 }
