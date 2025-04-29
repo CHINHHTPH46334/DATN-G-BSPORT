@@ -156,7 +156,9 @@ public class SanPhamController {
 
     @GetMapping("/getSanPhamByTenSanPham")
     public List<SanPhamView> getSanPhamBySP(@RequestParam("tenSanPham") String tenSanPham) {
-        return sanPhamService.getSanPhamTheoTen(tenSanPham);
+        // Spring sẽ tự split "áo,quần" thành List.of("áo","quần")
+        String joined = String.join(",", tenSanPham);
+        return sanPhamService.getSanPhamTheoTen(joined);
     }
 
     @GetMapping("/getSanPhamByTenSP")
