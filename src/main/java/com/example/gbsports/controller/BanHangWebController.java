@@ -89,10 +89,10 @@ public class BanHangWebController {
         hoaDonAdd.setNgay_sua(LocalDateTime.now());
         hoaDonAdd.setPhuong_thuc_nhan_hang("Giao hàng");
         hoaDonAdd.setVoucher(hoaDon.getVoucher().getId() != 0 ? voucherRepository.findById(hoaDon.getVoucher().getId()).get() : null);
-        hoaDonAdd.setKhachHang(hoaDon.getKhachHang().getIdKhachHang() == 0 ? null : khachHangRepo.findById(hoaDon.getKhachHang().getIdKhachHang()).get());
+        hoaDonAdd.setKhachHang(hoaDon.getId_khach_hang() == 0 ? null : khachHangRepo.findById(hoaDon.getId_khach_hang()).get());
         hoaDonRepo.save(hoaDonAdd);
         idHoaDon = hoaDonAdd.getId_hoa_don();
-        idKhachHang = hoaDonAdd.getKhachHang().getIdKhachHang();
+        idKhachHang = hoaDonAdd.getKhachHang() == null || hoaDonAdd.getKhachHang().getIdKhachHang() == null? 0: hoaDonAdd.getKhachHang().getIdKhachHang();
         xacNhan = hoaDon.getIsChuyen();
         TheoDoiDonHang theoDoiDonHang = new TheoDoiDonHang();
         theoDoiDonHang.setHoaDon(hoaDonAdd);
@@ -128,7 +128,8 @@ public class BanHangWebController {
     private void updateSoLuongSanPham(List<HoaDonChiTiet> list) {
         for (HoaDonChiTiet hdct : list) {
             ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).get();
-            if (ctsp.getSo_luong() == hdct.getSo_luong()) {
+            if (ctsp.getSo_luong() <= hdct.getSo_luong()) {
+                ctsp.setSo_luong(0);
                 ctsp.setTrang_thai("Không hoạt động");
                 chiTietSanPhamRepo.save(ctsp);
             } else {

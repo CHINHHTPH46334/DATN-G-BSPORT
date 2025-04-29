@@ -30,7 +30,7 @@ public class HoaDonRequest {
     private String phuong_thuc_nhan_hang;
     private String loai_hoa_don;
     private String ghi_chu;
-
+    private Integer id_khach_hang;
     private Integer id_nhan_vien;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngay_tao;
