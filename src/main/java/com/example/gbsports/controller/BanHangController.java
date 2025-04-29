@@ -529,10 +529,10 @@ public class BanHangController {
                         .body(Map.of("success", false, "message", "Không thể xóa sản phẩm từ hóa đơn đã thanh toán!"));
             }
 
-            // Xoá sản phẩm khỏi hóa đơn
+            // Xóa sản phẩm
             hoaDonChiTietRepo.xoaSPKhoiHD(idHoaDon, idChiTietSanPham);
 
-            // Cập nhật lại thông tin hóa đơn & voucher
+            // Cập nhật voucher
             try {
                 capNhatVoucher(idHoaDon);
             } catch (Exception ex) {
@@ -565,13 +565,28 @@ public class BanHangController {
     private void capNhatVoucher(Integer idHD) {
         List<HoaDonChiTietResponse> dsSanPham = hoaDonChiTietRepo.findHoaDonChiTietById(idHD);
 
-        BigDecimal tongTienSanPham = dsSanPham.stream()
-                .map(ct -> ct.getDon_gia().multiply(BigDecimal.valueOf(ct.getSo_luong())))
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         HoaDon hoaDon = hoaDonRepo.findById(idHD)
                 .orElseThrow(() -> new RuntimeException("Hóa đơn không tồn tại!"));
+
+        // Xử lý trường hợp không có sản phẩm
+        if (dsSanPham.isEmpty()) {
+            hoaDon.setTong_tien_truoc_giam(BigDecimal.ZERO);
+            hoaDon.setTong_tien_sau_giam(BigDecimal.ZERO);
+            if (hoaDon.getVoucher() != null) {
+                Voucher voucherCu = hoaDon.getVoucher();
+                voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
+                voucherRepository.save(voucherCu);
+                hoaDon.setVoucher(null);
+            }
+            hoaDonRepo.save(hoaDon);
+            return;
+        }
+
+        // Tính tổng tiền sản phẩm
+        BigDecimal tongTienSanPham = dsSanPham.stream()
+                .filter(ct -> ct.getDon_gia() != null && ct.getSo_luong() != null)
+                .map(ct -> ct.getDon_gia().multiply(BigDecimal.valueOf(ct.getSo_luong())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal phiVanChuyen = Optional.ofNullable(hoaDon.getPhi_van_chuyen()).orElse(BigDecimal.ZERO);
         BigDecimal tongTruocGiam = tongTienSanPham.add(phiVanChuyen);
@@ -585,30 +600,26 @@ public class BanHangController {
             Voucher voucherMoi = voucherRepository.findById(v.getId_voucher())
                     .orElseThrow(() -> new RuntimeException("Voucher không tồn tại!"));
 
+            if (voucherMoi.getSoLuong() <= 0) {
+                throw new RuntimeException("Voucher đã hết số lượng!");
+            }
+
             hoaDon.setTong_tien_sau_giam(tongTruocGiam.subtract(v.getGia_tri_giam_thuc_te()));
             hoaDon.setVoucher(voucherMoi);
 
             if (voucherCu == null || !voucherCu.getId().equals(voucherMoi.getId())) {
-                // Trả lại số lượng voucher cũ
                 if (voucherCu != null) {
                     voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
                     voucherRepository.save(voucherCu);
                 }
-
-                // Trừ voucher mới
-                if (voucherMoi.getSoLuong() > 0) {
-                    voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
-                    voucherRepository.save(voucherMoi);
-                }
+                voucherMoi.setSoLuong(voucherMoi.getSoLuong() - 1);
+                voucherRepository.save(voucherMoi);
             }
-
         } else {
-            // Không còn voucher áp dụng → phục hồi lại voucher cũ nếu có
             if (voucherCu != null) {
                 voucherCu.setSoLuong(voucherCu.getSoLuong() + 1);
                 voucherRepository.save(voucherCu);
             }
-
             hoaDon.setVoucher(null);
             hoaDon.setTong_tien_sau_giam(tongTruocGiam);
         }

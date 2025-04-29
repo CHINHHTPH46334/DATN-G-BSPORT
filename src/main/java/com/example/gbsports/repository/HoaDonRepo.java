@@ -234,7 +234,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                               join san_pham sp on sp.id_san_pham = ctsp.id_san_pham
                               join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac
                               join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc
-                              join voucher vc on vc.id_voucher = hd.id_voucher
+                             left join voucher vc on vc.id_voucher = hd.id_voucher
                               where ma_hoa_don = :maHoaDon
                         """)
     List<HoaDonChiTietResponse> listThongTinHoaDon(@Param("maHoaDon") String maHoaDon);
@@ -259,7 +259,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             phuong_thuc_nhan_hang,loai_hoa_don, ghi_chu, ten_voucher, ma_voucher,
             gia_tri_giam, kieu_giam_gia, ho_ten, phi_van_chuyen
             from hoa_don
-            join voucher vc on vc.id_voucher = hoa_don.id_voucher
+            left join voucher vc on vc.id_voucher = hoa_don.id_voucher
             where ma_hoa_don = :maHoaDon
                                     """)
     HoaDonResponse getHoaDonByMaHoaDon(@Param("maHoaDon") String maHoaDon);

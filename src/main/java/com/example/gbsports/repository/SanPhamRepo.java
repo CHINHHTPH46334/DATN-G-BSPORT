@@ -12,18 +12,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
-    @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n"
-            +
-            "            th.ten_thuong_hieu as ten_thuong_hieu, ten_chat_lieu, hinh_anh, sum(ctsp.so_luong) as tong_so_luong\n"
-            +
-            "            from san_pham sp\n" +
-            "          left  join danh_muc_san_pham dm on dm.id_danh_muc = sp.id_danh_muc\n" +
-            "           left join thuong_hieu th on th.id_thuong_hieu = sp.id_thuong_hieu\n" +
-            "          left  join chat_lieu cl on cl.id_chat_lieu = sp.id_chat_lieu\n" +
-            "\t\t\t full outer join chi_tiet_san_pham ctsp on ctsp.id_san_pham = sp.id_san_pham\n" +
-            "\t\t\tgroup by sp.id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai, dm.ten_danh_muc, \n"
-            +
-            "            th.ten_thuong_hieu, ten_chat_lieu,hinh_anh")
+    @Query(nativeQuery = true, value = """
+            SELECT
+            sp.id_san_pham AS id_san_pham,
+            ma_san_pham,
+            ten_san_pham,
+            mo_ta,
+            CASE
+            WHEN SUM(ctsp.so_luong) <= 0 THEN 'Không hoạt động'
+            ELSE sp.trang_thai
+            END AS trang_thai,  -- Sửa ở đây
+            dm.ten_danh_muc AS ten_danh_muc,
+            th.ten_thuong_hieu AS ten_thuong_hieu,
+            ten_chat_lieu,
+            hinh_anh,
+            SUM(ctsp.so_luong) AS tong_so_luong
+            FROM san_pham sp
+            LEFT JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
+            LEFT JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
+            LEFT JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
+            FULL OUTER JOIN chi_tiet_san_pham ctsp ON ctsp.id_san_pham = sp.id_san_pham
+            GROUP BY
+            sp.id_san_pham,
+            ma_san_pham,
+            ten_san_pham,
+            mo_ta,
+            sp.trang_thai,  -- Giữ nguyên trong GROUP BY
+            dm.ten_danh_muc,
+            th.ten_thuong_hieu,
+            ten_chat_lieu,
+            hinh_anh
+                        """)
     ArrayList<SanPhamView> getAllSanPham();
 
     @Query(nativeQuery = true, value = "select sp.id_san_pham as id_san_pham, ma_san_pham, ten_san_pham, mo_ta, sp.trang_thai as trang_thai, dm.ten_danh_muc as ten_danh_muc, \n"

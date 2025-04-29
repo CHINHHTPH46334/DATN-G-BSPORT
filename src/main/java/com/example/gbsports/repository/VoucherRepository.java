@@ -20,6 +20,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     Optional<Voucher> findByMaVoucher(String maVoucher);
 
     Page<Voucher> findByTrangThai(String trangThai, Pageable pageable);
+
     Page<Voucher> findByKieuGiamGia(String kieuGiamGia, Pageable pageable);
 
     @Query("SELECT v FROM Voucher v WHERE v.maVoucher LIKE %:keyword% OR v.tenVoucher LIKE %:keyword%")
@@ -73,5 +74,31 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
             """, nativeQuery = true)
     List<VoucherBHResponse> giaTriGiamThucTeByIDHD(@RequestParam("idHD") Integer idHD);
 
-
+    @Query(nativeQuery = true, value = """
+                    SELECT\s
+                    		vc.*,
+                    		:giaTruyen AS gia_truyen_vao,
+                    		CASE\s
+                    			WHEN kieu_giam_gia = N'Tiền mặt' THEN gia_tri_giam
+                    			WHEN kieu_giam_gia = N'Phần trăm' THEN\s
+                    				CASE\s
+                    					WHEN (:giaTruyen * gia_tri_giam / 100) > gia_tri_toi_da THEN gia_tri_toi_da
+                    					ELSE (:giaTruyen * gia_tri_giam / 100)
+                    				END
+                    		END AS so_tien_giam,
+                    		CASE\s
+                    			WHEN kieu_giam_gia = N'Tiền mặt' THEN :giaTruyen - gia_tri_giam
+                    			WHEN kieu_giam_gia = N'Phần trăm' THEN\s
+                    				CASE\s
+                    					WHEN (:giaTruyen * gia_tri_giam / 100) > gia_tri_toi_da THEN :giaTruyen - gia_tri_toi_da
+                    					ELSE :giaTruyen - (:giaTruyen * gia_tri_giam / 100)
+                    				END
+                    		END AS gia_sau_giam
+                    	FROM\s
+                    		voucher vc
+                    	WHERE\s
+                    		vc.trang_thai = N'Đang diễn ra'\s
+                    		AND :giaTruyen >= gia_tri_toi_thieu;
+            """)
+    List<VoucherBHResponse> listVoucherHopLeTheoGia(@Param("giaTruyen") BigDecimal giaTruyen);
 }
