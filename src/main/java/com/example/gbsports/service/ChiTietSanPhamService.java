@@ -4,9 +4,14 @@ import com.example.gbsports.entity.*;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.response.ChiTietSanPhamView;
+import com.example.gbsports.response.HinhAnhView;
+import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +21,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ChiTietSanPhamService {
@@ -38,22 +45,23 @@ public class ChiTietSanPhamService {
     @Autowired
     SanPhamService sanPhamService;
 
+    //    @Cacheable(value = "detailProducts")
     public List<ChiTietSanPhamView> getAllCTSP() {
-        ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
-        listCTSP0.clear();
-        for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
-            if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
-                listCTSP0.add(ctspv);
-            }
-        }
-        for (ChiTietSanPhamView ctspXet : listCTSP0) {
-            if (ctspXet.getId_chi_tiet_san_pham() == null || ctspXet.getId_chi_tiet_san_pham().equals("")){
-                continue;
-            }
-            ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
-            ctsp.setTrang_thai("Không hoạt động");
-            chiTietSanPhamRepo.save(ctsp);
-        }
+//        ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
+//        listCTSP0.clear();
+//        for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
+//            if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
+//                listCTSP0.add(ctspv);
+//            }
+//        }
+//        for (ChiTietSanPhamView ctspXet : listCTSP0) {
+//            if (ctspXet.getId_chi_tiet_san_pham() == null || ctspXet.getId_chi_tiet_san_pham().equals("")) {
+//                continue;
+//            }
+//            ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
+//            ctsp.setTrang_thai("Không hoạt động");
+//            chiTietSanPhamRepo.save(ctsp);
+//        }
 
         return chiTietSanPhamRepo.listCTSP();
     }
@@ -176,7 +184,86 @@ public class ChiTietSanPhamService {
                     chiTietSanPham.setNgay_tao(ngay_sua_lo);
                     chiTietSanPham.toString();
                     chiTietSanPhamRepo.save(chiTietSanPham);
-                    return ResponseEntity.ok("Lưu thành công");
+//                    ArrayList<HinhAnhSanPham> hinhAnhXoa = new ArrayList<>();
+//                    ArrayList<String> hinhAnhThem = new ArrayList<>();
+//                    for (HinhAnhView haGoc : hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham())) {
+//                        for (String haRequest : chiTietSanPhamRequest.getHinh_anh()) {
+//                            if (haGoc.getHinh_anh().equalsIgnoreCase(haRequest)) {
+//                                continue;
+//                            } else {
+//                                HinhAnhSanPham haXoa = hinhAnhSanPhamRepo.findById(haGoc.getId_hinh_anh()).get();
+//                                hinhAnhThem.add(haRequest);
+//                                hinhAnhXoa.add(haXoa);
+//
+//                            }
+//                        }
+//                    }
+//                    for (HinhAnhSanPham xoa : hinhAnhXoa) {
+//                        hinhAnhSanPhamRepo.delete(xoa);
+//                    }
+//                    for (String them: hinhAnhThem) {
+//                        HinhAnhSanPham hinhAnhSanPham = new HinhAnhSanPham();
+//                        hinhAnhSanPham.setChiTietSanPham(chiTietSanPhamRepo.findById(chiTietSanPham.getId_chi_tiet_san_pham()).get());
+//                        hinhAnhSanPham.setHinh_anh(them);
+//                        hinhAnhSanPham.setAnh_chinh(true);
+//                        hinhAnhSanPhamRepo.save(hinhAnhSanPham);
+//                    }
+                    //New
+
+                    List<HinhAnhView> anhHienCo = hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham());
+                    List<String> duongDanAnhHienCo = anhHienCo.stream()
+                            .map(HinhAnhView::getHinh_anh)
+                            .collect(Collectors.toList());
+
+// Lấy danh sách hình ảnh mới từ request
+                    List<String> duongDanAnhMoi = chiTietSanPhamRequest.getHinh_anh();
+
+// 1. Xóa những ảnh không còn trong danh sách mới
+                    for (HinhAnhView anhHienTai : anhHienCo) {
+                        if (!duongDanAnhMoi.contains(anhHienTai.getHinh_anh())) {
+                            // Ảnh này không còn trong danh sách mới, nên xóa đi
+                            hinhAnhSanPhamRepo.delete(hinhAnhSanPhamRepo.findById(anhHienTai.getId_hinh_anh()).get());
+                            System.out.println("Đã xóa ảnh: " + anhHienTai.getHinh_anh());
+                        }
+                    }
+
+// 2. Thêm những ảnh mới
+                    for (String duongDanAnh : duongDanAnhMoi) {
+                        if (!duongDanAnhHienCo.contains(duongDanAnh)) {
+                            // Đây là ảnh mới, thêm vào
+                            HinhAnhSanPham hinhAnhSanPham = new HinhAnhSanPham();
+                            hinhAnhSanPham.setChiTietSanPham(chiTietSanPhamRepo.findById(chiTietSanPham.getId_chi_tiet_san_pham()).get());
+                            hinhAnhSanPham.setHinh_anh(duongDanAnh);
+
+                            // Nếu chưa có ảnh nào hoặc đây là ảnh đầu tiên, đặt làm ảnh chính
+                            boolean isAnhChinh = duongDanAnhHienCo.isEmpty() ||
+                                    (anhHienCo.stream().noneMatch(a -> a.getAnh_chinh()) && duongDanAnhMoi.indexOf(duongDanAnh) == 0);
+
+                            hinhAnhSanPham.setAnh_chinh(isAnhChinh);
+                            hinhAnhSanPhamRepo.save(hinhAnhSanPham);
+                            System.out.println("Đã thêm ảnh mới: " + duongDanAnh);
+                        }
+                    }
+
+// 3. Kiểm tra xem có ảnh chính hay không, nếu không thì set ảnh đầu tiên là ảnh chính
+                    boolean hasMainImage = hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham())
+                            .stream().anyMatch(a -> a.getAnh_chinh());
+
+                    if (!hasMainImage && !duongDanAnhMoi.isEmpty()) {
+                        List<HinhAnhSanPham> allImages = new ArrayList<>();
+                        for (HinhAnhView haview : hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham())) {
+                            allImages.add(hinhAnhSanPhamRepo.findById(haview.getId_hinh_anh()).get());
+                        }
+                        if (!allImages.isEmpty()) {
+                            HinhAnhSanPham firstImage = allImages.get(0);
+                            firstImage.setAnh_chinh(true);
+                            hinhAnhSanPhamRepo.save(firstImage);
+                            System.out.println("Đã đặt ảnh đầu tiên làm ảnh chính: " + firstImage.getHinh_anh());
+                        }
+                    }
+
+
+                    return ResponseEntity.ok("Lưu thành công" + chiTietSanPham);
                 } else {
                     //Trùng màu và kích thước và trùng sản phẩm, ID ctsp khác nhau
                     System.out.println("Khong trung id ctsp ");
@@ -199,7 +286,7 @@ public class ChiTietSanPhamService {
                         if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                             ctspSua.setNgay_sua(new Date());
                             chiTietSanPhamRepo.save(ctspSua);
-                            return ResponseEntity.ok("cập nhật số lượng");
+                            return ResponseEntity.ok("cập nhật số lượng" + ctspSua);
                         } else {
                             return ResponseEntity.badRequest().body("KHông ổn");
                         }
@@ -229,7 +316,7 @@ public class ChiTietSanPhamService {
                             hinhAnhSanPham.setAnh_chinh(true);
                             hinhAnhSanPhamRepo.save(hinhAnhSanPham);
                         }
-                        return ResponseEntity.ok("Lưu thành công");
+                        return ResponseEntity.ok("Lưu thành công" + chiTietSanPham);
                     }
                 }
 
@@ -329,18 +416,35 @@ public class ChiTietSanPhamService {
         //Thiếu Kích thước
     }
 
+    public BigDecimal getMaxGiaBan() {
+        BigDecimal maxGiaBan = BigDecimal.ZERO;
+        for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
+            BigDecimal giaBan = ctsp.getGia_ban();
+            if (giaBan != null && giaBan.compareTo(maxGiaBan) > 0) {
+                maxGiaBan = giaBan;
+            }
+        }
+        return maxGiaBan;
+    }
+
     public Page<ChiTietSanPhamView> sapXep(Pageable pageable) {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
-
-    public ArrayList<ChiTietSanPhamView> listCTSPTheoSanPham(@PathVariable Integer id) {
+//    @Cacheable(value = "ctspBySP", key = "#idSanPham")
+    public ArrayList<ChiTietSanPhamView> listCTSPTheoSanPham(@RequestParam("id") Integer id) {
         return chiTietSanPhamRepo.listCTSPFolowSanPham(id);
     }
+
 
     public List<ChiTietSanPhamView> getCTSPBySanPhamFull(@RequestParam("idSanPham") Integer idSanPham) {
         return chiTietSanPhamRepo.getCTSPBySanPhamFull(idSanPham);
     }
 
+    //    @CacheEvict(value = "ctspBySp", key = "#idSanPham")
+    @Caching(evict = {
+            @CacheEvict(value = "ctspBySp", allEntries = true),
+            @CacheEvict(value = "products", key = "'allSanPham'")
+    })
     public ResponseEntity<?> changeAllCTSPKhongHoatDong(@RequestParam("id") Integer id) {
         ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
         int countCTSP = 0;
@@ -368,6 +472,10 @@ public class ChiTietSanPhamService {
         return ResponseEntity.ok(ctsp);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "ctspBySp", allEntries = true),
+            @CacheEvict(value = "products", key = "'allSanPham'")
+    })
     public ResponseEntity<?> changeAllCTSPHoatDong(@RequestParam("id") Integer id) {
         ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
         int countCTSP = 0;
@@ -393,5 +501,133 @@ public class ChiTietSanPhamService {
             sanPhamRepo.save(sanPham);
         }
         return ResponseEntity.ok(ctsp);
+    }
+
+    public ResponseEntity<List<ChiTietSanPhamView>> timKiemVaLoc(@RequestParam(name = "keyword", required = false) String keyword,
+                                                                 @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
+                                                                 @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
+                                                                 @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
+                                                                 @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
+                                                                 @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
+                                                                 @RequestParam(name = "trangThai", required = false) String trangThai,
+                                                                 @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
+                                                                 @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
+                                                                 @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
+                                                                 @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
+                                                                 @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
+        List<ChiTietSanPhamView> danhSachSanPham = chiTietSanPhamRepo.listCTSP();
+
+        if (isEmpty(keyword) &&
+                isEmpty(tenSanPham) &&
+                giaBanMin == null &&
+                giaBanMax == null &&
+                soLuongMin == null &&
+                soLuongMax == null &&
+                isEmpty(trangThai) &&
+                isEmpty(listMauSac) &&
+                isEmpty(listDanhMuc) &&
+                isEmpty(listThuongHieu) &&
+                isEmpty(listChatLieu) &&
+                isEmpty(listKichThuoc)) {
+            return ResponseEntity.ok(danhSachSanPham);
+        }
+
+        Stream<ChiTietSanPhamView> stream = danhSachSanPham.stream();
+        if (!isEmpty(keyword)) {
+            String keywordLowercase = keyword.toLowerCase(Locale.ROOT);
+            stream = stream.filter(ctsp ->
+                    ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
+                            ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
+                            ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
+                            ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
+                            ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
+                            (ctsp.getTen_mau_sac() != null && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
+                            (ctsp.getGia_tri() != null && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+            );
+        }
+        if (!isEmpty(tenSanPham)) {
+            String tenSanPhamLowercase = tenSanPham.toLowerCase(Locale.ROOT);
+            stream = stream.filter(ctsp -> ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
+        }
+//        if (soLuongMin == null ){
+//            soLuongMin = 0;
+//        }
+//        if (soLuongMax == null){
+//            soLuongMax = Integer.MAX_VALUE;
+//        }
+//        if (giaBanMin == null){
+//            giaBanMin = Float.parseFloat("0");
+//        }
+//        if (giaBanMax == null){
+//            giaBanMax = Float.MAX_VALUE;
+//        }
+        if (giaBanMin != null) {
+            stream = stream.filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() >= giaBanMin);
+        }
+
+        if (giaBanMax != null) {
+            stream = stream.filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() <= giaBanMax);
+        }
+
+        if (soLuongMin != null) {
+            stream = stream.filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() >= soLuongMin);
+        }
+
+        if (soLuongMax != null) {
+            stream = stream.filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() <= soLuongMax);
+        }
+
+        if (!isEmpty(trangThai)) {
+            stream = stream.filter(ctsp -> trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
+        }
+
+        if (!isEmpty(listMauSac)) {
+            stream = stream.filter(ctsp -> ctsp.getTen_mau_sac() != null &&
+                    listMauSac.stream()
+                            .anyMatch(ms -> ms.equalsIgnoreCase(ctsp.getTen_mau_sac())));
+        }
+
+        if (!isEmpty(listDanhMuc)) {
+            stream = stream.filter(ctsp -> ctsp.getTen_danh_muc() != null &&
+                    listDanhMuc.stream()
+                            .anyMatch(dm -> dm.equalsIgnoreCase(ctsp.getTen_danh_muc())));
+        }
+
+        if (!isEmpty(listThuongHieu)) {
+            stream = stream.filter(ctsp -> ctsp.getTen_thuong_hieu() != null &&
+                    listThuongHieu.stream()
+                            .anyMatch(th -> th.equalsIgnoreCase(ctsp.getTen_thuong_hieu())));
+        }
+
+        if (!isEmpty(listChatLieu)) {
+            stream = stream.filter(ctsp -> ctsp.getTen_chat_lieu() != null &&
+                    listChatLieu.stream()
+                            .anyMatch(cl -> cl.equalsIgnoreCase(ctsp.getTen_chat_lieu())));
+        }
+
+        if (!isEmpty(listKichThuoc)) {
+            stream = stream.filter(ctsp -> ctsp.getGia_tri() != null &&
+                    listKichThuoc.stream()
+                            .anyMatch(kt -> kt.equalsIgnoreCase(ctsp.getGia_tri())));
+        }
+
+        // Chuyển stream trở lại thành danh sách
+        List<ChiTietSanPhamView> ketQua = stream.collect(Collectors.toList());
+
+        return ResponseEntity.ok(ketQua);
+
+    }
+
+    private List<SanPhamView> changeListCTSPToListSp(List<ChiTietSanPhamView> list) {
+        return null;
+    }
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    // Phương thức tiện ích để kiểm tra danh sách trống hoặc null
+    private boolean isEmpty(List<?> list) {
+        return list == null || list.isEmpty();
     }
 }

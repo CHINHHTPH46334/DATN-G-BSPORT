@@ -43,6 +43,7 @@ public class SanPhamController {
 
     @GetMapping("/SanPham")
     public List<SanPhamView> getAll() {
+        System.out.println("chạy vào đây");
         return sanPhamService.getAll();
     }
 
@@ -90,7 +91,7 @@ public class SanPhamController {
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL')")
     @PutMapping("/chuyenTrangThaiSanPham")
-    public String chuyenTrangThaiSanPham(@RequestParam("id") Integer id) {
+    public ResponseEntity<?> chuyenTrangThaiSanPham(@RequestParam("id") Integer id) {
         return sanPhamService.chuyenTrangThai(id);
     }
 

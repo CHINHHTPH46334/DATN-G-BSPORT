@@ -36,4 +36,8 @@ public interface VoucherBHResponse {
 
     BigDecimal getGia_tri_giam_thuc_te();
 
+    BigDecimal getSo_tien_giam();
+
+    BigDecimal getGia_sau_giam();
+
 }

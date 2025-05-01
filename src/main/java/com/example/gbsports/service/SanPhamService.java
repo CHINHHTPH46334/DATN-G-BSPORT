@@ -6,8 +6,10 @@ import com.example.gbsports.request.SanPhamRequest;
 import com.example.gbsports.response.ChiTietSanPhamView;
 import com.example.gbsports.response.SanPhamView;
 import jakarta.validation.Valid;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,10 +23,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
 public class SanPhamService {
+    //    private static final Logger logger = LoggerFactory.getLogger(SanPhamService.class);
     @Autowired
     SanPhamRepo sanPhamRepo;
     @Autowired
@@ -35,21 +39,36 @@ public class SanPhamService {
     ThuongHieuRepo thuongHieuRepo;
     @Autowired
     ChatLieuRepo chatLieuRepo;
-//    @Cacheable("products")
+
+    @Cacheable(value = "products", key = "'allSanPham'")
     public ArrayList<SanPhamView> getAll() {
-        ArrayList<SanPhamView> newList = new ArrayList<>();
-        for (SanPhamView spv: sanPhamRepo.getAllSanPham()) {
-            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
-                newList.add(spv);
-            }
-        }
-        for (SanPhamView spXet: newList) {
-            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
-            sanPham.setTrang_thai("Không hoạt động");
-            sanPhamRepo.save(sanPham);
-        }
+//        ArrayList<SanPhamView> newList = new ArrayList<>();
+        System.out.println("Lấy dữ liệu từ database không phải từ cache");
 
         return sanPhamRepo.getAllSanPham();
+    }
+    @CacheEvict(value = "products", key = "'allSanPham'")
+    public void updateProductStatus() {
+        ArrayList<SanPhamView> allProducts = sanPhamRepo.getAllSanPham();
+        boolean hasUpdates = false;
+
+        for (SanPhamView spv : allProducts) {
+            if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
+                SanPham sanPham = sanPhamRepo.findById(spv.getId_san_pham()).get();
+                if (!"Không hoạt động".equals(sanPham.getTrang_thai())) {
+                    sanPham.setTrang_thai("Không hoạt động");
+                    sanPhamRepo.save(sanPham);
+                    hasUpdates = true;
+                }
+            }
+        }
+
+        // Nếu không có cập nhật nào, không cần phải làm mới cache
+        if (!hasUpdates) {
+            System.out.println("Không có sản phẩm nào cần cập nhật trạng thái");
+        } else {
+            System.out.println("Đã cập nhật trạng thái sản phẩm và làm mới cache");
+        }
     }
 
     public List<SanPham> getAllFindAll() {
@@ -63,19 +82,19 @@ public class SanPhamService {
     public SanPham detailSP(@RequestParam("id") Integer id) {
         return sanPhamRepo.findById(id).get();
     }
-
+    //Chưa cache
     public ArrayList<SanPhamView> getAllSPNgaySua() {
-        ArrayList<SanPhamView> newList = new ArrayList<>();
-        for (SanPhamView spv: sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
-            if (spv.getTong_so_luong() == null||spv.getTong_so_luong() <= 0){
-                newList.add(spv);
-            }
-        }
-        for (SanPhamView spXet: newList) {
-            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
-            sanPham.setTrang_thai("Không hoạt động");
-            sanPhamRepo.save(sanPham);
-        }
+//        ArrayList<SanPhamView> newList = new ArrayList<>();
+//        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
+//            if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
+//                newList.add(spv);
+//            }
+//        }
+//        for (SanPhamView spXet : newList) {
+//            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+//            sanPham.setTrang_thai("Không hoạt động");
+//            sanPhamRepo.save(sanPham);
+//        }
         return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
     }
 
@@ -179,39 +198,42 @@ public class SanPhamService {
 
     }
 
-    public String chuyenTrangThai(@RequestParam("id") Integer id) {
+    public ResponseEntity<?> chuyenTrangThai(@RequestParam("id") Integer id) {
+        System.out.println("id san pham" + id);
         ArrayList<ChiTietSanPham> list = new ArrayList<>();
         SanPham spDelete = new SanPham();
         for (SanPham sp : sanPhamRepo.findAll()) {
-            if (sp.getId_san_pham() == id) {
+            if (sp.getId_san_pham().equals(id)) {
                 spDelete = sp;
             }
         }
+        System.out.println(spDelete.getId_san_pham() + "id san pham sau khi lay");
         for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
-            if (ctsp.getSanPham().getId_san_pham() == id) {
+            if (ctsp.getSanPham().getId_san_pham().equals(id)) {
                 list.add(ctsp);
             }
         }
         if (list.isEmpty()) {
-            return "Không có chi tiết sản phẩm cho sản phẩm này";
+            return ResponseEntity.badRequest().body("Không có chi tiết cho sản phẩm này" + id);
         } else {
-            if (spDelete.getTrang_thai().equalsIgnoreCase("Hoạt động")) {
+            if (spDelete.getTrang_thai().trim().equalsIgnoreCase("Hoạt động".trim())) {
+                spDelete.setTrang_thai("Không hoạt động".trim());
+                sanPhamRepo.save(spDelete);
                 for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Không hoạt động");
+                    ctspXoa.setTrang_thai("Không hoạt động".trim());
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
-                spDelete.setTrang_thai("Không hoạt động");
-                sanPhamRepo.save(spDelete);
-            } else {
-                for (ChiTietSanPham ctspXoa : list) {
-                    ctspXoa.setTrang_thai("Hoạt động");
-                    chiTietSanPhamRepo.save(ctspXoa);
-                }
-                spDelete.setTrang_thai("Hoạt động");
-                sanPhamRepo.save(spDelete);
             }
+//            else {
+//                for (ChiTietSanPham ctspXoa : list) {
+//                    ctspXoa.setTrang_thai("Hoạt động".trim());
+//                    chiTietSanPhamRepo.save(ctspXoa);
+//                }
+//                spDelete.setTrang_thai("Hoạt động".trim());
+//                sanPhamRepo.save(spDelete);
+//            }
         }
-        return "Chuyển trạng thái thành công";
+        return ResponseEntity.ok(spDelete);
     }
 
     public ArrayList<SanPham> listTimKiem(String search) {
