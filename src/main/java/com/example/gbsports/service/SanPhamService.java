@@ -83,6 +83,7 @@ public class SanPhamService {
         return sanPhamRepo.findById(id).get();
     }
     //Chưa cache
+//    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
 //        ArrayList<SanPhamView> newList = new ArrayList<>();
 //        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
@@ -314,7 +315,6 @@ public class SanPhamService {
     public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
     }
-
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }

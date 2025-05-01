@@ -265,4 +265,14 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             """, nativeQuery = true)
     List<ChiTietSanPhamView> getAllCTSPKM();
     //////
+
+    @Query(nativeQuery = true, value = """
+            select * from chi_tiet_san_pham ctsp 
+            where ctsp.id_san_pham = :idSanPham and ctsp.id_mau_sac= :idMauSac and ctsp.id_kich_thuoc = :idKichThuoc
+            """)
+    Optional<ChiTietSanPham> findByIdSanPhamIdMauSacIdKichThuoc(
+            @Param("idSanPham") Integer idSanPham,
+            @Param("idMauSac") Integer idMauSac,
+            @Param("idKichThuoc") Integer idKichThuoc
+    );
 }
