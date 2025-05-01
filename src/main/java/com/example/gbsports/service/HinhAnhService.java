@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class HinhAnhService {
     @Autowired
     HinhAnhSanPhamRepo hinhAnhSanPhamRepo;
-    public ArrayList<HinhAnhView> listAnhTheoCTSP(@RequestParam("idCTSP") Integer id,
-                                                  @RequestParam("anhChinh") Boolean anhChinh) {
+    public List<HinhAnhView> listAnhTheoCTSP(@RequestParam("idCTSP") Integer id,
+                                             @RequestParam("anhChinh") Boolean anhChinh) {
         ArrayList<HinhAnhView> listTam = new ArrayList<>();
         if (anhChinh == null){
             return hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(id);

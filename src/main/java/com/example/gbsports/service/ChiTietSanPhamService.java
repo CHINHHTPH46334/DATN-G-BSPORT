@@ -46,23 +46,25 @@ public class ChiTietSanPhamService {
     @Autowired
     SanPhamService sanPhamService;
 
-    //    @Cacheable(value = "detailProducts")
+    // @Cacheable(value = "detailProducts")
     public List<ChiTietSanPhamView> getAllCTSP() {
-//        ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
-//        listCTSP0.clear();
-//        for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
-//            if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
-//                listCTSP0.add(ctspv);
-//            }
-//        }
-//        for (ChiTietSanPhamView ctspXet : listCTSP0) {
-//            if (ctspXet.getId_chi_tiet_san_pham() == null || ctspXet.getId_chi_tiet_san_pham().equals("")) {
-//                continue;
-//            }
-//            ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
-//            ctsp.setTrang_thai("Không hoạt động");
-//            chiTietSanPhamRepo.save(ctsp);
-//        }
+        // ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
+        // listCTSP0.clear();
+        // for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
+        // if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
+        // listCTSP0.add(ctspv);
+        // }
+        // }
+        // for (ChiTietSanPhamView ctspXet : listCTSP0) {
+        // if (ctspXet.getId_chi_tiet_san_pham() == null ||
+        // ctspXet.getId_chi_tiet_san_pham().equals("")) {
+        // continue;
+        // }
+        // ChiTietSanPham ctsp =
+        // chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
+        // ctsp.setTrang_thai("Không hoạt động");
+        // chiTietSanPhamRepo.save(ctsp);
+        // }
 
         return chiTietSanPhamRepo.listCTSP();
     }
@@ -116,6 +118,7 @@ public class ChiTietSanPhamService {
             String message = "";
             boolean isNewDetail = false;
             Integer oldQuantity = 0;
+            boolean isUpdateByAttribute = false; // Biến đánh dấu trường hợp update theo thuộc tính
 
             // CASE 1: Kiểm tra nếu có ID chi tiết sản phẩm (cập nhật)
             if (chiTietSanPhamRequest.getId_chi_tiet_san_pham() != null &&
@@ -157,6 +160,10 @@ public class ChiTietSanPhamService {
                     chiTietSanPham = existingSanPhamByAttributes.get();
                     oldQuantity = chiTietSanPham.getSo_luong();
                     chiTietSanPham.setSo_luong(oldQuantity + chiTietSanPhamRequest.getSo_luong());
+
+                    // Đánh dấu đây là trường hợp cập nhật theo thuộc tính
+                    isUpdateByAttribute = true;
+
                     message = "Cập nhật số lượng chi tiết sản phẩm thành công";
                 }
                 // CASE 3: Tạo mới chi tiết sản phẩm
@@ -182,15 +189,23 @@ public class ChiTietSanPhamService {
             // Lưu chi tiết sản phẩm
             ChiTietSanPham savedProduct = chiTietSanPhamRepo.save(chiTietSanPham);
 
-            // Xử lý hình ảnh
+            // Xử lý hình ảnh - Đã điều chỉnh logic để giải quyết vấn đề
             if (isNewDetail) {
                 // Nếu là chi tiết sản phẩm mới
                 if (chiTietSanPhamRequest.getHinh_anh() != null && !chiTietSanPhamRequest.getHinh_anh().isEmpty()) {
                     saveProductImages(savedProduct, chiTietSanPhamRequest.getHinh_anh());
                 }
+            } else if (isUpdateByAttribute) {
+                // Nếu là cập nhật theo thuộc tính (CASE 2.1 - trùng màu sắc và kích thước)
+                // Thêm ảnh mới nếu có, nhưng KHÔNG xóa ảnh cũ
+                if (chiTietSanPhamRequest.getHinh_anh() != null && !chiTietSanPhamRequest.getHinh_anh().isEmpty()) {
+                    addNewProductImagesOnly(savedProduct, chiTietSanPhamRequest.getHinh_anh());
+                }
             } else {
-                // Nếu là cập nhật chi tiết sản phẩm
-                processProductImages(savedProduct, chiTietSanPhamRequest.getHinh_anh());
+                // Nếu là cập nhật theo ID chi tiết sản phẩm (CASE 1)
+                if (chiTietSanPhamRequest.getHinh_anh() != null && !chiTietSanPhamRequest.getHinh_anh().isEmpty()) {
+                    processProductImages(savedProduct, chiTietSanPhamRequest.getHinh_anh());
+                }
             }
 
             // Chuẩn bị response
@@ -215,7 +230,37 @@ public class ChiTietSanPhamService {
     }
 
     /**
-     * Xử lý hình ảnh sản phẩm khi cập nhật
+     * Chỉ thêm các ảnh mới mà không xóa ảnh cũ
+     * Dùng cho trường hợp cập nhật theo thuộc tính (trùng màu sắc và kích thước)
+     */
+    private void addNewProductImagesOnly(ChiTietSanPham product, List<String> newImagePaths) {
+        if (newImagePaths == null || newImagePaths.isEmpty()) {
+            return;
+        }
+
+        // Lấy danh sách đường dẫn hình ảnh hiện có
+        List<HinhAnhView> existingImages = hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(product.getId_chi_tiet_san_pham());
+        List<String> existingImagePaths = existingImages.stream()
+                .map(HinhAnhView::getHinh_anh)
+                .collect(Collectors.toList());
+
+        // Chỉ thêm các ảnh mới chưa tồn tại, KHÔNG xóa ảnh cũ
+        for (String path : newImagePaths) {
+            if (!existingImagePaths.contains(path)) {
+                HinhAnhSanPham newImage = new HinhAnhSanPham();
+                newImage.setChiTietSanPham(product);
+                newImage.setHinh_anh(path);
+                newImage.setAnh_chinh(false); // Giữ nguyên ảnh chính cũ
+                hinhAnhSanPhamRepo.save(newImage);
+            }
+        }
+
+        // Đảm bảo luôn có một ảnh chính
+        ensureMainImageExists(product.getId_chi_tiet_san_pham());
+    }
+
+    /**
+     * Xử lý hình ảnh sản phẩm khi cập nhật theo ID
      */
     private void processProductImages(ChiTietSanPham product, List<String> newImagePaths) {
         if (newImagePaths == null || newImagePaths.isEmpty()) {
@@ -360,7 +405,8 @@ public class ChiTietSanPhamService {
                 sanPham.setTrang_thai("Hoạt động");
                 sanPhamRepo.save(sanPham);
             }
-            // Nếu người dùng đang cố gắng vô hiệu hóa CTSP, giữ nguyên trạng thái sản phẩm cha
+            // Nếu người dùng đang cố gắng vô hiệu hóa CTSP, giữ nguyên trạng thái sản phẩm
+            // cha
             else {
                 ctspDelete.setTrang_thai("Không hoạt động");
                 chiTietSanPhamRepo.save(ctspDelete);
@@ -385,11 +431,11 @@ public class ChiTietSanPhamService {
     }
 
     public ArrayList<ChiTietSanPhamView> listLocCTSP(String tenSanPham, float giaBanMin, float giaBanMax,
-                                                     Integer soLuongMin, Integer soLuongMax, String trangThai,
-                                                     String tenMauSac, String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
+            Integer soLuongMin, Integer soLuongMax, String trangThai,
+            String tenMauSac, String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
         return chiTietSanPhamRepo.listLocCTSP(tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax,
                 trangThai, tenMauSac, tenDanhMuc, tenThuongHieu, tenChatLieu);
-        //Thiếu Kích thước
+        // Thiếu Kích thước
     }
 
     public BigDecimal getMaxGiaBan() {
@@ -407,17 +453,16 @@ public class ChiTietSanPhamService {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
 
-    //    @Cacheable(value = "ctspBySP", key = "#idSanPham")
+    // @Cacheable(value = "ctspBySP", key = "#idSanPham")
     public ArrayList<ChiTietSanPhamView> listCTSPTheoSanPham(@RequestParam("id") Integer id) {
         return chiTietSanPhamRepo.listCTSPFolowSanPham(id);
     }
-
 
     public List<ChiTietSanPhamView> getCTSPBySanPhamFull(@RequestParam("idSanPham") Integer idSanPham) {
         return chiTietSanPhamRepo.getCTSPBySanPhamFull(idSanPham);
     }
 
-    //    @CacheEvict(value = "ctspBySp", key = "#idSanPham")
+    // @CacheEvict(value = "ctspBySp", key = "#idSanPham")
     @Caching(evict = {
             @CacheEvict(value = "ctspBySp", allEntries = true),
             @CacheEvict(value = "products", key = "'allSanPham'")
@@ -480,18 +525,19 @@ public class ChiTietSanPhamService {
         return ResponseEntity.ok(ctsp);
     }
 
-    public ResponseEntity<List<SanPhamView>> timKiemVaLoc(@RequestParam(name = "keyword", required = false) String keyword,
-                                                          @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
-                                                          @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
-                                                          @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
-                                                          @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
-                                                          @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
-                                                          @RequestParam(name = "trangThai", required = false) String trangThai,
-                                                          @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
-                                                          @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
-                                                          @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
-                                                          @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
-                                                          @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
+    public ResponseEntity<List<SanPhamView>> timKiemVaLoc(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
+            @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
+            @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
+            @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
+            @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
+            @RequestParam(name = "trangThai", required = false) String trangThai,
+            @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
+            @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
+            @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
+            @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
+            @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
         // Log các tham số để debug
         System.out.println("Tham số nhận được:");
         System.out.println("keyword: " + keyword);
@@ -523,7 +569,6 @@ public class ChiTietSanPhamService {
             return ResponseEntity.ok(sanPhamRepo.getSanPhamByListCTSP(listKhongCoGi));
         }
 
-
         Stream<ChiTietSanPhamView> stream = danhSachSanPham.stream();
         int countBefore = (int) stream.count(); // Đếm số lượng ban đầu
         stream = danhSachSanPham.stream(); // Reset stream sau khi đã count
@@ -532,24 +577,33 @@ public class ChiTietSanPhamService {
 
         if (!isEmpty(keyword)) {
             String keywordLowercase = keyword.toLowerCase(Locale.ROOT);
-            stream = stream.filter(ctsp ->
-                    (ctsp.getTen_san_pham() != null && ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getMa_san_pham() != null && ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_chat_lieu() != null && ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_danh_muc() != null && ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_thuong_hieu() != null && ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_mau_sac() != null && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getGia_tri() != null && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase))
-            );
+            stream = stream.filter(ctsp -> (ctsp.getTen_san_pham() != null
+                    && ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
+                    (ctsp.getMa_san_pham() != null
+                            && ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_chat_lieu() != null
+                            && ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_danh_muc() != null
+                            && ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_thuong_hieu() != null
+                            && ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_mau_sac() != null
+                            && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getGia_tri() != null
+                            && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase)));
             System.out.println("Sau khi lọc keyword: " + stream.count());
             stream = danhSachSanPham.stream(); // Reset stream sau khi đã count
         }
 
         if (!isEmpty(tenSanPham)) {
             String tenSanPhamLowercase = tenSanPham.toLowerCase(Locale.ROOT);
-            stream = stream.filter(ctsp ->
-                    ctsp.getTen_san_pham() != null &&
-                            ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
+            stream = stream.filter(ctsp -> ctsp.getTen_san_pham() != null &&
+                    ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
             System.out.println("Sau khi lọc tên sản phẩm: " + stream.count());
             stream = danhSachSanPham.stream(); // Reset stream sau khi đã count
         }
@@ -579,9 +633,8 @@ public class ChiTietSanPhamService {
         }
 
         if (!isEmpty(trangThai)) {
-            stream = stream.filter(ctsp ->
-                    ctsp.getTrang_thai() != null &&
-                            trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
+            stream = stream.filter(ctsp -> ctsp.getTrang_thai() != null &&
+                    trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
             System.out.println("Sau khi lọc trạng thái: " + stream.count());
             stream = danhSachSanPham.stream(); // Reset stream sau khi đã count
         }
@@ -598,7 +651,8 @@ public class ChiTietSanPhamService {
             System.out.println("Các màu sắc trong dữ liệu: " + allMauSac);
 
             stream = stream.filter(ctsp -> {
-                if (ctsp.getTen_mau_sac() == null) return false;
+                if (ctsp.getTen_mau_sac() == null)
+                    return false;
                 String mauSacValue = ctsp.getTen_mau_sac().trim();
 
                 for (String ms : listMauSac) {
@@ -624,7 +678,8 @@ public class ChiTietSanPhamService {
             System.out.println("Các danh mục trong dữ liệu: " + allDanhMuc);
 
             stream = stream.filter(ctsp -> {
-                if (ctsp.getTen_danh_muc() == null) return false;
+                if (ctsp.getTen_danh_muc() == null)
+                    return false;
                 String danhMucValue = ctsp.getTen_danh_muc().trim();
 
                 for (String dm : listDanhMuc) {
@@ -650,7 +705,8 @@ public class ChiTietSanPhamService {
             System.out.println("Các thương hiệu trong dữ liệu: " + allThuongHieu);
 
             stream = stream.filter(ctsp -> {
-                if (ctsp.getTen_thuong_hieu() == null) return false;
+                if (ctsp.getTen_thuong_hieu() == null)
+                    return false;
                 String thuongHieuValue = ctsp.getTen_thuong_hieu().trim();
 
                 for (String th : listThuongHieu) {
@@ -676,7 +732,8 @@ public class ChiTietSanPhamService {
             System.out.println("Các chất liệu trong dữ liệu: " + allChatLieu);
 
             stream = stream.filter(ctsp -> {
-                if (ctsp.getTen_chat_lieu() == null) return false;
+                if (ctsp.getTen_chat_lieu() == null)
+                    return false;
                 String chatLieuValue = ctsp.getTen_chat_lieu().trim();
 
                 for (String cl : listChatLieu) {
@@ -702,7 +759,8 @@ public class ChiTietSanPhamService {
             System.out.println("Các kích thước trong dữ liệu: " + allKichThuoc);
 
             stream = stream.filter(ctsp -> {
-                if (ctsp.getGia_tri() == null) return false;
+                if (ctsp.getGia_tri() == null)
+                    return false;
                 String giaTriValue = ctsp.getGia_tri().trim();
 
                 for (String kt : listKichThuoc) {
@@ -722,22 +780,31 @@ public class ChiTietSanPhamService {
         // Áp dụng từng bộ lọc
         if (!isEmpty(keyword)) {
             String keywordLowercase = keyword.toLowerCase(Locale.ROOT);
-            finalStream = finalStream.filter(ctsp ->
-                    (ctsp.getTen_san_pham() != null && ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getMa_san_pham() != null && ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_chat_lieu() != null && ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_danh_muc() != null && ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_thuong_hieu() != null && ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getTen_mau_sac() != null && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getGia_tri() != null && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase))
-            );
+            finalStream = finalStream.filter(ctsp -> (ctsp.getTen_san_pham() != null
+                    && ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
+                    (ctsp.getMa_san_pham() != null
+                            && ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_chat_lieu() != null
+                            && ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_danh_muc() != null
+                            && ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_thuong_hieu() != null
+                            && ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getTen_mau_sac() != null
+                            && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase))
+                    ||
+                    (ctsp.getGia_tri() != null
+                            && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase)));
         }
 
         if (!isEmpty(tenSanPham)) {
             String tenSanPhamLowercase = tenSanPham.toLowerCase(Locale.ROOT);
-            finalStream = finalStream.filter(ctsp ->
-                    ctsp.getTen_san_pham() != null &&
-                            ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
+            finalStream = finalStream.filter(ctsp -> ctsp.getTen_san_pham() != null &&
+                    ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
         }
 
         if (giaBanMin != null) {
@@ -757,14 +824,14 @@ public class ChiTietSanPhamService {
         }
 
         if (!isEmpty(trangThai)) {
-            finalStream = finalStream.filter(ctsp ->
-                    ctsp.getTrang_thai() != null &&
-                            trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
+            finalStream = finalStream.filter(ctsp -> ctsp.getTrang_thai() != null &&
+                    trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
         }
 
         if (!isEmpty(listMauSac)) {
             finalStream = finalStream.filter(ctsp -> {
-                if (ctsp.getTen_mau_sac() == null) return false;
+                if (ctsp.getTen_mau_sac() == null)
+                    return false;
                 String mauSacValue = ctsp.getTen_mau_sac().trim();
 
                 for (String ms : listMauSac) {
@@ -778,7 +845,8 @@ public class ChiTietSanPhamService {
 
         if (!isEmpty(listDanhMuc)) {
             finalStream = finalStream.filter(ctsp -> {
-                if (ctsp.getTen_danh_muc() == null) return false;
+                if (ctsp.getTen_danh_muc() == null)
+                    return false;
                 String danhMucValue = ctsp.getTen_danh_muc().trim();
 
                 for (String dm : listDanhMuc) {
@@ -792,7 +860,8 @@ public class ChiTietSanPhamService {
 
         if (!isEmpty(listThuongHieu)) {
             finalStream = finalStream.filter(ctsp -> {
-                if (ctsp.getTen_thuong_hieu() == null) return false;
+                if (ctsp.getTen_thuong_hieu() == null)
+                    return false;
                 String thuongHieuValue = ctsp.getTen_thuong_hieu().trim();
 
                 for (String th : listThuongHieu) {
@@ -806,7 +875,8 @@ public class ChiTietSanPhamService {
 
         if (!isEmpty(listChatLieu)) {
             finalStream = finalStream.filter(ctsp -> {
-                if (ctsp.getTen_chat_lieu() == null) return false;
+                if (ctsp.getTen_chat_lieu() == null)
+                    return false;
                 String chatLieuValue = ctsp.getTen_chat_lieu().trim();
 
                 for (String cl : listChatLieu) {
@@ -820,7 +890,8 @@ public class ChiTietSanPhamService {
 
         if (!isEmpty(listKichThuoc)) {
             finalStream = finalStream.filter(ctsp -> {
-                if (ctsp.getGia_tri() == null) return false;
+                if (ctsp.getGia_tri() == null)
+                    return false;
                 String giaTriValue = ctsp.getGia_tri().trim();
 
                 for (String kt : listKichThuoc) {
@@ -850,7 +921,7 @@ public class ChiTietSanPhamService {
         } else {
             return ResponseEntity.ok(listReturn);
         }
-        //Đang chuyển list ctsp -> sản phẩm
+        // Đang chuyển list ctsp -> sản phẩm
 
     }
 

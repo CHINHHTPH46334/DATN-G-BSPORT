@@ -84,7 +84,7 @@ public class SanPhamService {
         return sanPhamRepo.findById(id).get();
     }
     //Chưa cache
-    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
+//    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
 //        ArrayList<SanPhamView> newList = new ArrayList<>();
 //        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
