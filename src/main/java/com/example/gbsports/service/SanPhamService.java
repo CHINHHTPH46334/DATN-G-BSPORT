@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -83,6 +84,7 @@ public class SanPhamService {
         return sanPhamRepo.findById(id).get();
     }
     //Chưa cache
+    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
 //        ArrayList<SanPhamView> newList = new ArrayList<>();
 //        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
@@ -314,7 +316,6 @@ public class SanPhamService {
     public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
     }
-
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }
