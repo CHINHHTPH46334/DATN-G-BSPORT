@@ -604,12 +604,15 @@ public class HoaDonController {
         }
     }
 
+    // lềnh thay đổi
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
     @GetMapping("/khach-hang/{idKhachHang}")
     public ResponseEntity<?> getDonHangByKhachHang(@PathVariable Integer idKhachHang) {
         try {
-            List<HoaDon> hoaDons = hoaDonService.getHoaDonByKhachHangId(idKhachHang);
+            List<HoaDonResponse> hoaDons = hoaDonService.getHoaDonByKhachHangId(idKhachHang);
             System.out.println("✅ Số đơn hàng tìm thấy cho idKhachHang " + idKhachHang + ": " + hoaDons.size());
+            // Gỡ lỗi: In giá trị ghi_chu của mỗi hóa đơn
+            hoaDons.forEach(hd -> System.out.println("Ghi_chu của hóa đơn " + hd.getMa_hoa_don() + ": " + hd.getGhi_chu()));
             return ResponseEntity.ok(hoaDons);
         } catch (Exception e) {
             System.err.println("Lỗi khi lấy đơn hàng cho idKhachHang " + idKhachHang + ": " + e.getMessage());
@@ -843,6 +846,7 @@ public class HoaDonController {
     }
 
     ///Của lềnh
+    // lềnh sửa
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_KH')")
     @PutMapping("/huy-don/{idHoaDon}")
     @Transactional
@@ -859,8 +863,9 @@ public class HoaDonController {
 
             HoaDon hoaDon = hoaDonOpt.get();
 
-            // Kiểm tra trạng thái hiện tại của đơn hàng
-            if (!"Chờ xác nhận".equals(hoaDon.getTrang_thai())) {
+            // Lấy lịch sử trạng thái từ bảng theo_doi_don_hang
+            List<TheoDoiDonHangResponse> trangThaiHistory = hoaDonRepo.findTrangThaiHistoryByIdHoaDon(idHoaDon);
+            if (trangThaiHistory.isEmpty() || !"Chờ xác nhận".equals(trangThaiHistory.get(trangThaiHistory.size() - 1).getTrang_thai())) {
                 response.put("success", false);
                 response.put("message", "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận!");
                 return ResponseEntity.badRequest().body(response);
@@ -881,7 +886,7 @@ public class HoaDonController {
                 voucherRepo.save(voucher);
             }
 
-            // Cập nhật trạng thái đơn hàng
+            // Cập nhật trạng thái đơn hàng trong hoa_don
             hoaDon.setTrang_thai("Đã hủy");
             hoaDon.setNgay_sua(LocalDateTime.now());
             hoaDonRepo.save(hoaDon);

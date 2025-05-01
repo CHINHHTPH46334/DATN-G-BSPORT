@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -1204,4 +1205,83 @@ public class KhachHangController {
                 ? hoaDonRepo.getAllHDByidKH(idKH, pageable)
                 : hoaDonRepo.getAllHDByidKHandTT(idKH, trangThai, pageable);
     }
+
+    // lềnh thêm
+    @PostMapping("/update-order-info")
+    @PreAuthorize("hasRole('ROLE_KH')")
+    public ResponseEntity<Map<String, Object>> updateOrderCustomerInfo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UpdateOrderCustomerInfoDTO request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy email từ UserDetails (giả sử username là email)
+            String email = userDetails.getUsername();
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByEmail(email);
+            if (!khachHangOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin khách hàng!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            Integer idKhachHang = khachHangOpt.get().getIdKhachHang();
+
+            // Kiểm tra mã hóa đơn và đảm bảo thuộc về khách hàng
+            Optional<HoaDon> hoaDonOpt = hoaDonRepo.findByMaHoaDonAndIdKhachHang(request.getMaHoaDon(), idKhachHang);
+            if (!hoaDonOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy hóa đơn hoặc bạn không có quyền cập nhật!");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            HoaDon hoaDon = hoaDonOpt.get();
+
+            // Kiểm tra trạng thái đơn hàng (phải là Chờ xác nhận, Đã xác nhận, hoặc Chờ đóng gói)
+            String currentStatus = hoaDonRepo.findLatestStatusByIdHoaDon(hoaDon.getId_hoa_don());
+            List<String> allowedStatuses = Arrays.asList("Chờ xác nhận", "Đã xác nhận", "Chờ đóng gói");
+            if (!allowedStatuses.contains(currentStatus)) {
+                response.put("success", false);
+                response.put("message", "Không thể cập nhật thông tin khách hàng cho đơn hàng này!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Kiểm tra dữ liệu đầu vào
+            if (request.getHoTen() == null || request.getHoTen().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Họ tên không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            if (request.getSdtNguoiNhan() == null || request.getSdtNguoiNhan().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Số điện thoại không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            if (request.getDiaChi() == null || request.getDiaChi().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Địa chỉ không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Cập nhật thông tin
+            hoaDon.setHo_ten(request.getHoTen().trim());
+            hoaDon.setSdt_nguoi_nhan(request.getSdtNguoiNhan().trim());
+            hoaDon.setDia_chi(request.getDiaChi().trim());
+            hoaDon.setNgay_sua(LocalDateTime.now());
+            hoaDonRepo.save(hoaDon);
+
+            // Ghi lại lịch sử cập nhật trong theo_doi_don_hang
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            String noiDungDoi = "Khách hàng tự cập nhật thông tin";
+            hoaDonRepo.insertTrangThaiDonHang(request.getMaHoaDon(), "Đã cập nhật", ngayChuyen, null, noiDungDoi);
+
+            response.put("success", true);
+            response.put("message", "Cập nhật thông tin khách hàng thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

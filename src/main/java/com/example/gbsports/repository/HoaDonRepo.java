@@ -362,6 +362,30 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     HoaDonChiTietResponse getKhachHangInfoByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
 
+    // lềnh thêm và sửa
+    @Query(value = """
+            SELECT DISTINCT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, 
+                            hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.dia_chi, hd.ghi_chu,
+                            v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            FROM hoa_don hd
+            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
+            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                        FROM theo_doi_don_hang t
+                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
+                                                FROM theo_doi_don_hang t2
+                                                WHERE t2.id_hoa_don = t.id_hoa_don
+                                                )
+                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            WHERE hd.id_khach_hang = :idKhachHang
+            ORDER BY hd.ngay_tao DESC
+            """, nativeQuery = true)
+    List<HoaDonResponse> findHoaDonWithLatestStatusByKhachHangId(@Param("idKhachHang") Integer idKhachHang);
 
+    @Query("SELECT h FROM HoaDon h WHERE h.ma_hoa_don = :maHoaDon AND h.khachHang.idKhachHang = :idKhachHang")
+    Optional<HoaDon> findByMaHoaDonAndIdKhachHang(@Param("maHoaDon") String maHoaDon, @Param("idKhachHang") Integer idKhachHang);
+
+    @Query(value = "SELECT TOP 1 trang_thai FROM theo_doi_don_hang WHERE id_hoa_don = :idHoaDon ORDER BY ngay_chuyen DESC", nativeQuery = true)
+    String findLatestStatusByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 
 }
