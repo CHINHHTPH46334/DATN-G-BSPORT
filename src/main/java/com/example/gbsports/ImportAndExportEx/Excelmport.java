@@ -165,8 +165,6 @@ public class Excelmport {
 
                 // ✅ Đọc dữ liệu cho Sản Phẩm
                 String tenSanPham = getStringValueFromCell(row.getCell(0));
-//                Boolean gioiTinh = getBooleanValueFromCell(row.getCell(1));
-//                BigDecimal giaNhap = getBigDecimalValue(row.getCell(1));
                 BigDecimal giaBan = getBigDecimalValue(row.getCell(1));
                 Integer soLuong = getIntegerValueFromCell(row.getCell(2));
                 String giaTriKichThuoc = getStringValueFromCell(row.getCell(3));
@@ -211,6 +209,9 @@ public class Excelmport {
                     list.add(chiTietSanPham);
                 }
             }
+        }
+        for (ChiTietSanPham ctsp: list) {
+            ctsp.inThongTin();
         }
         return list;
     }
