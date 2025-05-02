@@ -118,70 +118,196 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query("SELECT sp FROM SanPham sp ORDER BY sp.id_san_pham")
     Page<SanPham> findAllSortedByIdSanPham(Pageable pageable);
 
-    @Query(nativeQuery = true, value = "WITH KhuyenMaiHieuLuc AS (\n" +
-            "\t\t\t\t\t\tSELECT \n" +
-            "\t\t\t\t\t\t\tctkm.id_chi_tiet_san_pham,\n" +
-            "\t\t\t\t\t\t\tGiamGia = CASE \n" +
-            "\t\t\t\t\t\t\t\tWHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100)\n"
-            +
-            "\t\t\t\t\t\t\t\tWHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam\n" +
-            "\t\t\t\t\t\t\t\tELSE ctsp.gia_ban\n" +
-            "\t\t\t\t\t\t\tEND\n" +
-            "\t\t\t\t\t\tFROM chi_tiet_khuyen_mai ctkm\n" +
-            "\t\t\t\t\t\tJOIN khuyen_mai km \n" +
-            "\t\t\t\t\t\t\tON ctkm.id_khuyen_mai = km.id_khuyen_mai\n" +
-            "\t\t\t\t\t\t\tAND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han\n" +
-            "\t\t\t\t\t\tJOIN chi_tiet_san_pham ctsp \n" +
-            "\t\t\t\t\t\t\tON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham\n" +
-            "\t\t\t\t\t),\n" +
-            "\t\t\t\t\tGiaTotNhat AS (\n" +
-            "\t\t\t\t\t\tSELECT\n" +
-            "\t\t\t\t\t\t\tctsp.id_san_pham,\n" +
-            "\t\t\t\t\t\t\tGiaGiamMin = MIN(ISNULL(kh.GiamGia, ctsp.gia_ban)), -- Xử lý NULL\n" +
-            "\t\t\t\t\t\t\tGiaGiamMax = MAX(ISNULL(kh.GiamGia, ctsp.gia_ban))\n" +
-            "\t\t\t\t\t\tFROM chi_tiet_san_pham ctsp\n" +
-            "\t\t\t\t\t\tLEFT JOIN KhuyenMaiHieuLuc kh \n" +
-            "\t\t\t\t\t\t\tON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham\n" +
-            "\t\t\t\t\t\tGROUP BY ctsp.id_san_pham\n" +
-            "\t\t\t\t\t)\n" +
-            "\n" +
-            "\t\t\t\t\tSELECT DISTINCT top 10\n" +
-            "\t\t\t\t\t\tsp.id_san_pham,\n" +
-            "\t\t\t\t\t\tsp.ma_san_pham,\n" +
-            "\t\t\t\t\t\tsp.ten_san_pham,\n" +
-            "\t\t\t\t\t\tsp.mo_ta,\n" +
-            "\t\t\t\t\t\tsp.trang_thai,\n" +
-            "\t\t\t\t\t\tdm.ten_danh_muc,\n" +
-            "\t\t\t\t\t\tth.ten_thuong_hieu,\n" +
-            "\t\t\t\t\t\tcl.ten_chat_lieu,\n" +
-            "\t\t\t\t\t\tsp.hinh_anh,\n" +
-            "\t\t\t\t\t\tavg(bl.danh_gia) over (PARTITION BY sp.id_san_pham) as danh_gia,\n" +
-            "\t\t\t\t\t\tcount(bl.danh_gia) over(PARTITION BY sp.id_san_pham) as so_luong_danh_gia,\n" +
-            "\t\t\t\t\t\tSUM(ctsp.so_luong) OVER (PARTITION BY sp.id_san_pham) AS tong_so_luong,\n" +
-            "\t\t\t\t\t\tMAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_max,\n" +
-            "\t\t\t\t\t\tMIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_min,\n" +
-            "\t\t\t\t\t\t-- Đảm bảo không bị NULL\n" +
-            "\t\t\t\t\t\tCOALESCE(gt.GiaGiamMin, MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_tot_nhat,\n"
-            +
-            "\t\t\t\t\t\tCOALESCE(gt.GiaGiamMax, MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_khuyen_mai_cao_nhat\n"
-            +
-            "\t\t\t\t\tFROM san_pham sp\n" +
-            "\t\t\t\t\tINNER JOIN danh_muc_san_pham dm \n" +
-            "\t\t\t\t\t\tON sp.id_danh_muc = dm.id_danh_muc\n" +
-            "\t\t\t\t\tINNER JOIN thuong_hieu th \n" +
-            "\t\t\t\t\t\tON sp.id_thuong_hieu = th.id_thuong_hieu\n" +
-            "\t\t\t\t\tINNER JOIN chat_lieu cl \n" +
-            "\t\t\t\t\t\tON sp.id_chat_lieu = cl.id_chat_lieu\n" +
-            "\t\t\t\t\tINNER JOIN chi_tiet_san_pham ctsp \n" +
-            "\t\t\t\t\t\tON sp.id_san_pham = ctsp.id_san_pham\n" +
-            "\t\t\t\t\tLEFT JOIN GiaTotNhat gt \n" +
-            "\t\t\t\t\t\tON sp.id_san_pham = gt.id_san_pham\n" +
-            "\t\t\t\t\tleft join binh_luan bl \n" +
-            "\t\t\t\t\t\ton bl.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham\n" +
-            "\t\t\t\t\tWHERE \n" +
-            "\t\t\t\t\t\tsp.trang_thai = N'Hoạt động'\n" +
-            "    AND sp.ten_san_pham LIKE CONCAT('%', :tenSanPham ,'%');")
+    @Query(nativeQuery = true, value = """
+            WITH KhuyenMaiHieuLuc AS (
+            SELECT 
+            ctkm.id_chi_tiet_san_pham,
+            GiamGia = CASE 
+            WHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100)
+            WHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam
+            ELSE ctsp.gia_ban
+            END
+            FROM chi_tiet_khuyen_mai ctkm
+            JOIN khuyen_mai km 
+            ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+            AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+            JOIN chi_tiet_san_pham ctsp 
+            ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            ),
+            GiaTotNhat AS (
+            SELECT
+            ctsp.id_san_pham,
+            GiaGiamMin = MIN(ISNULL(kh.GiamGia, ctsp.gia_ban)),
+            GiaGiamMax = MAX(ISNULL(kh.GiamGia, ctsp.gia_ban))
+            FROM chi_tiet_san_pham ctsp
+            LEFT JOIN KhuyenMaiHieuLuc kh 
+            ON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham
+            GROUP BY ctsp.id_san_pham
+            )
+            SELECT DISTINCT top 10
+            sp.id_san_pham,
+            sp.ma_san_pham,
+            sp.ten_san_pham,
+            sp.mo_ta,
+            sp.trang_thai,
+            dm.ten_danh_muc,
+            th.ten_thuong_hieu,
+            cl.ten_chat_lieu,
+            sp.hinh_anh,
+            avg(bl.danh_gia) over (PARTITION BY sp.id_san_pham) as danh_gia,
+            count(bl.danh_gia) over(PARTITION BY sp.id_san_pham) as so_luong_danh_gia,
+            SUM(ctsp.so_luong) OVER (PARTITION BY sp.id_san_pham) AS tong_so_luong,
+            MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_max,
+            MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_min,
+            COALESCE(gt.GiaGiamMin, MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_tot_nhat,
+            COALESCE(gt.GiaGiamMax, MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_khuyen_mai_cao_nhat
+            FROM san_pham sp
+            INNER JOIN danh_muc_san_pham dm 
+            ON sp.id_danh_muc = dm.id_danh_muc
+            INNER JOIN thuong_hieu th 
+            ON sp.id_thuong_hieu = th.id_thuong_hieu
+            INNER JOIN chat_lieu cl 
+            ON sp.id_chat_lieu = cl.id_chat_lieu
+            INNER JOIN chi_tiet_san_pham ctsp 
+            ON sp.id_san_pham = ctsp.id_san_pham
+            LEFT JOIN GiaTotNhat gt 
+            ON sp.id_san_pham = gt.id_san_pham
+            left join binh_luan bl 
+            on bl.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            WHERE 
+            sp.trang_thai = N'Hoạt động'
+            AND EXISTS (
+            SELECT 1
+            FROM STRING_SPLIT(:tenSanPham, ',') AS kw
+            WHERE sp.ten_san_pham LIKE '%' + kw.value + '%')
+               """)
     ArrayList<SanPhamView> listSanPhamBanHangWebTheoSP(@Param("tenSanPham") String tenSanPham);
+
+    @Query(nativeQuery = true, value = """
+            WITH KhuyenMaiHieuLuc AS (
+            SELECT ctkm.id_chi_tiet_san_pham,
+            GiamGia = CASE 
+            WHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100)
+            WHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam
+            ELSE ctsp.gia_ban
+            END
+            FROM chi_tiet_khuyen_mai ctkm
+            JOIN khuyen_mai km 
+            ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+            AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+            JOIN chi_tiet_san_pham ctsp 
+            ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            ),
+            GiaTotNhat AS (
+            SELECT
+            ctsp.id_san_pham,
+            GiaGiamMin = MIN(ISNULL(kh.GiamGia, ctsp.gia_ban)),
+            GiaGiamMax = MAX(ISNULL(kh.GiamGia, ctsp.gia_ban))
+            FROM chi_tiet_san_pham ctsp
+            LEFT JOIN KhuyenMaiHieuLuc kh 
+            ON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham
+            GROUP BY ctsp.id_san_pham
+            )
+            SELECT DISTINCT
+            sp.id_san_pham,
+            sp.ma_san_pham,
+            sp.ten_san_pham,
+            sp.mo_ta,
+            sp.trang_thai,
+            dm.ten_danh_muc,
+            th.ten_thuong_hieu,
+            cl.ten_chat_lieu,
+            sp.hinh_anh,
+            avg(bl.danh_gia) over (PARTITION BY sp.id_san_pham) as danh_gia,
+            count(bl.danh_gia) over(PARTITION BY sp.id_san_pham) as so_luong_danh_gia,
+            SUM(ctsp.so_luong) OVER (PARTITION BY sp.id_san_pham) AS tong_so_luong,
+            MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_max,
+            MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_min,
+            COALESCE(gt.GiaGiamMin, MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_tot_nhat,
+            COALESCE(gt.GiaGiamMax, MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_khuyen_mai_cao_nhat
+            FROM san_pham sp
+            INNER JOIN danh_muc_san_pham dm 
+            ON sp.id_danh_muc = dm.id_danh_muc
+            INNER JOIN thuong_hieu th 
+            ON sp.id_thuong_hieu = th.id_thuong_hieu
+            INNER JOIN chat_lieu cl 
+            ON sp.id_chat_lieu = cl.id_chat_lieu
+            INNER JOIN chi_tiet_san_pham ctsp 
+            ON sp.id_san_pham = ctsp.id_san_pham
+            LEFT JOIN GiaTotNhat gt 
+            ON sp.id_san_pham = gt.id_san_pham
+            left join binh_luan bl 
+            on bl.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            WHERE 
+            sp.trang_thai = N'Hoạt động'
+             AND EXISTS (SELECT 1
+                         FROM STRING_SPLIT(:tenSanPham, ',') AS kw
+                         WHERE sp.ten_san_pham LIKE '%' + kw.value + '%')
+            """)
+    ArrayList<SanPhamView> listSanPhamByTenSP(@Param("tenSanPham") String tenSanPham);
+
+    @Query(nativeQuery = true, value = """
+ WITH KhuyenMaiHieuLuc AS (
+            SELECT ctkm.id_chi_tiet_san_pham,
+            GiamGia = CASE 
+            WHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100)
+            WHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam
+            ELSE ctsp.gia_ban
+            END
+            FROM chi_tiet_khuyen_mai ctkm
+            JOIN khuyen_mai km 
+            ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+            AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+            JOIN chi_tiet_san_pham ctsp 
+            ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            ),
+            GiaTotNhat AS (
+            SELECT
+            ctsp.id_san_pham,
+            GiaGiamMin = MIN(ISNULL(kh.GiamGia, ctsp.gia_ban)),
+            GiaGiamMax = MAX(ISNULL(kh.GiamGia, ctsp.gia_ban))
+            FROM chi_tiet_san_pham ctsp
+            LEFT JOIN KhuyenMaiHieuLuc kh 
+            ON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham
+            GROUP BY ctsp.id_san_pham
+            )
+            SELECT DISTINCT
+            sp.id_san_pham,
+            sp.ma_san_pham,
+            sp.ten_san_pham,
+            sp.mo_ta,
+            sp.trang_thai,
+            dm.ten_danh_muc,
+            th.ten_thuong_hieu,
+            cl.ten_chat_lieu,
+            sp.hinh_anh,
+            avg(bl.danh_gia) over (PARTITION BY sp.id_san_pham) as danh_gia,
+            count(bl.danh_gia) over(PARTITION BY sp.id_san_pham) as so_luong_danh_gia,
+            SUM(ctsp.so_luong) OVER (PARTITION BY sp.id_san_pham) AS tong_so_luong,
+            MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_max,
+            MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham) AS gia_min,
+            COALESCE(gt.GiaGiamMin, MIN(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_tot_nhat,
+            COALESCE(gt.GiaGiamMax, MAX(ctsp.gia_ban) OVER (PARTITION BY sp.id_san_pham)) AS gia_khuyen_mai_cao_nhat
+            FROM san_pham sp
+            INNER JOIN danh_muc_san_pham dm 
+            ON sp.id_danh_muc = dm.id_danh_muc
+            INNER JOIN thuong_hieu th 
+            ON sp.id_thuong_hieu = th.id_thuong_hieu
+            INNER JOIN chat_lieu cl 
+            ON sp.id_chat_lieu = cl.id_chat_lieu
+            INNER JOIN chi_tiet_san_pham ctsp 
+            ON sp.id_san_pham = ctsp.id_san_pham
+            LEFT JOIN GiaTotNhat gt 
+            ON sp.id_san_pham = gt.id_san_pham
+            left join binh_luan bl 
+            on bl.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+            WHERE 
+            sp.trang_thai = N'Hoạt động'
+            AND EXISTS (SELECT 1
+                        FROM STRING_SPLIT(:tenDanhMuc, ',') AS kw
+                        WHERE dm.ten_danh_muc LIKE '%' + kw.value + '%')
+                       """)
+    ArrayList<SanPhamView> listSanPhamByTenDM(@Param("tenDanhMuc") String tenDanhMuc);
 
     @Query("SELECT s FROM SanPham s WHERE LOWER(s.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(s.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
