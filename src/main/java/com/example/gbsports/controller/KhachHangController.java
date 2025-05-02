@@ -1284,4 +1284,97 @@ public class KhachHangController {
         }
     }
 
+
+    ///
+    @PostMapping("/send-support-request")
+    @PreAuthorize("hasRole('ROLE_KH')") // Chỉ cho phép khách hàng (ROLE_KH) truy cập
+    public ResponseEntity<Map<String, Object>> sendSupportRequest(
+            @AuthenticationPrincipal UserDetails userDetails, // Lấy thông tin người dùng từ token
+            @RequestBody SupportRequestDTO request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy email từ token (username chính là email)
+            String email = userDetails.getUsername();
+
+            // Tìm khách hàng dựa trên email từ token
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByEmail(email);
+            if (!khachHangOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin khách hàng!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            KhachHang khachHang = khachHangOpt.get();
+
+            // Kiểm tra trạng thái tài khoản khách hàng
+            if (!"Đang hoạt động".equals(khachHang.getTrangThai())) {
+                response.put("success", false);
+                response.put("message", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Tạo nội dung email
+            String subject = "Yêu cầu hỗ trợ mới từ khách hàng - " + request.getChuDe();
+            String body = "<!DOCTYPE html>" +
+                    "<html lang='vi'>" +
+                    "<head>" +
+                    "<meta charset='UTF-8'>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: #e53935; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".header h1 { margin: 0; font-size: 24px; }" +
+                    ".content { padding: 20px; }" +
+                    ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                    ".info-box { background-color: #fff5f5; border-left: 5px solid #e53935; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box p { margin: 5px 0; }" +
+                    ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                    ".footer a { color: #e53935; text-decoration: none; }" +
+                    ".footer a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    "<h1>Yêu cầu hỗ trợ từ khách hàng</h1>" +
+                    "</div>" +
+                    "<div class='content'>" +
+                    "<h3>Thông tin yêu cầu:</h3>" +
+                    "<div class='info-box'>" +
+                    "<p><strong>Họ và tên:</strong> " + request.getHoTen() + "</p>" +
+                    "<p><strong>Số điện thoại:</strong> " + request.getSoDienThoai() + "</p>" +
+                    "<p><strong>Email:</strong> " + request.getEmail() + "</p>" +
+                    "<p><strong>Chủ đề:</strong> " + request.getChuDe() + "</p>" +
+                    "<p><strong>Nội dung:</strong> " + request.getNoiDung() + "</p>" +
+                    "</div>" +
+                    "<p>Vui lòng xem xét và phản hồi yêu cầu của khách hàng trong thời gian sớm nhất.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+
+            // Gửi email đến lenhphun919@gmail.com
+            emailService.sendEmail("lenhphun919@gmail.com", subject, body);
+
+            response.put("success", true);
+            response.put("message", "Yêu cầu hỗ trợ đã được gửi thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (MessagingException e) {
+            response.put("success", false);
+            response.put("message", "Gửi yêu cầu thất bại: Không thể gửi email - " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }
