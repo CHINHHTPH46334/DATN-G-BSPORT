@@ -14,4 +14,5 @@ public interface HinhAnhSanPhamRepo extends JpaRepository<HinhAnhSanPham, Intege
             "JOIN chi_tiet_san_pham ctsp ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham\n" +
             "WHERE ha.id_chi_tiet_san_pham = :idChiTietSanPham")
     ArrayList<HinhAnhView> listHinhAnhTheoSanPham(@Param("idChiTietSanPham") Integer idChiTietSanPham);
+
 }

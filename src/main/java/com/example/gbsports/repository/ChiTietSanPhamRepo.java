@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Integer> {
+public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Integer>, JpaSpecificationExecutor<ChiTietSanPhamView> {
     @Query("SELECT c FROM ChiTietSanPham c WHERE c.sanPham.id_san_pham = :idSanPham")
     List<ChiTietSanPham> findBySanPhamIdSanPham(@Param("idSanPham") Integer idSanPham);
 
@@ -264,4 +265,14 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             """, nativeQuery = true)
     List<ChiTietSanPhamView> getAllCTSPKM();
     //////
+
+    @Query(nativeQuery = true, value = """
+            select * from chi_tiet_san_pham ctsp 
+            where ctsp.id_san_pham = :idSanPham and ctsp.id_mau_sac= :idMauSac and ctsp.id_kich_thuoc = :idKichThuoc
+            """)
+    Optional<ChiTietSanPham> findByIdSanPhamIdMauSacIdKichThuoc(
+            @Param("idSanPham") Integer idSanPham,
+            @Param("idMauSac") Integer idMauSac,
+            @Param("idKichThuoc") Integer idKichThuoc
+    );
 }

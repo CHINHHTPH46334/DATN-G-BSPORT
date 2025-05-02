@@ -134,16 +134,20 @@ public class FavoriteService {
 
         try {
             // Fetch all favorites for this customer, including product details
-            String sql = "SELECT dsyt.id_chi_tiet_san_pham, dsyt.ngay_them, " +
-                    "ctsp.id_san_pham, sp.ten_san_pham, ms.ten_mau_sac, kt.gia_tri, " +
-                    "ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai " +
-                    "FROM danh_sach_yeu_thich dsyt " +
-                    "JOIN chi_tiet_san_pham ctsp ON dsyt.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham " +
-                    "JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham " +
-                    "LEFT JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac " +
-                    "LEFT JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc " +
-                    "WHERE dsyt.id_khach_hang = ? " +
-                    "ORDER BY dsyt.ngay_them DESC";
+            String sql = """
+    SELECT dsyt.id_chi_tiet_san_pham, dsyt.ngay_them, 
+           ctsp.id_san_pham, sp.ten_san_pham, ms.ten_mau_sac, kt.gia_tri, 
+           ctsp.so_luong, ctsp.gia_ban, ctsp.trang_thai,
+           COALESCE(ha.hinh_anh, sp.hinh_anh) AS hinh_anh
+    FROM danh_sach_yeu_thich dsyt 
+    JOIN chi_tiet_san_pham ctsp ON dsyt.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham 
+    JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham 
+    LEFT JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac 
+    LEFT JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc 
+    LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+    WHERE dsyt.id_khach_hang = ? 
+    ORDER BY dsyt.ngay_them DESC
+""";
 
             // Use RowMapper to map query results to a list of Maps
             var favoritesList = jdbcTemplate.query(sql, (rs, rowNum) -> {
@@ -155,13 +159,10 @@ public class FavoriteService {
                 item.put("gia_tri", rs.getString("gia_tri")); // Size value
                 item.put("so_luong", rs.getInt("so_luong"));
                 item.put("gia_ban", rs.getDouble("gia_ban"));
-                // Fix: Get trang_thai as String instead of Integer
                 item.put("trang_thai", rs.getString("trang_thai"));
                 item.put("ngay_them", rs.getTimestamp("ngay_them"));
-
-                // Use a default placeholder image for displaying products
-                item.put("hinh_anh", "/image/logo/logo.png");
-
+                String hinhAnh = rs.getString("hinh_anh");
+                item.put("hinh_anh", hinhAnh != null ? hinhAnh : "/image/logo/logo.png");
                 return item;
             }, idKhachHang);
 

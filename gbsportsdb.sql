@@ -245,7 +245,7 @@ CREATE TABLE hoa_don (
     phuong_thuc_nhan_hang NVARCHAR(100),
 	loai_hoa_don NVARCHAR(20),
 	ghi_chu NVARCHAR(255),
-	phu_thu DECIMAL(12,2)
+    phu_thu DECIMAL(12,2)
 );
 
 -- 23. Bảng hoa_don_chi_tiet

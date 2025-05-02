@@ -1,5 +1,6 @@
 package com.example.gbsports.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -16,6 +17,7 @@ public class HoaDonChiTiet {
     private Integer id_hoa_don_chi_tiet;
     @ManyToOne
     @JoinColumn(name = "id_hoa_don")
+    @JsonBackReference(value = "hoaDon-chiTiet")
 //    @JsonIgnore
     private HoaDon hoaDon;
     @ManyToOne
