@@ -44,4 +44,18 @@ public class ChiTietSanPham {
         }
     }
 
+    public void inThongTin(){
+        System.out.println("ChiTietSanPham{" +
+                "id_chi_tiet_san_pham=" + id_chi_tiet_san_pham +
+                ", sanPham=" + sanPham +
+                ", qr_code='" + qr_code + '\'' +
+                ", gia_ban=" + gia_ban +
+                ", so_luong=" + so_luong +
+                ", trang_thai='" + trang_thai + '\'' +
+                ", ngay_tao=" + ngay_tao +
+                ", ngay_sua=" + ngay_sua +
+                ", kichThuoc=" + kichThuoc +
+                ", mauSac=" + mauSac +
+                '}');
+    }
 }

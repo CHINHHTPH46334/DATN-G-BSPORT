@@ -24,7 +24,7 @@ public class CacheConfig {
                 .maximumSize(500));
 
         // Danh sách tên cache
-        cacheManager.setCacheNames(Arrays.asList("products","ctspBySp"));
+        cacheManager.setCacheNames(Arrays.asList("products","ctspBySp","productsNgaySua"));
 
         return cacheManager;
     }

@@ -26,7 +26,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     Optional<ChiTietSanPham> findById(Integer id);
 
     @Query(nativeQuery = true, value = "select id_chi_tiet_san_pham, ma_san_pham, ten_san_pham, qr_code, gia_ban, so_luong, ctsp.trang_thai as trang_thai,\n" +
-            "ctsp.ngay_tao, ctsp.ngay_sua, gia_tri, don_vi, ten_mau_sac as ten_mau, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc, sp.id_san_pham, sp.id_danh_muc, sp.id_thuong_hieu, sp.id_chat_lieu\n" +
+            "ctsp.ngay_tao, ctsp.ngay_sua, gia_tri, don_vi, ten_mau_sac as ten_mau_sac, ten_danh_muc, ten_thuong_hieu, ten_chat_lieu, ctsp.id_mau_sac,ctsp.id_kich_thuoc, sp.id_san_pham, sp.id_danh_muc, sp.id_thuong_hieu, sp.id_chat_lieu\n" +
             "from chi_tiet_san_pham ctsp\n" +
             "full outer join san_pham sp on sp.id_san_pham = ctsp.id_san_pham\n" +
             "left join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
@@ -234,38 +234,38 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
                               @RequestParam("soLuong") Integer soLuong);
 
     @Query(value = """
-            SELECT ctsp.id_chi_tiet_san_pham,
-            ma_san_pham, 
-            sp.ten_san_pham, 
-            dm.ten_danh_muc, 
+                SELECT ctsp.id_chi_tiet_san_pham,
+                ma_san_pham, 
+                sp.ten_san_pham, 
+                dm.ten_danh_muc, 
             ms.ten_mau_sac AS ten_mau, 
-            kt.gia_tri,
-            ctsp.so_luong, 
-            COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS gia_ban,
-            ctsp.trang_thai,
-            ha.hinh_anh, 
-            ha.anh_chinh
-            FROM chi_tiet_san_pham ctsp
-            JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
-            JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
-            JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
-            JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
-            LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
-            LEFT JOIN ( SELECT
-            	ctkm.id_chi_tiet_san_pham,
-                MIN(ctkm.gia_sau_giam) AS giaHienTai
-            	FROM chi_tiet_khuyen_mai ctkm
-            	JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
-            	WHERE km.trang_thai = N'Đang diễn ra'
-            	AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
-            	GROUP BY ctkm.id_chi_tiet_san_pham
-            	) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
-            WHERE ctsp.trang_thai = N'Hoạt động'
-            ORDER BY ctsp.id_chi_tiet_san_pham
-            """, nativeQuery = true)
+                kt.gia_tri,
+                ctsp.so_luong, 
+                COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS gia_ban,
+                ctsp.trang_thai,
+                ha.hinh_anh, 
+                ha.anh_chinh
+                FROM chi_tiet_san_pham ctsp
+                JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
+                JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+                JOIN mau_sac ms ON ctsp.id_mau_sac = ms.id_mau_sac
+                JOIN kich_thuoc kt ON ctsp.id_kich_thuoc = kt.id_kich_thuoc
+                LEFT JOIN hinh_anh ha ON ctsp.id_chi_tiet_san_pham = ha.id_chi_tiet_san_pham AND ha.anh_chinh = 1
+                LEFT JOIN ( SELECT
+                	ctkm.id_chi_tiet_san_pham,
+                    MIN(ctkm.gia_sau_giam) AS giaHienTai
+                	FROM chi_tiet_khuyen_mai ctkm
+                	JOIN khuyen_mai km ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+                	WHERE km.trang_thai = N'Đang diễn ra'
+                	AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+                	GROUP BY ctkm.id_chi_tiet_san_pham
+                	) km_max ON ctsp.id_chi_tiet_san_pham = km_max.id_chi_tiet_san_pham
+                WHERE ctsp.trang_thai = N'Hoạt động'
+                ORDER BY ctsp.id_chi_tiet_san_pham
+                """, nativeQuery = true)
     List<ChiTietSanPhamView> getAllCTSPKM();
-    //////
 
+    //////
     @Query(nativeQuery = true, value = """
             select * from chi_tiet_san_pham ctsp 
             where ctsp.id_san_pham = :idSanPham and ctsp.id_mau_sac= :idMauSac and ctsp.id_kich_thuoc = :idKichThuoc
@@ -275,4 +275,6 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
             @Param("idMauSac") Integer idMauSac,
             @Param("idKichThuoc") Integer idKichThuoc
     );
+
+
 }
