@@ -24,4 +24,6 @@ public interface TheoDoiDonHangRepo extends JpaRepository<TheoDoiDonHang, Intege
     Optional<TheoDoiDonHang> findByMaHDAndTrangThai(String maHoaDon);
     @Query("SELECT t FROM TheoDoiDonHang t WHERE t.hoaDon.id_hoa_don = :idHoaDon ORDER BY t.ngay_chuyen DESC")
     List<TheoDoiDonHang> findByIdHoaDonOrderByNgayChuyenDesc(@Param("idHoaDon") Integer idHoaDon);
+    @Query("SELECT t FROM TheoDoiDonHang t WHERE t.hoaDon.id_hoa_don = :idHoaDon")
+    List<TheoDoiDonHang> findByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 }

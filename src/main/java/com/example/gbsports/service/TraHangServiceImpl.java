@@ -89,6 +89,7 @@ public class TraHangServiceImpl implements TraHangService {
         theoDoiDonHang.setNoi_dung_doi(request.getLy_do());
         theoDoiDonHang.setNgay_chuyen(LocalDateTime.now());
         theoDoiDonHang.setHoaDon(hoaDon);
+        hoaDon.setPhu_thu(BigDecimal.valueOf(0));
 //        hoaDon.setTong_tien_sau_giam(BigDecimal.valueOf(100000));
 //        hoaDonRepository.save(hoaDon);
         List<ChiTietTraHang> chiTietTraHangList = new ArrayList<>();
@@ -118,7 +119,7 @@ public class TraHangServiceImpl implements TraHangService {
 
         traHangRepository.save(traHang);
         theoDoiDonHangRepo.save(theoDoiDonHang);
-
+        hoaDonRepository.save(hoaDon);
         response.setThanh_cong(true);
         response.setThong_bao("Tạo yêu cầu trả hàng thành công!");
         response.setId_tra_hang(traHang.getId());
