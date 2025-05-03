@@ -51,7 +51,7 @@ public class SecurityConfig {
                                 "/admin/quan_ly_san_pham/getAllCTSPKM","/admin/quan_ly_san_pham/CTSPBySanPhamFullWeb",
                                 "/admin/quan_ly_san_pham/getSanPhamByTenSanPham", "/api/reviews/**", "/order/**",
                                 "/payment/**",
-                                "/api/ghtk/**", "/testDeleteImage", "/testImage")
+                                "/api/ghtk/**", "/testDeleteImage", "/testImage","/api/chatbot/**")
                         .permitAll()
                         .requestMatchers("/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
                         .requestMatchers("/api/khach-hang/change-password", "/api/khach-hang/hd_kh",

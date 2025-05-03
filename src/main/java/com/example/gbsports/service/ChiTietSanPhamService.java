@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,24 +44,7 @@ public class ChiTietSanPhamService {
     @Autowired
     SanPhamService sanPhamService;
 
-    //    @Cacheable(value = "detailProducts")
     public List<ChiTietSanPhamView> getAllCTSP() {
-//        ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
-//        listCTSP0.clear();
-//        for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
-//            if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
-//                listCTSP0.add(ctspv);
-//            }
-//        }
-//        for (ChiTietSanPhamView ctspXet : listCTSP0) {
-//            if (ctspXet.getId_chi_tiet_san_pham() == null || ctspXet.getId_chi_tiet_san_pham().equals("")) {
-//                continue;
-//            }
-//            ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
-//            ctsp.setTrang_thai("Không hoạt động");
-//            chiTietSanPhamRepo.save(ctsp);
-//        }
-
         return chiTietSanPhamRepo.listCTSP();
     }
 
@@ -75,13 +57,8 @@ public class ChiTietSanPhamService {
     }
 
     public static String convertJsDateToUtc7(String jsDateString) {
-        // Chuyển chuỗi từ JS (ISO 8601) thành Instant (UTC)
         Instant instant = Instant.parse(jsDateString);
-
-        // Chuyển từ UTC sang UTC+7 (Asia/Bangkok)
         ZonedDateTime utc7Time = instant.atZone(ZoneId.of("Asia/Bangkok"));
-
-        // Định dạng kết quả theo "yyyy-MM-dd HH:mm:ss"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return utc7Time.format(formatter);
     }
@@ -93,15 +70,13 @@ public class ChiTietSanPhamService {
         Integer count2 = 0;
         Integer count3 = 0;
         Date ngay_sua_lo = null;
-//        System.out.println("IDRESPONE"+chiTietSanPhamRequest.getId_chi_tiet_san_pham()/2+"chua chia 2 " +chiTietSanPhamRequest.getId_chi_tiet_san_pham() );
+
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream().map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
             return ResponseEntity.badRequest().body(errors);
         } else {
             if (chiTietSanPhamRequest.getId_chi_tiet_san_pham() == null || chiTietSanPhamRequest.getId_chi_tiet_san_pham().equals("")) {
-                //Trùng màu và kích thước và trùng sản phẩm, ID ctsp khác nhau
-                System.out.println("Khong trung id ctsp ");
                 for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
                     if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
                             && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
@@ -117,7 +92,6 @@ public class ChiTietSanPhamService {
                     ctspSua.setId_chi_tiet_san_pham(id);
                     ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
                     ctspSua.setNgay_sua(new Date());
-                    System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                     if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                         chiTietSanPhamRepo.save(ctspSua);
                         return ResponseEntity.ok("cập nhật số lượng");
@@ -125,13 +99,10 @@ public class ChiTietSanPhamService {
                         return ResponseEntity.badRequest().body("KHông ổn");
                     }
                 } else {
-                    //Thêm mới
                     ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-//                    chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                     Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
                     Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
                     Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-                    System.out.println("Them moi");
                     KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
                     MauSac mauSac = mauSacOptional.orElse(new MauSac());
                     SanPham sanPham = sanPhamOptional.orElse(new SanPham());
@@ -153,18 +124,13 @@ public class ChiTietSanPhamService {
                     return ResponseEntity.ok("Lưu thành công");
                 }
             } else {
-                System.out.println("Khong co loi validate");
                 for (ChiTietSanPham ctspCheckTrung : chiTietSanPhamRepo.findAll()) {
                     if (ctspCheckTrung.getId_chi_tiet_san_pham().equals(chiTietSanPhamRequest.getId_chi_tiet_san_pham())) {
                         count++;
                         ngay_sua_lo = (ctspCheckTrung.getNgay_tao());
-                        System.out.println("ngay tao nay" + ngay_sua_lo);
-                        System.out.println("count=" + count);
                     }
                 }
                 if (count > 0) {
-                    //Sửa
-                    System.out.println("Da vao trung id_chi_tiet_san_pham");
                     ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
                     chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                     Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
@@ -176,7 +142,6 @@ public class ChiTietSanPhamService {
                     SanPham sanPham = sanPhamOptional.orElse(new SanPham());
                     BeanUtils.copyProperties(chiTietSanPhamRequest, chiTietSanPham);
 
-
                     chiTietSanPham.setMauSac(mauSac);
                     chiTietSanPham.setKichThuoc(kichThuoc);
                     chiTietSanPham.setSanPham(sanPham);
@@ -184,68 +149,34 @@ public class ChiTietSanPhamService {
                     chiTietSanPham.setNgay_tao(ngay_sua_lo);
                     chiTietSanPham.toString();
                     chiTietSanPhamRepo.save(chiTietSanPham);
-//                    ArrayList<HinhAnhSanPham> hinhAnhXoa = new ArrayList<>();
-//                    ArrayList<String> hinhAnhThem = new ArrayList<>();
-//                    for (HinhAnhView haGoc : hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham())) {
-//                        for (String haRequest : chiTietSanPhamRequest.getHinh_anh()) {
-//                            if (haGoc.getHinh_anh().equalsIgnoreCase(haRequest)) {
-//                                continue;
-//                            } else {
-//                                HinhAnhSanPham haXoa = hinhAnhSanPhamRepo.findById(haGoc.getId_hinh_anh()).get();
-//                                hinhAnhThem.add(haRequest);
-//                                hinhAnhXoa.add(haXoa);
-//
-//                            }
-//                        }
-//                    }
-//                    for (HinhAnhSanPham xoa : hinhAnhXoa) {
-//                        hinhAnhSanPhamRepo.delete(xoa);
-//                    }
-//                    for (String them: hinhAnhThem) {
-//                        HinhAnhSanPham hinhAnhSanPham = new HinhAnhSanPham();
-//                        hinhAnhSanPham.setChiTietSanPham(chiTietSanPhamRepo.findById(chiTietSanPham.getId_chi_tiet_san_pham()).get());
-//                        hinhAnhSanPham.setHinh_anh(them);
-//                        hinhAnhSanPham.setAnh_chinh(true);
-//                        hinhAnhSanPhamRepo.save(hinhAnhSanPham);
-//                    }
-                    //New
 
                     List<HinhAnhView> anhHienCo = hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham());
                     List<String> duongDanAnhHienCo = anhHienCo.stream()
                             .map(HinhAnhView::getHinh_anh)
                             .collect(Collectors.toList());
 
-// Lấy danh sách hình ảnh mới từ request
                     List<String> duongDanAnhMoi = chiTietSanPhamRequest.getHinh_anh();
 
-// 1. Xóa những ảnh không còn trong danh sách mới
                     for (HinhAnhView anhHienTai : anhHienCo) {
                         if (!duongDanAnhMoi.contains(anhHienTai.getHinh_anh())) {
-                            // Ảnh này không còn trong danh sách mới, nên xóa đi
                             hinhAnhSanPhamRepo.delete(hinhAnhSanPhamRepo.findById(anhHienTai.getId_hinh_anh()).get());
-                            System.out.println("Đã xóa ảnh: " + anhHienTai.getHinh_anh());
                         }
                     }
 
-// 2. Thêm những ảnh mới
                     for (String duongDanAnh : duongDanAnhMoi) {
                         if (!duongDanAnhHienCo.contains(duongDanAnh)) {
-                            // Đây là ảnh mới, thêm vào
                             HinhAnhSanPham hinhAnhSanPham = new HinhAnhSanPham();
                             hinhAnhSanPham.setChiTietSanPham(chiTietSanPhamRepo.findById(chiTietSanPham.getId_chi_tiet_san_pham()).get());
                             hinhAnhSanPham.setHinh_anh(duongDanAnh);
 
-                            // Nếu chưa có ảnh nào hoặc đây là ảnh đầu tiên, đặt làm ảnh chính
                             boolean isAnhChinh = duongDanAnhHienCo.isEmpty() ||
                                     (anhHienCo.stream().noneMatch(a -> a.getAnh_chinh()) && duongDanAnhMoi.indexOf(duongDanAnh) == 0);
 
                             hinhAnhSanPham.setAnh_chinh(isAnhChinh);
                             hinhAnhSanPhamRepo.save(hinhAnhSanPham);
-                            System.out.println("Đã thêm ảnh mới: " + duongDanAnh);
                         }
                     }
 
-// 3. Kiểm tra xem có ảnh chính hay không, nếu không thì set ảnh đầu tiên là ảnh chính
                     boolean hasMainImage = hinhAnhSanPhamRepo.listHinhAnhTheoSanPham(chiTietSanPham.getId_chi_tiet_san_pham())
                             .stream().anyMatch(a -> a.getAnh_chinh());
 
@@ -258,15 +189,11 @@ public class ChiTietSanPhamService {
                             HinhAnhSanPham firstImage = allImages.get(0);
                             firstImage.setAnh_chinh(true);
                             hinhAnhSanPhamRepo.save(firstImage);
-                            System.out.println("Đã đặt ảnh đầu tiên làm ảnh chính: " + firstImage.getHinh_anh());
                         }
                     }
 
-
                     return ResponseEntity.ok("Lưu thành công" + chiTietSanPham);
                 } else {
-                    //Trùng màu và kích thước và trùng sản phẩm, ID ctsp khác nhau
-                    System.out.println("Khong trung id ctsp ");
                     for (ChiTietSanPham ctsp : chiTietSanPhamRepo.findAll()) {
                         if (ctsp.getMauSac().getId_mau_sac() == chiTietSanPhamRequest.getId_mau_sac()
                                 && ctsp.getKichThuoc().getId_kich_thuoc() == chiTietSanPhamRequest.getId_kich_thuoc()
@@ -282,7 +209,6 @@ public class ChiTietSanPhamService {
                         ctspSua.setId_chi_tiet_san_pham(id);
                         ctspSua.setSo_luong(ctspSua.getSo_luong() + chiTietSanPhamRequest.getSo_luong());
                         ctspSua.setNgay_sua(new Date());
-                        System.out.println("Khong trung id nhung trung mau sac kich thuoc");
                         if (ctspSua.getSo_luong() == (slCu + chiTietSanPhamRequest.getSo_luong())) {
                             ctspSua.setNgay_sua(new Date());
                             chiTietSanPhamRepo.save(ctspSua);
@@ -291,13 +217,10 @@ public class ChiTietSanPhamService {
                             return ResponseEntity.badRequest().body("KHông ổn");
                         }
                     } else {
-                        //Thêm mới
                         ChiTietSanPham chiTietSanPham = new ChiTietSanPham();
-//                    chiTietSanPham.setId_chi_tiet_san_pham(chiTietSanPhamRequest.getId_chi_tiet_san_pham());
                         Optional<KichThuoc> kichThuocOptional = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc());
                         Optional<MauSac> mauSacOptional = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac());
                         Optional<SanPham> sanPhamOptional = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham());
-                        System.out.println("Them moi");
                         KichThuoc kichThuoc = kichThuocOptional.orElse(new KichThuoc());
                         MauSac mauSac = mauSacOptional.orElse(new MauSac());
                         SanPham sanPham = sanPhamOptional.orElse(new SanPham());
@@ -319,10 +242,8 @@ public class ChiTietSanPhamService {
                         return ResponseEntity.ok("Lưu thành công" + chiTietSanPham);
                     }
                 }
-
             }
         }
-
     }
 
     public Integer trungMauSacKichThuoc(Integer idMauSac, Integer idKichThuoc, Integer soLuong) {
@@ -376,19 +297,14 @@ public class ChiTietSanPhamService {
                 sanPhamService.chuyenTrangThai(sanPham.getId_san_pham());
             }
         } else {
-            // Nếu người dùng đang cố gắng kích hoạt CTSP
             if (ctspDelete.getTrang_thai().equalsIgnoreCase("Không hoạt động")) {
-                // Kích hoạt CTSP và sản phẩm cha
                 ctspDelete.setTrang_thai("Hoạt động");
                 chiTietSanPhamRepo.save(ctspDelete);
                 sanPham.setTrang_thai("Hoạt động");
                 sanPhamRepo.save(sanPham);
-            }
-            // Nếu người dùng đang cố gắng vô hiệu hóa CTSP, giữ nguyên trạng thái sản phẩm cha
-            else {
+            } else {
                 ctspDelete.setTrang_thai("Không hoạt động");
                 chiTietSanPhamRepo.save(ctspDelete);
-                // Không thay đổi trạng thái sản phẩm cha
             }
         }
 
@@ -413,7 +329,6 @@ public class ChiTietSanPhamService {
                                                      String tenMauSac, String tenDanhMuc, String tenThuongHieu, String tenChatLieu) {
         return chiTietSanPhamRepo.listLocCTSP(tenSanPham, giaBanMin, giaBanMax, soLuongMin, soLuongMax,
                 trangThai, tenMauSac, tenDanhMuc, tenThuongHieu, tenChatLieu);
-        //Thiếu Kích thước
     }
 
     public BigDecimal getMaxGiaBan() {
@@ -430,17 +345,15 @@ public class ChiTietSanPhamService {
     public Page<ChiTietSanPhamView> sapXep(Pageable pageable) {
         return chiTietSanPhamRepo.listPhanTrangChiTietSanPham(pageable);
     }
-//    @Cacheable(value = "ctspBySP", key = "#idSanPham")
+
     public ArrayList<ChiTietSanPhamView> listCTSPTheoSanPham(@RequestParam("id") Integer id) {
         return chiTietSanPhamRepo.listCTSPFolowSanPham(id);
     }
-
 
     public List<ChiTietSanPhamView> getCTSPBySanPhamFull(@RequestParam("idSanPham") Integer idSanPham) {
         return chiTietSanPhamRepo.getCTSPBySanPhamFull(idSanPham);
     }
 
-    //    @CacheEvict(value = "ctspBySp", key = "#idSanPham")
     @Caching(evict = {
             @CacheEvict(value = "ctspBySp", allEntries = true),
             @CacheEvict(value = "products", key = "'allSanPham'")
@@ -449,9 +362,7 @@ public class ChiTietSanPhamService {
         ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
         int countCTSP = 0;
         listTam.clear();
-        System.out.println("Chuyen ctsp khong hoat dong");
         ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(id).get();
-        System.out.println("idTatCaCTSPKhongHoatDOng" + ctsp.getId_chi_tiet_san_pham());
         ctsp.setTrang_thai("Không hoạt động");
         chiTietSanPhamRepo.save(ctsp);
         SanPham sanPham = sanPhamRepo.findById(ctsp.getSanPham().getId_san_pham()).get();
@@ -480,9 +391,7 @@ public class ChiTietSanPhamService {
         ArrayList<ChiTietSanPham> listTam = new ArrayList<>();
         int countCTSP = 0;
         listTam.clear();
-        System.out.println("Chuyen ctsp khong hoat dong");
         ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(id).get();
-        System.out.println("idTatCaCTSPHoatDOng" + ctsp.getId_chi_tiet_san_pham());
         ctsp.setTrang_thai("Hoạt động");
         chiTietSanPhamRepo.save(ctsp);
         SanPham sanPham = sanPhamRepo.findById(ctsp.getSanPham().getId_san_pham()).get();
@@ -503,22 +412,33 @@ public class ChiTietSanPhamService {
         return ResponseEntity.ok(ctsp);
     }
 
-    public ResponseEntity<List<ChiTietSanPhamView>> timKiemVaLoc(@RequestParam(name = "keyword", required = false) String keyword,
-                                                                 @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
-                                                                 @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
-                                                                 @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
-                                                                 @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
-                                                                 @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
-                                                                 @RequestParam(name = "trangThai", required = false) String trangThai,
-                                                                 @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
-                                                                 @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
-                                                                 @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
-                                                                 @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
-                                                                 @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
+    public ResponseEntity<List<SanPhamView>> timKiemVaLoc(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
+            @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,
+            @RequestParam(name = "giaBanMax", required = false) Float giaBanMax,
+            @RequestParam(name = "soLuongMin", required = false) Integer soLuongMin,
+            @RequestParam(name = "soLuongMax", required = false) Integer soLuongMax,
+            @RequestParam(name = "trangThai", required = false) String trangThai,
+            @RequestParam(name = "listMauSac", required = false) List<String> listMauSac,
+            @RequestParam(name = "listDanhMuc", required = false) List<String> listDanhMuc,
+            @RequestParam(name = "listThuongHieu", required = false) List<String> listThuongHieu,
+            @RequestParam(name = "listChatLieu", required = false) List<String> listChatLieu,
+            @RequestParam(name = "listKichThuoc", required = false) List<String> listKichThuoc) {
+        
+        // Log các tham số để debug
+        System.out.println("Tham số nhận được:");
+        System.out.println("keyword: " + keyword);
+        System.out.println("listMauSac: " + listMauSac);
+        System.out.println("listDanhMuc: " + listDanhMuc);
+        System.out.println("listThuongHieu: " + listThuongHieu);
+        System.out.println("listChatLieu: " + listChatLieu);
+        System.out.println("listKichThuoc: " + listKichThuoc);
+
         List<ChiTietSanPhamView> danhSachSanPham = chiTietSanPhamRepo.listCTSP();
+        System.out.println("Tổng số sản phẩm ban đầu: " + danhSachSanPham.size());
 
         if (isEmpty(keyword) &&
-                isEmpty(tenSanPham) &&
                 giaBanMin == null &&
                 giaBanMax == null &&
                 soLuongMin == null &&
@@ -529,93 +449,168 @@ public class ChiTietSanPhamService {
                 isEmpty(listThuongHieu) &&
                 isEmpty(listChatLieu) &&
                 isEmpty(listKichThuoc)) {
-            return ResponseEntity.ok(danhSachSanPham);
+            List<Integer> listKhongCoGi = danhSachSanPham.stream()
+                    .map(ChiTietSanPhamView::getId_chi_tiet_san_pham)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(sanPhamRepo.getSanPhamByListCTSP(listKhongCoGi));
         }
 
-        Stream<ChiTietSanPhamView> stream = danhSachSanPham.stream();
+        List<ChiTietSanPhamView> ketQua = new ArrayList<>(danhSachSanPham);
+
+        // Áp dụng các bộ lọc
         if (!isEmpty(keyword)) {
             String keywordLowercase = keyword.toLowerCase(Locale.ROOT);
-            stream = stream.filter(ctsp ->
-                    ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
-                            ctsp.getMa_san_pham().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
-                            ctsp.getTen_chat_lieu().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
-                            ctsp.getTen_danh_muc().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
-                            ctsp.getTen_thuong_hieu().toLowerCase(Locale.ROOT).contains(keywordLowercase) ||
-                            (ctsp.getTen_mau_sac() != null && ctsp.getTen_mau_sac().toLowerCase(Locale.ROOT).contains(keywordLowercase)) ||
-                            (ctsp.getGia_tri() != null && ctsp.getGia_tri().toLowerCase(Locale.ROOT).contains(keywordLowercase))
-            );
+            String[] keywords = keywordLowercase.split("\\s+");
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    String content = Stream.of(
+                        ctsp.getTen_san_pham(),
+                        ctsp.getMa_san_pham(),
+                        ctsp.getTen_chat_lieu(),
+                        ctsp.getTen_danh_muc(),
+                        ctsp.getTen_thuong_hieu(),
+                        ctsp.getTen_mau_sac(),
+                        ctsp.getGia_tri()
+                    )
+                    .filter(Objects::nonNull)
+                    .map(s -> s.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.joining(" "));
+                    
+                    return Arrays.stream(keywords)
+                               .filter(kw -> !kw.equals("không"))
+                               .allMatch(content::contains);
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc keyword: " + ketQua.size());
         }
-        if (!isEmpty(tenSanPham)) {
-            String tenSanPhamLowercase = tenSanPham.toLowerCase(Locale.ROOT);
-            stream = stream.filter(ctsp -> ctsp.getTen_san_pham().toLowerCase(Locale.ROOT).contains(tenSanPhamLowercase));
-        }
-//        if (soLuongMin == null ){
-//            soLuongMin = 0;
-//        }
-//        if (soLuongMax == null){
-//            soLuongMax = Integer.MAX_VALUE;
-//        }
-//        if (giaBanMin == null){
-//            giaBanMin = Float.parseFloat("0");
-//        }
-//        if (giaBanMax == null){
-//            giaBanMax = Float.MAX_VALUE;
-//        }
+
         if (giaBanMin != null) {
-            stream = stream.filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() >= giaBanMin);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() >= giaBanMin)
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc giá bán min: " + ketQua.size());
         }
 
         if (giaBanMax != null) {
-            stream = stream.filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() <= giaBanMax);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> ctsp.getGia_ban() != null && ctsp.getGia_ban() <= giaBanMax)
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc giá bán max: " + ketQua.size());
         }
 
         if (soLuongMin != null) {
-            stream = stream.filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() >= soLuongMin);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() >= soLuongMin)
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc số lượng min: " + ketQua.size());
         }
 
         if (soLuongMax != null) {
-            stream = stream.filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() <= soLuongMax);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> ctsp.getSo_luong() != null && ctsp.getSo_luong() <= soLuongMax)
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc số lượng max: " + ketQua.size());
         }
 
         if (!isEmpty(trangThai)) {
-            stream = stream.filter(ctsp -> trangThai.equalsIgnoreCase(ctsp.getTrang_thai()));
+            ketQua = ketQua.stream()
+                .filter(ctsp -> ctsp.getTrang_thai() != null &&
+                        trangThai.equalsIgnoreCase(ctsp.getTrang_thai()))
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc trạng thái: " + ketQua.size());
         }
 
         if (!isEmpty(listMauSac)) {
-            stream = stream.filter(ctsp -> ctsp.getTen_mau_sac() != null &&
-                    listMauSac.stream()
-                            .anyMatch(ms -> ms.equalsIgnoreCase(ctsp.getTen_mau_sac())));
+            System.out.println("Lọc theo màu sắc: " + listMauSac);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    if (ctsp.getTen_mau_sac() == null)
+                        return false;
+                    String mauSacValue = ctsp.getTen_mau_sac().toLowerCase().trim();
+                    return listMauSac.stream()
+                            .filter(Objects::nonNull)
+                            .map(ms -> ms.toLowerCase().trim())
+                            .anyMatch(mauSacValue::contains);
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc màu sắc: " + ketQua.size());
         }
 
         if (!isEmpty(listDanhMuc)) {
-            stream = stream.filter(ctsp -> ctsp.getTen_danh_muc() != null &&
-                    listDanhMuc.stream()
-                            .anyMatch(dm -> dm.equalsIgnoreCase(ctsp.getTen_danh_muc())));
+            System.out.println("Lọc theo danh mục: " + listDanhMuc);
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    if (ctsp.getTen_danh_muc() == null)
+                        return false;
+                    String danhMucValue = ctsp.getTen_danh_muc().toLowerCase().trim();
+                    return listDanhMuc.stream()
+                            .filter(Objects::nonNull)
+                            .map(dm -> dm.toLowerCase().trim())
+                            .anyMatch(dm -> danhMucValue.contains(dm) || dm.contains(danhMucValue));
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc danh mục: " + ketQua.size());
         }
 
         if (!isEmpty(listThuongHieu)) {
-            stream = stream.filter(ctsp -> ctsp.getTen_thuong_hieu() != null &&
-                    listThuongHieu.stream()
-                            .anyMatch(th -> th.equalsIgnoreCase(ctsp.getTen_thuong_hieu())));
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    if (ctsp.getTen_thuong_hieu() == null)
+                        return false;
+                    String thuongHieuValue = ctsp.getTen_thuong_hieu().toLowerCase().trim();
+                    return listThuongHieu.stream()
+                            .filter(Objects::nonNull)
+                            .map(th -> th.toLowerCase().trim())
+                            .anyMatch(thuongHieuValue::contains);
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc thương hiệu: " + ketQua.size());
         }
 
         if (!isEmpty(listChatLieu)) {
-            stream = stream.filter(ctsp -> ctsp.getTen_chat_lieu() != null &&
-                    listChatLieu.stream()
-                            .anyMatch(cl -> cl.equalsIgnoreCase(ctsp.getTen_chat_lieu())));
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    if (ctsp.getTen_chat_lieu() == null)
+                        return false;
+                    String chatLieuValue = ctsp.getTen_chat_lieu().toLowerCase().trim();
+                    return listChatLieu.stream()
+                            .filter(Objects::nonNull)
+                            .map(cl -> cl.toLowerCase().trim())
+                            .anyMatch(chatLieuValue::contains);
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc chất liệu: " + ketQua.size());
         }
 
         if (!isEmpty(listKichThuoc)) {
-            stream = stream.filter(ctsp -> ctsp.getGia_tri() != null &&
-                    listKichThuoc.stream()
-                            .anyMatch(kt -> kt.equalsIgnoreCase(ctsp.getGia_tri())));
+            ketQua = ketQua.stream()
+                .filter(ctsp -> {
+                    if (ctsp.getGia_tri() == null)
+                        return false;
+                    String giaTriValue = ctsp.getGia_tri().toLowerCase().trim();
+                    return listKichThuoc.stream()
+                            .filter(Objects::nonNull)
+                            .map(kt -> kt.toLowerCase().trim())
+                            .anyMatch(giaTriValue::contains);
+                })
+                .collect(Collectors.toList());
+            System.out.println("Sau khi lọc kích thước: " + ketQua.size());
         }
 
-        // Chuyển stream trở lại thành danh sách
-        List<ChiTietSanPhamView> ketQua = stream.collect(Collectors.toList());
+        System.out.println("Kết quả lọc cuối cùng: " + ketQua.size());
 
-        return ResponseEntity.ok(ketQua);
+        if (ketQua.isEmpty()) {
+            System.out.println("Không có kết quả lọc");
+            return ResponseEntity.ok(new ArrayList<>());
+        }
 
+        List<Integer> listIDCTSP = ketQua.stream()
+                .map(ChiTietSanPhamView::getId_chi_tiet_san_pham)
+                .collect(Collectors.toList());
+
+        ArrayList<SanPhamView> listReturn = (ArrayList<SanPhamView>) sanPhamRepo.getSanPhamByListCTSP(listIDCTSP);
+        
+        return ResponseEntity.ok(listReturn.isEmpty() ? new ArrayList<>() : listReturn);
     }
 
     private List<SanPhamView> changeListCTSPToListSp(List<ChiTietSanPhamView> list) {
@@ -626,7 +621,6 @@ public class ChiTietSanPhamService {
         return str == null || str.trim().isEmpty();
     }
 
-    // Phương thức tiện ích để kiểm tra danh sách trống hoặc null
     private boolean isEmpty(List<?> list) {
         return list == null || list.isEmpty();
     }

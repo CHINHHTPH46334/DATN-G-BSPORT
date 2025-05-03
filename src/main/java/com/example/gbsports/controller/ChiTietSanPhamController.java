@@ -3,6 +3,7 @@ package com.example.gbsports.controller;
 import com.example.gbsports.entity.ChiTietSanPham;
 import com.example.gbsports.request.ChiTietSanPhamRequest;
 import com.example.gbsports.response.ChiTietSanPhamView;
+import com.example.gbsports.response.SanPhamView;
 import com.example.gbsports.service.ChiTietSanPhamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,7 @@ public class ChiTietSanPhamController {
     }
 
     @GetMapping("/locCTSP")
-    public ResponseEntity<List<ChiTietSanPhamView>> locCTSP(
+    public ResponseEntity<List<SanPhamView>> locCTSP(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "tenSanPham", required = false) String tenSanPham,
             @RequestParam(name = "giaBanMin", required = false) Float giaBanMin,

@@ -7,11 +7,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
+
     @Query(nativeQuery = true, value = """
             SELECT
             sp.id_san_pham AS id_san_pham,
@@ -296,4 +299,66 @@ public interface SanPhamRepo extends JpaRepository<SanPham, Integer> {
     @Query("SELECT s FROM SanPham s ORDER BY s.id_san_pham DESC")
     List<SanPham> findAllSortedByIdSanPham();
 
+    @Query(nativeQuery = true, value = """
+             SELECT	distinct
+                        sp.id_san_pham AS id_san_pham,
+                        ma_san_pham,
+                        ten_san_pham,
+                        mo_ta,
+                        CASE
+                        WHEN SUM(ctsp.so_luong) <= 0 THEN 'Không hoạt động'
+                        ELSE sp.trang_thai
+                        END AS trang_thai,  -- Sửa ở đây
+                        dm.ten_danh_muc AS ten_danh_muc,
+                        th.ten_thuong_hieu AS ten_thuong_hieu,
+                        ten_chat_lieu,
+                        hinh_anh,
+                        SUM(ctsp.so_luong) AS tong_so_luong
+                        FROM san_pham sp
+                        LEFT JOIN danh_muc_san_pham dm ON dm.id_danh_muc = sp.id_danh_muc
+                        LEFT JOIN thuong_hieu th ON th.id_thuong_hieu = sp.id_thuong_hieu
+                        LEFT JOIN chat_lieu cl ON cl.id_chat_lieu = sp.id_chat_lieu
+                        JOIN chi_tiet_san_pham ctsp ON ctsp.id_san_pham = sp.id_san_pham
+            			where id_chi_tiet_san_pham in (:list)
+                        GROUP BY
+                        sp.id_san_pham,
+                        ma_san_pham,
+                        ten_san_pham,
+                        mo_ta,
+                        sp.trang_thai,  -- Giữ nguyên trong GROUP BY
+                        dm.ten_danh_muc,
+                        th.ten_thuong_hieu,
+                        ten_chat_lieu,
+                        hinh_anh
+            """)
+    List<SanPhamView> getSanPhamByListCTSP(@Param("list") List<Integer> listIdCTSP);
+
+    @Query("""
+        SELECT DISTINCT sp FROM SanPham sp
+        LEFT JOIN FETCH sp.danhMuc dm
+        LEFT JOIN FETCH sp.thuongHieu th
+        LEFT JOIN FETCH sp.chatLieu cl
+        WHERE (
+            LOWER(sp.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(sp.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(dm.ten_danh_muc) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(th.ten_thuong_hieu) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(cl.ten_chat_lieu) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        ORDER BY sp.id_san_pham DESC
+    """)
+    Page<SanPham> searchSanPhamAdvanced(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT sp FROM SanPham sp WHERE " +
+           "(:keyword IS NULL OR LOWER(sp.ma_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(sp.ten_san_pham) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:categoryId IS NULL OR sp.danhMuc.id_danh_muc = :categoryId) " +
+           "AND (:brandId IS NULL OR sp.thuongHieu.id_thuong_hieu = :brandId) " +
+           "AND (:materialId IS NULL OR sp.chatLieu.id_chat_lieu = :materialId)")
+    Page<SanPham> searchSanPhamAdvanced(
+        @Param("keyword") String keyword,
+        @Param("categoryId") Integer categoryId,
+        @Param("brandId") Integer brandId,
+        @Param("materialId") Integer materialId,
+        Pageable pageable
+    );
 }
