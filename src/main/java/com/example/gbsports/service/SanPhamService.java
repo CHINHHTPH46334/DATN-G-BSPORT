@@ -329,6 +329,10 @@ public class SanPhamService {
         return sanPhamRepo.listSanPhamByTenDM(tenDanhMuc);
     }
 
+    public List<SanPhamView> getSanPhamSieuSale() {
+        return sanPhamRepo.listSanPhamSieuKhuyeMai();
+    }
+
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }
