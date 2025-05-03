@@ -118,13 +118,6 @@ public class BanHangWebController {
         vc.setSoLuong(vc.getSoLuong() - 1);
         voucherRepository.save(vc);
     }
-
-    //        public void deleteGioHangByKh(List<HoaDonChiTiet> list){
-//        GioHang gh = gioHangRepository.findByKhachHangId(idKhachHang).get();
-//
-//
-//        ArrayList<>
-//    }
     private void updateSoLuongSanPham(List<HoaDonChiTiet> list) {
         for (HoaDonChiTiet hdct : list) {
             ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).get();
