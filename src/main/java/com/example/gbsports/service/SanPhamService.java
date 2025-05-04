@@ -86,8 +86,9 @@ public class SanPhamService {
     public SanPham detailSP(@RequestParam("id") Integer id) {
         return sanPhamRepo.findById(id).get();
     }
-    //Chưa cache
-//    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
+
+    // Chưa cache
+    // @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
         // ArrayList<SanPhamView> newList = new ArrayList<>();
         // for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
@@ -326,6 +327,10 @@ public class SanPhamService {
 
     public List<SanPhamView> getSanPhamTheoTenDM(@RequestParam("tenDanhMuc") String tenDanhMuc) {
         return sanPhamRepo.listSanPhamByTenDM(tenDanhMuc);
+    }
+
+    public List<SanPhamView> getSanPhamSieuSale() {
+        return sanPhamRepo.listSanPhamSieuKhuyeMai();
     }
 
     public List<ChiTietSanPhamView> getAllCTSPKM() {

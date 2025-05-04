@@ -172,6 +172,11 @@ public class SanPhamController {
         return sanPhamService.getSanPhamTheoTenDM(tenDanhMuc);
     }
 
+    @GetMapping("/getSanPhamSieuSale")
+    public List<SanPhamView> getSanPhamSieuSale() {
+        return sanPhamService.getSanPhamSieuSale();
+    }
+
     @GetMapping("/getAllCTSPKM")
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return sanPhamService.getAllCTSPKM();
