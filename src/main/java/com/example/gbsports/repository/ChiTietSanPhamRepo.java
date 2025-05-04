@@ -244,13 +244,12 @@ WHERE
                 ma_san_pham, 
                 sp.ten_san_pham, 
                 dm.ten_danh_muc, 
-            ms.ten_mau_sac AS ten_mau, 
+                ms.ten_mau_sac AS ten_mau, 
                 kt.gia_tri,
                 ctsp.so_luong, 
                 COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS gia_ban,
                 ctsp.trang_thai,
-                ha.hinh_anh, 
-                ha.anh_chinh
+                sp.hinh_anh
                 FROM chi_tiet_san_pham ctsp
                 JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
                 JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc

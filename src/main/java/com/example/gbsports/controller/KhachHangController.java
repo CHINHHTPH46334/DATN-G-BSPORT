@@ -1208,7 +1208,6 @@ public class KhachHangController {
     }
 
     // lềnh thêm
-    // lềnh thêm
     @PostMapping("/update-order-info")
     @PreAuthorize("hasRole('ROLE_KH')")
     public ResponseEntity<Map<String, Object>> updateOrderCustomerInfo(
@@ -1368,7 +1367,7 @@ public class KhachHangController {
                     "</html>";
 
             // Gửi email đến lenhphun919@gmail.com
-            emailService.sendEmail("lenhphun919@gmail.com", subject, body);
+            emailService.sendEmail("chinhhtph46334@gmail.com", subject, body);
 
             response.put("success", true);
             response.put("message", "Yêu cầu hỗ trợ đã được gửi thành công!");
