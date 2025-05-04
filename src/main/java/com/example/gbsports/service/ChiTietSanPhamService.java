@@ -75,7 +75,8 @@ public class ChiTietSanPhamService {
      * API endpoint để lưu thông tin chi tiết sản phẩm
      * Xử lý thêm mới, cập nhật và xử lý trùng lặp chi tiết sản phẩm
      */
-    public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest, BindingResult result) {
+    public ResponseEntity<?> saveChiTietSanPham(@Valid @RequestBody ChiTietSanPhamRequest chiTietSanPhamRequest,
+            BindingResult result) {
         // Kiểm tra lỗi validation
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream()
@@ -87,13 +88,16 @@ public class ChiTietSanPhamService {
         try {
             // Lấy dữ liệu liên quan (các entity cần thiết)
             KichThuoc kichThuoc = kichThuocRepo.findById(chiTietSanPhamRequest.getId_kich_thuoc())
-                    .orElseThrow(() -> new ResourceNotFoundException("KichThuoc", "id", chiTietSanPhamRequest.getId_kich_thuoc()));
+                    .orElseThrow(() -> new ResourceNotFoundException("KichThuoc", "id",
+                            chiTietSanPhamRequest.getId_kich_thuoc()));
 
             MauSac mauSac = mauSacRepo.findById(chiTietSanPhamRequest.getId_mau_sac())
-                    .orElseThrow(() -> new ResourceNotFoundException("MauSac", "id", chiTietSanPhamRequest.getId_mau_sac()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("MauSac", "id", chiTietSanPhamRequest.getId_mau_sac()));
 
             SanPham sanPham = sanPhamRepo.findById(chiTietSanPhamRequest.getId_san_pham())
-                    .orElseThrow(() -> new ResourceNotFoundException("SanPham", "id", chiTietSanPhamRequest.getId_san_pham()));
+                    .orElseThrow(() -> new ResourceNotFoundException("SanPham", "id",
+                            chiTietSanPhamRequest.getId_san_pham()));
 
             // Biến để lưu trữ chi tiết sản phẩm cần xử lý
             ChiTietSanPham chiTietSanPham = null;
@@ -107,8 +111,7 @@ public class ChiTietSanPhamService {
                     !chiTietSanPhamRequest.getId_chi_tiet_san_pham().toString().isEmpty()) {
 
                 Optional<ChiTietSanPham> existingById = chiTietSanPhamRepo.findById(
-                        chiTietSanPhamRequest.getId_chi_tiet_san_pham()
-                );
+                        chiTietSanPhamRequest.getId_chi_tiet_san_pham());
 
                 if (existingById.isPresent()) {
                     chiTietSanPham = existingById.get();
@@ -120,7 +123,7 @@ public class ChiTietSanPhamService {
                     // Sao chép các thuộc tính cơ bản (có thể loại trừ sanPham)
                     chiTietSanPham.setGia_ban(chiTietSanPhamRequest.getGia_ban());
                     chiTietSanPham.setSo_luong(chiTietSanPhamRequest.getSo_luong());
-//                    chiTietSanPham.setTrang_thai(chiTietSanPhamRequest.getTrang_thai());
+                    // chiTietSanPham.setTrang_thai(chiTietSanPhamRequest.getTrang_thai());
                     chiTietSanPham.setQr_code(chiTietSanPhamRequest.getQr_code());
 
                     // Giữ ngày tạo gốc
@@ -131,13 +134,14 @@ public class ChiTietSanPhamService {
             // CASE 2: Nếu không có ID hoặc ID không tồn tại, kiểm tra trùng lặp thuộc tính
             if (chiTietSanPham == null) {
                 // Tìm chi tiết sản phẩm dựa trên ID của các thuộc tính
-                Optional<ChiTietSanPham> existingSanPhamByAttributes = chiTietSanPhamRepo.findByIdSanPhamIdMauSacIdKichThuoc(
-                        chiTietSanPhamRequest.getId_san_pham(),
-                        chiTietSanPhamRequest.getId_mau_sac(),
-                        chiTietSanPhamRequest.getId_kich_thuoc()
-                );
+                Optional<ChiTietSanPham> existingSanPhamByAttributes = chiTietSanPhamRepo
+                        .findByIdSanPhamIdMauSacIdKichThuoc(
+                                chiTietSanPhamRequest.getId_san_pham(),
+                                chiTietSanPhamRequest.getId_mau_sac(),
+                                chiTietSanPhamRequest.getId_kich_thuoc());
 
-                // CASE 2.1: Nếu chi tiết sản phẩm với cùng thuộc tính đã tồn tại (cập nhật số lượng)
+                // CASE 2.1: Nếu chi tiết sản phẩm với cùng thuộc tính đã tồn tại (cập nhật số
+                // lượng)
                 if (existingSanPhamByAttributes.isPresent()) {
                     chiTietSanPham = existingSanPhamByAttributes.get();
                     oldQuantity = chiTietSanPham.getSo_luong();
@@ -165,7 +169,7 @@ public class ChiTietSanPhamService {
             // Đặt các entity liên quan và ngày sửa
             chiTietSanPham.setMauSac(mauSac);
             chiTietSanPham.setKichThuoc(kichThuoc);
-            chiTietSanPham.setSanPham(sanPham);  // Đảm bảo sử dụng SanPham đã tìm thấy từ DB
+            chiTietSanPham.setSanPham(sanPham); // Đảm bảo sử dụng SanPham đã tìm thấy từ DB
             chiTietSanPham.setNgay_sua(new Date());
 
             // Lưu chi tiết sản phẩm
