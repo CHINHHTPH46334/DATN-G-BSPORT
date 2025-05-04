@@ -187,7 +187,6 @@ SELECT
     sp.ma_san_pham,
     sp.ten_san_pham,
     sp.mo_ta,
-    sp.trang_thai,
     dm.ten_danh_muc,
     th.ten_thuong_hieu,
     cl.ten_chat_lieu,
@@ -206,7 +205,8 @@ SELECT
     ctsp.gia_ban AS GiaGoc,
     ISNULL(kh.GiamGia, ctsp.gia_ban) AS GiaHienTai,
     kh.gia_tri_giam AS GiaTriKhuyenMai,
-    kh.kieu_giam_gia AS KieuKhuyenMai
+    kh.kieu_giam_gia AS KieuKhuyenMai,
+    ctsp.trang_thai
 FROM chi_tiet_san_pham ctsp
 INNER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
 INNER JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc

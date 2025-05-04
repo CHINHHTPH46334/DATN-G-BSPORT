@@ -78,7 +78,7 @@ public class BanHangWebController {
     Integer idKhachHang = 0;
     Boolean xacNhan = false;
 
-//    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") public
+    //    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_QL', 'ROLE_NV')") public
     @PostMapping("/taoHoaDonWeb")
     public ResponseEntity<?> taoHoaDonWeb(@RequestBody HoaDonRequest hoaDon) {
         HoaDon hoaDonAdd = new HoaDon();
@@ -92,7 +92,7 @@ public class BanHangWebController {
         hoaDonAdd.setKhachHang(hoaDon.getId_khach_hang() == 0 ? null : khachHangRepo.findById(hoaDon.getId_khach_hang()).get());
         hoaDonRepo.save(hoaDonAdd);
         idHoaDon = hoaDonAdd.getId_hoa_don();
-        idKhachHang = hoaDonAdd.getKhachHang() == null || hoaDonAdd.getKhachHang().getIdKhachHang() == null? 0: hoaDonAdd.getKhachHang().getIdKhachHang();
+        idKhachHang = hoaDonAdd.getKhachHang() == null || hoaDonAdd.getKhachHang().getIdKhachHang() == null ? 0 : hoaDonAdd.getKhachHang().getIdKhachHang();
         xacNhan = hoaDon.getIsChuyen();
         TheoDoiDonHang theoDoiDonHang = new TheoDoiDonHang();
         theoDoiDonHang.setHoaDon(hoaDonAdd);
@@ -118,6 +118,7 @@ public class BanHangWebController {
         vc.setSoLuong(vc.getSoLuong() - 1);
         voucherRepository.save(vc);
     }
+
     private void updateSoLuongSanPham(List<HoaDonChiTiet> list) {
         for (HoaDonChiTiet hdct : list) {
             ChiTietSanPham ctsp = chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).get();
@@ -250,5 +251,10 @@ public class BanHangWebController {
     @GetMapping("/voucherTheoGiaTruyen")
     public List<VoucherBHResponse> voucherTheoGiaTruyen(@RequestParam("giaTruyen") BigDecimal giaTruyen) {
         return voucherService.listVoucherTheoGiaTruyen(giaTruyen);
+    }
+
+    @GetMapping("/trangThaiCTSP")
+    public Boolean getTrangThai(@RequestParam("idCTSP") Integer idCTSP) {
+        return chiTietSanPhamRepo.findById(idCTSP).get().getTrang_thai().equalsIgnoreCase("Hoạt động") ? true : false;
     }
 }
