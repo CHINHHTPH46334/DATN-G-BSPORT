@@ -140,85 +140,91 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     Page<ChiTietSanPhamView> searchCTSP_HD(@Param("keyword") String keyword, Pageable pageable);
 
     //=============================== Của Dũng====================================//
-    @Query(nativeQuery = true, value = "WITH DanhGiaSanPham AS (\n" +
-            "    SELECT\n" +
-            "        id_chi_tiet_san_pham,\n" +
-            "        AVG(ISNULL(danh_gia, 0) * 1.0) as danh_gia_trung_binh, -- Nhân 1.0 để đảm bảo kết quả là số thực\n" +
-            "        COUNT(binh_luan) as so_luong_danh_gia -- Chỉ đếm các bình luận không rỗng\n" +
-            "    FROM binh_luan\n" +
-            "    GROUP BY id_chi_tiet_san_pham\n" +
-            "),\n" +
-            "-- CTE for calculating effective promotions\n" +
-            "KhuyenMaiHieuLuc AS (\n" +
-            "    SELECT\n" +
-            "        ctkm.id_chi_tiet_san_pham,\n" +
-            "        GiamGia = CASE\n" +
-            "            WHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100.0)\n" +
-            "            WHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam\n" +
-            "            ELSE ctsp.gia_ban\n" +
-            "        END,\n" +
-            "        km.gia_tri_giam,\n" +
-            "        km.kieu_giam_gia\n" +
-            "    FROM chi_tiet_khuyen_mai ctkm\n" +
-            "    JOIN khuyen_mai km\n" +
-            "        ON ctkm.id_khuyen_mai = km.id_khuyen_mai\n" +
-            "        AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han\n" +
-            "    JOIN chi_tiet_san_pham ctsp\n" +
-            "        ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham\n" +
-            "),\n" +
-            "-- CTE for aggregating images per product detail\n" +
-            "AnhSanPham AS (\n" +
-            "    SELECT\n" +
-            "        id_chi_tiet_san_pham,\n" +
-            "        -- Nối tất cả hinh_anh thành một chuỗi, cách nhau bằng dấu phẩy\n" +
-            "        -- WITHIN GROUP (ORDER BY ...) nếu bạn muốn ảnh có thứ tự cụ thể (ví dụ: theo id_hinh_anh)\n" +
-            "        STRING_AGG(ISNULL(ha.hinh_anh, ''), ',') WITHIN GROUP (ORDER BY ha.id_hinh_anh) AS hinh_anh\n" +
-            "        -- Nếu không cần thứ tự hoặc không có cột để sắp xếp:\n" +
-            "        -- STRING_AGG(ISNULL(ha.hinh_anh, ''), ',') AS DanhSachHinhAnh\n" +
-            "    FROM hinh_anh ha\n" +
-            "    WHERE ha.hinh_anh IS NOT NULL AND ha.hinh_anh <> '' -- Chỉ nối các ảnh có giá trị\n" +
-            "    GROUP BY id_chi_tiet_san_pham\n" +
-            ")\n" +
-            "-- Final Select statement combining all information\n" +
-            "SELECT\n" +
-            "    ctsp.id_chi_tiet_san_pham,\n" +
-            "    sp.id_san_pham,\n" +
-            "    sp.ma_san_pham,\n" +
-            "    sp.ten_san_pham,\n" +
-            "    sp.mo_ta,\n" +
-            "    sp.trang_thai,\n" +
-            "    dm.ten_danh_muc,\n" +
-            "    th.ten_thuong_hieu,\n" +
-            "    cl.ten_chat_lieu,\n" +
-            "    ISNULL(asp.hinh_anh, '') AS hinh_anh, -- Lấy chuỗi ảnh đã nối từ CTE AnhSanPham\n" +
-            "    kt.gia_tri , -- Đổi tên để rõ ràng hơn\n" +
-            "    kt.don_vi,   -- Đổi tên để rõ ràng hơn\n" +
-            "    ms.ma_mau_sac,\n" +
-            "    ms.ten_mau_sac,\n" +
-            "    kt.id_kich_thuoc,\n" +
-            "    ms.id_mau_sac,\n" +
-            "    ctsp.ngay_tao,\n" +
-            "    ctsp.ngay_sua,\n" +
-            "    ctsp.so_luong,\n" +
-            "    ISNULL(dgs.danh_gia_trung_binh, 0) as danh_gia_trung_binh, -- Lấy từ CTE DanhGiaSanPham\n" +
-            "    ISNULL(dgs.so_luong_danh_gia, 0) as so_luong_danh_gia,    -- Lấy từ CTE DanhGiaSanPham\n" +
-            "    ctsp.gia_ban AS GiaGoc,\n" +
-            "    ISNULL(kh.GiamGia, ctsp.gia_ban) AS GiaHienTai,\n" +
-            "    kh.gia_tri_giam AS GiaTriKhuyenMai,\n" +
-            "    kh.kieu_giam_gia AS KieuKhuyenMai\n" +
-            "FROM chi_tiet_san_pham ctsp\n" +
-            "INNER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham\n" +
-            "INNER JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc\n" +
-            "INNER JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu\n" +
-            "INNER JOIN chat_lieu cl ON sp.id_chat_lieu = cl.id_chat_lieu\n" +
-            "LEFT JOIN KhuyenMaiHieuLuc kh ON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham\n" +
-            "LEFT JOIN DanhGiaSanPham dgs ON ctsp.id_chi_tiet_san_pham = dgs.id_chi_tiet_san_pham\n" +
-            "LEFT JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc\n" +
-            "LEFT JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac\n" +
-            "LEFT JOIN AnhSanPham asp ON ctsp.id_chi_tiet_san_pham = asp.id_chi_tiet_san_pham -- Join với CTE ảnh đã nối\n" +
-            "WHERE\n" +
-            "    sp.trang_thai = N'Hoạt động'\n" +
-            "    AND sp.id_san_pham = :idSanPham; -- Lọc theo sản phẩm cụ thể\n")
+    @Query(nativeQuery = true, value = """
+WITH DanhGiaSanPham AS (
+    SELECT
+        id_chi_tiet_san_pham,
+        AVG(ISNULL(danh_gia, 0) * 1.0) AS danh_gia_trung_binh,
+        COUNT(binh_luan) AS so_luong_danh_gia
+    FROM binh_luan
+    GROUP BY id_chi_tiet_san_pham
+),
+KhuyenMaiHieuLuc AS (
+    SELECT
+        ctkm.id_chi_tiet_san_pham,
+        GiamGia = CASE
+            WHEN km.kieu_giam_gia = N'Phần trăm' THEN ctsp.gia_ban * (1 - km.gia_tri_giam / 100.0)
+            WHEN km.kieu_giam_gia = N'Tiền mặt' THEN ctsp.gia_ban - km.gia_tri_giam
+            ELSE ctsp.gia_ban
+        END,
+        km.gia_tri_giam,
+        km.kieu_giam_gia,
+        ROW_NUMBER() OVER (
+            PARTITION BY ctkm.id_chi_tiet_san_pham
+            ORDER BY km.ngay_bat_dau DESC
+        ) AS rn
+    FROM chi_tiet_khuyen_mai ctkm
+    JOIN khuyen_mai km
+        ON ctkm.id_khuyen_mai = km.id_khuyen_mai
+        AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
+    JOIN chi_tiet_san_pham ctsp
+        ON ctkm.id_chi_tiet_san_pham = ctsp.id_chi_tiet_san_pham
+),
+KhuyenMaiHieuLucNhat AS (
+    SELECT *
+    FROM KhuyenMaiHieuLuc
+    WHERE rn = 1
+),
+AnhSanPham AS (
+    SELECT
+        id_chi_tiet_san_pham,
+        STRING_AGG(ISNULL(ha.hinh_anh, ''), ',') WITHIN GROUP (ORDER BY ha.id_hinh_anh) AS hinh_anh
+    FROM hinh_anh ha
+    WHERE ha.hinh_anh IS NOT NULL AND ha.hinh_anh <> ''
+    GROUP BY id_chi_tiet_san_pham
+)
+
+SELECT
+    ctsp.id_chi_tiet_san_pham,
+    sp.id_san_pham,
+    sp.ma_san_pham,
+    sp.ten_san_pham,
+    sp.mo_ta,
+    sp.trang_thai,
+    dm.ten_danh_muc,
+    th.ten_thuong_hieu,
+    cl.ten_chat_lieu,
+    ISNULL(asp.hinh_anh, '') AS hinh_anh,
+    kt.gia_tri,
+    kt.don_vi,
+    ms.ma_mau_sac,
+    ms.ten_mau_sac,
+    kt.id_kich_thuoc,
+    ms.id_mau_sac,
+    ctsp.ngay_tao,
+    ctsp.ngay_sua,
+    ctsp.so_luong,
+    ISNULL(dgs.danh_gia_trung_binh, 0) AS danh_gia_trung_binh,
+    ISNULL(dgs.so_luong_danh_gia, 0) AS so_luong_danh_gia,
+    ctsp.gia_ban AS GiaGoc,
+    ISNULL(kh.GiamGia, ctsp.gia_ban) AS GiaHienTai,
+    kh.gia_tri_giam AS GiaTriKhuyenMai,
+    kh.kieu_giam_gia AS KieuKhuyenMai
+FROM chi_tiet_san_pham ctsp
+INNER JOIN san_pham sp ON sp.id_san_pham = ctsp.id_san_pham
+INNER JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
+INNER JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+INNER JOIN chat_lieu cl ON sp.id_chat_lieu = cl.id_chat_lieu
+LEFT JOIN KhuyenMaiHieuLucNhat kh ON ctsp.id_chi_tiet_san_pham = kh.id_chi_tiet_san_pham
+LEFT JOIN DanhGiaSanPham dgs ON ctsp.id_chi_tiet_san_pham = dgs.id_chi_tiet_san_pham
+LEFT JOIN kich_thuoc kt ON kt.id_kich_thuoc = ctsp.id_kich_thuoc
+LEFT JOIN mau_sac ms ON ms.id_mau_sac = ctsp.id_mau_sac
+LEFT JOIN AnhSanPham asp ON ctsp.id_chi_tiet_san_pham = asp.id_chi_tiet_san_pham
+WHERE
+    sp.trang_thai = N'Hoạt động'
+    AND sp.id_san_pham = :idSanPham;
+
+""")
     ArrayList<ChiTietSanPhamView> getCTSPBySanPhamFull(@Param("idSanPham") Integer idSanPham);
 
     //ddd

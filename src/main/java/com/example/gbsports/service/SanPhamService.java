@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class SanPhamService {
-    //    private static final Logger logger = LoggerFactory.getLogger(SanPhamService.class);
+    // private static final Logger logger =
+    // LoggerFactory.getLogger(SanPhamService.class);
     @Autowired
     SanPhamRepo sanPhamRepo;
     @Autowired
@@ -43,11 +45,12 @@ public class SanPhamService {
 
     @Cacheable(value = "products", key = "'allSanPham'")
     public ArrayList<SanPhamView> getAll() {
-//        ArrayList<SanPhamView> newList = new ArrayList<>();
+        // ArrayList<SanPhamView> newList = new ArrayList<>();
         System.out.println("Lấy dữ liệu từ database không phải từ cache");
 
         return sanPhamRepo.getAllSanPham();
     }
+
     @CacheEvict(value = "products", key = "'allSanPham'")
     public void updateProductStatus() {
         ArrayList<SanPhamView> allProducts = sanPhamRepo.getAllSanPham();
@@ -83,20 +86,21 @@ public class SanPhamService {
     public SanPham detailSP(@RequestParam("id") Integer id) {
         return sanPhamRepo.findById(id).get();
     }
-    //Chưa cache
-//    @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
+
+    // Chưa cache
+    // @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
-//        ArrayList<SanPhamView> newList = new ArrayList<>();
-//        for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
-//            if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
-//                newList.add(spv);
-//            }
-//        }
-//        for (SanPhamView spXet : newList) {
-//            SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
-//            sanPham.setTrang_thai("Không hoạt động");
-//            sanPhamRepo.save(sanPham);
-//        }
+        // ArrayList<SanPhamView> newList = new ArrayList<>();
+        // for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
+        // if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
+        // newList.add(spv);
+        // }
+        // }
+        // for (SanPhamView spXet : newList) {
+        // SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
+        // sanPham.setTrang_thai("Không hoạt động");
+        // sanPhamRepo.save(sanPham);
+        // }
         return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
     }
 
@@ -226,14 +230,14 @@ public class SanPhamService {
                     chiTietSanPhamRepo.save(ctspXoa);
                 }
             }
-//            else {
-//                for (ChiTietSanPham ctspXoa : list) {
-//                    ctspXoa.setTrang_thai("Hoạt động".trim());
-//                    chiTietSanPhamRepo.save(ctspXoa);
-//                }
-//                spDelete.setTrang_thai("Hoạt động".trim());
-//                sanPhamRepo.save(spDelete);
-//            }
+            // else {
+            // for (ChiTietSanPham ctspXoa : list) {
+            // ctspXoa.setTrang_thai("Hoạt động".trim());
+            // chiTietSanPhamRepo.save(ctspXoa);
+            // }
+            // spDelete.setTrang_thai("Hoạt động".trim());
+            // sanPhamRepo.save(spDelete);
+            // }
         }
         return ResponseEntity.ok(spDelete);
     }
@@ -277,7 +281,7 @@ public class SanPhamService {
     }
 
     public SanPham getSanPhamOrCreateSanPham(String tenSanPham, ThuongHieu thuongHieu, DanhMuc danhMuc,
-                                             ChatLieu chatLieu) {
+            ChatLieu chatLieu) {
         Optional<SanPham> exitingSanPham = sanPhamRepo.findAll().stream()
                 .filter(sanPham -> tenSanPham
                         .equalsIgnoreCase(Optional.ofNullable(sanPham.getTen_san_pham()).orElse("")))
@@ -316,6 +320,19 @@ public class SanPhamService {
     public List<SanPhamView> getSanPhamTheoTen(@RequestParam("tenSanPham") String tenSanPham) {
         return sanPhamRepo.listSanPhamBanHangWebTheoSP(tenSanPham);
     }
+
+    public List<SanPhamView> getSanPhamTheoTenSP(@RequestParam("tenSanPham") String tenSanPham) {
+        return sanPhamRepo.listSanPhamByTenSP(tenSanPham);
+    }
+
+    public List<SanPhamView> getSanPhamTheoTenDM(@RequestParam("tenDanhMuc") String tenDanhMuc) {
+        return sanPhamRepo.listSanPhamByTenDM(tenDanhMuc);
+    }
+
+    public List<SanPhamView> getSanPhamSieuSale() {
+        return sanPhamRepo.listSanPhamSieuKhuyeMai();
+    }
+
     public List<ChiTietSanPhamView> getAllCTSPKM() {
         return chiTietSanPhamRepo.getAllCTSPKM();
     }
