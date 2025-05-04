@@ -28,6 +28,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -1207,11 +1208,13 @@ public class KhachHangController {
     }
 
     // lềnh thêm
+    // lềnh thêm
     @PostMapping("/update-order-info")
     @PreAuthorize("hasRole('ROLE_KH')")
     public ResponseEntity<Map<String, Object>> updateOrderCustomerInfo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UpdateOrderCustomerInfoDTO request) {
+            @RequestBody UpdateOrderCustomerInfoDTO request,
+            @RequestParam(value = "phiVanChuyen", required = false, defaultValue = "0") BigDecimal phiVanChuyen) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -1266,6 +1269,11 @@ public class KhachHangController {
             hoaDon.setSdt_nguoi_nhan(request.getSdtNguoiNhan().trim());
             hoaDon.setDia_chi(request.getDiaChi().trim());
             hoaDon.setNgay_sua(LocalDateTime.now());
+            BigDecimal pvcCu = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
+            hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_sau_giam().subtract(pvcCu).add(phiVanChuyen));
+            System.out.println("Phí vận chuyển: " + phiVanChuyen);
+            System.out.println("Phí vận chuyển: " + hoaDon.getTong_tien_sau_giam());
+            hoaDon.setPhi_van_chuyen(phiVanChuyen);
             hoaDonRepo.save(hoaDon);
 
             // Ghi lại lịch sử cập nhật trong theo_doi_don_hang

@@ -1097,13 +1097,17 @@ public class HoaDonController {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn với mã: " + maHoaDon));
             Integer idHoaDon = hoaDon.getId_hoa_don();
 
-            // Sử dụng đúng truy vấn SQL như yêu cầu
-            String sql = "select s.hinh_anh, ma_san_pham, ten_san_pham, c.so_luong, don_gia, c.so_luong * don_gia as 'Tong_tien' " +
-                    "from hoa_don h " +
-                    "join hoa_don_chi_tiet c on h.id_hoa_don = c.id_hoa_don " +
-                    "join chi_tiet_san_pham t on c.id_chi_tiet_san_pham = t.id_chi_tiet_san_pham " +
-                    "join san_pham s on s.id_san_pham = t.id_san_pham " +
-                    "where h.id_hoa_don = ?";
+            // Truy vấn SQL cập nhật để bao gồm id_san_pham, id_chi_tiet_san_pham, ten_mau_sac, gia_tri
+            String sql = "SELECT s.id_san_pham, t.id_chi_tiet_san_pham, s.hinh_anh, s.ma_san_pham, s.ten_san_pham, " +
+                    "c.so_luong, c.don_gia, c.so_luong * c.don_gia as 'tong_tien', " +
+                    "ms.ten_mau_sac, kt.gia_tri " +
+                    "FROM hoa_don h " +
+                    "JOIN hoa_don_chi_tiet c ON h.id_hoa_don = c.id_hoa_don " +
+                    "JOIN chi_tiet_san_pham t ON c.id_chi_tiet_san_pham = t.id_chi_tiet_san_pham " +
+                    "JOIN san_pham s ON s.id_san_pham = t.id_san_pham " +
+                    "LEFT JOIN mau_sac ms ON t.id_mau_sac = ms.id_mau_sac " +
+                    "LEFT JOIN kich_thuoc kt ON t.id_kich_thuoc = kt.id_kich_thuoc " +
+                    "WHERE h.id_hoa_don = ?";
 
             return jdbcTemplate.queryForList(sql, idHoaDon);
         } catch (Exception e) {

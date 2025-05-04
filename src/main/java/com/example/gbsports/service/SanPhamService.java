@@ -90,17 +90,6 @@ public class SanPhamService {
     // Chưa cache
     // @Cacheable(value = "productsNgaySua",key = "'allSanPhamNgaySua'")
     public ArrayList<SanPhamView> getAllSPNgaySua() {
-        // ArrayList<SanPhamView> newList = new ArrayList<>();
-        // for (SanPhamView spv : sanPhamRepo.getAllSanPhamSapXepTheoNgaySua()) {
-        // if (spv.getTong_so_luong() == null || spv.getTong_so_luong() <= 0) {
-        // newList.add(spv);
-        // }
-        // }
-        // for (SanPhamView spXet : newList) {
-        // SanPham sanPham = sanPhamRepo.findById(spXet.getId_san_pham()).get();
-        // sanPham.setTrang_thai("Không hoạt động");
-        // sanPhamRepo.save(sanPham);
-        // }
         return sanPhamRepo.getAllSanPhamSapXepTheoNgaySua();
     }
 

@@ -48,24 +48,6 @@ public class ChiTietSanPhamService {
 
     // @Cacheable(value = "detailProducts")
     public List<ChiTietSanPhamView> getAllCTSP() {
-        // ArrayList<ChiTietSanPhamView> listCTSP0 = new ArrayList<>();
-        // listCTSP0.clear();
-        // for (ChiTietSanPhamView ctspv : chiTietSanPhamRepo.listCTSP()) {
-        // if (ctspv.getSo_luong() == null || ctspv.getSo_luong() <= 0) {
-        // listCTSP0.add(ctspv);
-        // }
-        // }
-        // for (ChiTietSanPhamView ctspXet : listCTSP0) {
-        // if (ctspXet.getId_chi_tiet_san_pham() == null ||
-        // ctspXet.getId_chi_tiet_san_pham().equals("")) {
-        // continue;
-        // }
-        // ChiTietSanPham ctsp =
-        // chiTietSanPhamRepo.findById(ctspXet.getId_chi_tiet_san_pham()).get();
-        // ctsp.setTrang_thai("Không hoạt động");
-        // chiTietSanPhamRepo.save(ctsp);
-        // }
-
         return chiTietSanPhamRepo.listCTSP();
     }
 
@@ -138,7 +120,7 @@ public class ChiTietSanPhamService {
                     // Sao chép các thuộc tính cơ bản (có thể loại trừ sanPham)
                     chiTietSanPham.setGia_ban(chiTietSanPhamRequest.getGia_ban());
                     chiTietSanPham.setSo_luong(chiTietSanPhamRequest.getSo_luong());
-                    chiTietSanPham.setTrang_thai(chiTietSanPhamRequest.getTrang_thai());
+//                    chiTietSanPham.setTrang_thai(chiTietSanPhamRequest.getTrang_thai());
                     chiTietSanPham.setQr_code(chiTietSanPhamRequest.getQr_code());
 
                     // Giữ ngày tạo gốc
@@ -565,6 +547,7 @@ public class ChiTietSanPhamService {
                 isEmpty(listKichThuoc)) {
             List<Integer> listKhongCoGi = danhSachSanPham.stream()
                     .map(ChiTietSanPhamView::getId_chi_tiet_san_pham)
+                    .distinct()
                     .collect(Collectors.toList());
             return ResponseEntity.ok(sanPhamRepo.getSanPhamByListCTSP(listKhongCoGi));
         }
