@@ -37,12 +37,14 @@ com\example\gbsports\entity\GioHangTam$ChiTietGioHangTam.class
 com\example\gbsports\service\FavoriteService.class
 com\example\gbsports\entity\HoiThoai.class
 com\example\gbsports\entity\ThuongHieu.class
+com\example\gbsports\service\ChiTietSanPhamService$ResourceNotFoundException.class
 com\example\gbsports\repository\KichThuocRepo.class
 com\example\gbsports\request\ChiTietGioHangRequest.class
 com\example\gbsports\util\HexStringUtil.class
 com\example\gbsports\entity\HoaDon.class
 com\example\gbsports\request\SanPhamRequest.class
 com\example\gbsports\entity\HoaDonChiTiet.class
+com\example\gbsports\config\CacheConfig.class
 com\example\gbsports\repository\ChiTietSanPhamRepo.class
 com\example\gbsports\request\TraHangRequest$ChiTietTraHangRequest.class
 com\example\gbsports\entity\KichThuoc.class
@@ -50,10 +52,13 @@ com\example\gbsports\repository\LichSuDangNhapRepo.class
 com\example\gbsports\entity\TheoDoiDonHang.class
 com\example\gbsports\controller\ReviewController.class
 com\example\gbsports\controller\BCTKController.class
+com\example\gbsports\request\UpdateOrderCustomerInfoDTO.class
 com\example\gbsports\entity\KhuyenMai.class
 com\example\gbsports\entity\PasswordGenerator.class
+com\example\gbsports\request\SupportRequestDTO.class
 com\example\gbsports\util\JwtUtil.class
 com\example\gbsports\request\LoginResponse.class
+com\example\gbsports\repository\ChiTietGioHangWeb.class
 com\example\gbsports\response\SanPhamView.class
 com\example\gbsports\entity\DanhMuc.class
 com\example\gbsports\repository\HinhAnhSanPhamRepo.class
@@ -159,6 +164,7 @@ com\example\gbsports\request\TheoDoiDonHangRequest.class
 com\example\gbsports\service\KhuyenMaiService.class
 com\example\gbsports\controller\BanHangController.class
 com\example\gbsports\controller\ChiTietSanPhamController.class
+com\example\gbsports\response\ApiResponse.class
 com\example\gbsports\service\GhtkService.class
 com\example\gbsports\entity\LichSuDangNhap.class
 com\example\gbsports\request\RegisterRequest.class

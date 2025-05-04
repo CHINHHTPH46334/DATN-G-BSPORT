@@ -1200,9 +1200,9 @@ public class HoaDonController {
             LocalDateTime ngayChuyen = statusList.get(0).getNgay_chuyen();
             LocalDateTime now = LocalDateTime.now();
             long daysBetween = ChronoUnit.DAYS.between(ngayChuyen.toLocalDate(), now.toLocalDate());
-            if (daysBetween > 7) {
+            if (daysBetween > 14) {
                 response.put("thanh_cong", false);
-                response.put("thong_bao", "Hóa đơn đã quá 7 ngày kể từ khi hoàn thành, không thể trả hàng!");
+                response.put("thong_bao", "Hóa đơn đã quá 14 ngày kể từ khi hoàn thành, không thể trả hàng!");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 //             Fetch invoice details
