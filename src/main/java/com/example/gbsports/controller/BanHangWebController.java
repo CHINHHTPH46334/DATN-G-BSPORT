@@ -183,7 +183,27 @@ public class BanHangWebController {
         }
         return ResponseEntity.ok(listHdct);
     }
+    @PostMapping("/taoHoaDonChiTietMuaNgay")
+    public ResponseEntity<?> taoHoaDonChiTietMuaNgay(@RequestBody List<HoaDonChiTiet> hoaDonChiTiets) {
+        ArrayList<HoaDonChiTiet> listHdct = new ArrayList<>();
+        for (HoaDonChiTiet hdct : hoaDonChiTiets) {
+            HoaDonChiTiet hoaDonChiTietAdd = new HoaDonChiTiet();
+            hoaDonChiTietAdd.setHoaDon(hoaDonRepo.findById(idHoaDon).get());
+            System.out.println("id Hoá đơn: fdfdfd: " + idHoaDon);
+            hoaDonChiTietAdd.setChiTietSanPham(
+                    chiTietSanPhamRepo.findById(hdct.getChiTietSanPham().getId_chi_tiet_san_pham()).orElseThrow()
+            );
+            hoaDonChiTietAdd.setSo_luong(hdct.getSo_luong());
+            hoaDonChiTietAdd.setDon_gia(hdct.getDon_gia());
 
+            hoaDonChiTietRepo.save(hoaDonChiTietAdd);
+            listHdct.add(hoaDonChiTietAdd);
+        }
+        if (xacNhan) {
+            updateSoLuongSanPham(listHdct);
+        }
+        return ResponseEntity.ok(listHdct);
+    }
     //
     @PostMapping("/suaHoaDon")
     public ResponseEntity<?> suaHoaDon(@RequestBody HoaDon hoaDon) {
