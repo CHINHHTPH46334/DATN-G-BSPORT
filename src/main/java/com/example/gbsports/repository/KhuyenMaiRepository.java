@@ -29,12 +29,12 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai,Integer> {
             "AND (:end IS NULL OR km.ngayHetHan <= :end)")
     Page<KhuyenMai> searchByDateRange(@Param("start") OffsetDateTime start, @Param("end") OffsetDateTime end, Pageable pageable);
 
-    @Query("SELECT km FROM KhuyenMai km WHERE km.giaTriGiam BETWEEN :minPrice AND :maxPrice")
+    @Query("SELECT km FROM KhuyenMai km WHERE km.giaTriToiDa BETWEEN :minPrice AND :maxPrice")
     Page<KhuyenMai> searchByPriceRange(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
-    @Query("SELECT COALESCE(MIN(km.giaTriGiam), 0) FROM KhuyenMai km")
+    @Query("SELECT COALESCE(MIN(km.giaTriToiDa), 0) FROM KhuyenMai km")
     BigDecimal findMinPrice();
 
-    @Query("SELECT COALESCE(MAX(km.giaTriGiam), 0) FROM KhuyenMai km")
+    @Query("SELECT COALESCE(MAX(km.giaTriToiDa), 0) FROM KhuyenMai km")
     BigDecimal findMaxPrice();
 }
