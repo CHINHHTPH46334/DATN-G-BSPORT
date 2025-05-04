@@ -287,30 +287,19 @@ public class KhachHangController {
         khachHangRequest.setTrangThai("Đang hoạt động");
         khachHangRequest.setGioiTinh(true);
         khachHangRequest.setNgaySinh(new Date());
-        // Kiểm tra số điện thoại
-        String cleanedPhone = khachHangRequest.getSoDienThoai().replaceAll("\\s+", "");
-        if (!cleanedPhone.matches("^(0)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$")) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            fieldErrors.put("soDienThoai", "Số điện thoại không hợp lệ (VD: 0912345678)");
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-        khachHangRequest.setSoDienThoai(cleanedPhone);
-
-        // Kiểm tra email đã tồn tại
-        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
-        if (existingTaiKhoan.isPresent()) {
-            response.put("error", "Email đã được sử dụng!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
         try {
-            // Sinh mã khách hàng tự động nếu không có trong request
+            // Kiểm tra email đã tồn tại
+            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+            if (existingTaiKhoan.isPresent()) {
+                response.put("error", "Email đã được sử dụng!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Sinh mã khách hàng tự động nếu không có
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
                 maKhachHang = generateMaKhachHang();
             } else {
-                // Kiểm tra nếu mã đã tồn tại
                 Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(maKhachHang);
                 if (existingKhachHang.isPresent()) {
                     response.put("error", "Mã khách hàng đã tồn tại!");
@@ -325,8 +314,8 @@ public class KhachHangController {
 
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau)); // Mã hóa mật khẩu
-            taiKhoan.setRoles(rolesRepo.findById(4).get());
+            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau));
+            taiKhoan.setRoles(rolesRepo.findById(4).orElseThrow(() -> new RuntimeException("Role không tồn tại")));
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             // Lưu khách hàng
@@ -338,23 +327,15 @@ public class KhachHangController {
 
             // Lưu địa chỉ
             if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
-                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
-                        .filter(this::isValidDiaChi)
-                        .collect(Collectors.toList());
-
-                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
+                for (KhachHangRequest.DiaChiRequest diaChiReq : khachHangRequest.getDiaChiList()) {
                     DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
                     diaChiKhachHang.setKhachHang(khachHang);
-                    diaChiKhachHang.setSoNha(diaChiReq.getSoNha());
-                    diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
-                    diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
-                    diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-                    diaChiKhachHang.setDiaChiMacDinh(true);
+                    BeanUtils.copyProperties(diaChiReq, diaChiKhachHang);
                     diaChiKhachHangRepo.save(diaChiKhachHang);
                 }
             }
 
-            // Gửi email (không làm thất bại request nếu lỗi)
+            // Gửi email chào mừng
             String subject = "Chào mừng bạn đến với GB Sports!";
             String body = "<!DOCTYPE html>" +
                     "<html lang='vi'>" +
