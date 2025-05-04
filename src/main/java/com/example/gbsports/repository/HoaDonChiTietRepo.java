@@ -30,7 +30,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
                           AND GETDATE() BETWEEN km.ngay_bat_dau AND km.ngay_het_han
                             ), ctsp2.gia_ban) AS gia_sau_giam,
                     ctsp1.so_luong AS so_luong_con_lai, kt.gia_tri AS kich_thuoc, hd.trang_thai AS trang_thai_thanh_toan,
-                    hd.loai_hoa_don, hd.ghi_chu, ms.ten_mau_sac, ctsp2.id_chi_tiet_san_pham, ha.hinh_anh, ha.anh_chinh
+                    hd.loai_hoa_don, hd.ghi_chu, ms.ten_mau_sac, ctsp2.id_chi_tiet_san_pham, sp.hinh_anh, ha.anh_chinh
                 FROM hoa_don hd
                 FULL OUTER JOIN hoa_don_chi_tiet hdct ON hd.id_hoa_don = hdct.id_hoa_don
                 FULL OUTER JOIN (SELECT id_chi_tiet_san_pham, so_luong FROM chi_tiet_san_pham ct
@@ -163,7 +163,7 @@ public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Integer>
             	ctsp.id_chi_tiet_san_pham,
             	sp.ma_san_pham,
             	sp.ten_san_pham,
-            	ha.hinh_anh,
+            	sp.hinh_anh,
             	hdct.so_luong,
             	ctsp.so_luong AS so_luong_ton,
             	COALESCE((

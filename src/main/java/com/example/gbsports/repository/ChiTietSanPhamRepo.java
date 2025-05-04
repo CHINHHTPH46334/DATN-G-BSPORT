@@ -93,7 +93,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     @Query(value = """
         SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
                 ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
-                ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
+                ctsp.gia_ban AS giaGoc, sp.hinh_anh, ha.anh_chinh
         FROM chi_tiet_san_pham ctsp
         JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
         JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
@@ -117,7 +117,7 @@ public interface ChiTietSanPhamRepo extends JpaRepository<ChiTietSanPham, Intege
     @Query(value = """
         SELECT ctsp.id_chi_tiet_san_pham, sp.ten_san_pham, dm.ten_danh_muc, ms.ten_mau_sac AS ten_mau, kt.gia_tri,
                 ctsp.so_luong, COALESCE(km_max.giaHienTai, ctsp.gia_ban) AS giaHienTai, ctsp.trang_thai,
-                ctsp.gia_ban AS giaGoc, ha.hinh_anh, ha.anh_chinh
+                ctsp.gia_ban AS giaGoc, sp.hinh_anh, ha.anh_chinh
         FROM chi_tiet_san_pham ctsp
         JOIN san_pham sp ON ctsp.id_san_pham = sp.id_san_pham
         JOIN danh_muc_san_pham dm ON sp.id_danh_muc = dm.id_danh_muc
