@@ -23,95 +23,45 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
-    @Query(nativeQuery = true, value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
-            FROM hoa_don hd
-            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                    ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-            WHERE hd.trang_thai = N'Hoàn thành'
-            ORDER BY hd.ngay_tao DESC
-            """)
-    Page<HoaDonResponse> getAllHD(Pageable pageable);
 
     @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
+            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,
+                            hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
                             hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
                             hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
             FROM hoa_don hd
             LEFT JOIN nhan_vien nv ON hd.id_nhan_vien = nv.id_nhan_vien
             LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-            WHERE (
-                    :keyword IS NULL
-                    OR hd.ma_hoa_don LIKE %:keyword%
-                    OR nv.ma_nhan_vien LIKE %:keyword%
-                    OR hd.ho_ten LIKE %:keyword%
-                    OR hd.sdt_nguoi_nhan LIKE %:keyword%
+            LEFT JOIN (
+                SELECT t1.id_hoa_don, t1.trang_thai, t1.ngay_chuyen
+                FROM theo_doi_don_hang t1
+                WHERE t1.trang_thai != N'Đã cập nhật'
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM theo_doi_don_hang t2
+                    WHERE t2.id_hoa_don = t1.id_hoa_don
+                    AND t2.trang_thai != N'Đã cập nhật'
+                    AND t2.ngay_chuyen > t1.ngay_chuyen
                 )
-            AND hd.trang_thai = N'Hoàn thành'
+            ) AS tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            WHERE hd.trang_thai = N'Hoàn thành'
+            AND (:keyword IS NULL
+                OR hd.ma_hoa_don LIKE CONCAT('%', :keyword, '%')
+                OR nv.ma_nhan_vien LIKE CONCAT('%', :keyword, '%')
+                OR hd.ho_ten LIKE CONCAT('%', :keyword, '%')
+                OR hd.sdt_nguoi_nhan LIKE CONCAT('%', :keyword, '%'))
+            AND (:tuNgay IS NULL OR hd.ngay_tao >= :tuNgay)
+            AND (:denNgay IS NULL OR hd.ngay_tao <= :denNgay)
+            AND (:trangThai IS NULL OR tdh.trang_thai = :trangThai)
+            AND (:loaiHoaDon IS NULL OR hd.loai_hoa_don = :loaiHoaDon)
             ORDER BY hd.ngay_tao DESC
             """, nativeQuery = true)
-    Page<HoaDonResponse> timHoaDon(
+    Page<HoaDonResponse> locHoaDon(
             @Param("keyword") String keyword,
-            Pageable pageable);
-
-    // Lọc theo khoảng ngày
-    @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
-            FROM hoa_don hd
-            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-            WHERE hd.ngay_tao BETWEEN :tuNgay AND :denNgay
-            AND hd.trang_thai = N'Hoàn thành'
-            ORDER BY hd.ngay_tao DESC
-            """, nativeQuery = true)
-    Page<HoaDonResponse> findHoaDonByNgay(
             @Param("tuNgay") LocalDateTime tuNgay,
             @Param("denNgay") LocalDateTime denNgay,
-            Pageable pageable);
-
-    // Lọc theo trạng thái theo dõi đơn hàng
-    @Query(value = """
-            SELECT DISTINCT hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.sdt_nguoi_nhan,hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don,
-                            hd.dia_chi, v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
-                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
-            FROM hoa_don hd
-            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
-            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
-                        FROM theo_doi_don_hang t
-                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
-                                                FROM theo_doi_don_hang t2
-                                                WHERE t2.id_hoa_don = t.id_hoa_don
-                                                )
-                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
-            WHERE tdh.trang_thai = :trangThai
-            AND hd.trang_thai = N'Hoàn thành'
-            ORDER BY hd.ngay_tao DESC
-            """, nativeQuery = true)
-    Page<HoaDonResponse> findHoaDonByTrangThaiGiaoHang(
             @Param("trangThai") String trangThai,
+            @Param("loaiHoaDon") String loaiHoaDon,
             Pageable pageable);
 
     @Query(value = """
@@ -234,7 +184,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
                               join san_pham sp on sp.id_san_pham = ctsp.id_san_pham
                               join mau_sac ms on ms.id_mau_sac = ctsp.id_mau_sac
                               join kich_thuoc kt on kt.id_kich_thuoc = ctsp.id_kich_thuoc
-                              join voucher vc on vc.id_voucher = hd.id_voucher
+                             left join voucher vc on vc.id_voucher = hd.id_voucher
                               where ma_hoa_don = :maHoaDon
                         """)
     List<HoaDonChiTietResponse> listThongTinHoaDon(@Param("maHoaDon") String maHoaDon);
@@ -259,7 +209,7 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
             phuong_thuc_nhan_hang,loai_hoa_don, ghi_chu, ten_voucher, ma_voucher,
             gia_tri_giam, kieu_giam_gia, ho_ten, phi_van_chuyen
             from hoa_don
-            join voucher vc on vc.id_voucher = hoa_don.id_voucher
+            left join voucher vc on vc.id_voucher = hoa_don.id_voucher
             where ma_hoa_don = :maHoaDon
                                     """)
     HoaDonResponse getHoaDonByMaHoaDon(@Param("maHoaDon") String maHoaDon);
@@ -362,6 +312,30 @@ public interface HoaDonRepo extends JpaRepository<HoaDon, Integer> {
     HoaDonChiTietResponse getKhachHangInfoByMaHoaDon(@Param("maHoaDon") String maHoaDon);
 
 
+    // lềnh thêm và sửa
+    @Query(value = """
+            SELECT DISTINCT hd.id_hoa_don, hd.ma_hoa_don, hd.ngay_tao, hd.ho_ten, hd.email, hd.sdt_nguoi_nhan, 
+                            hd.trang_thai AS trang_thai_thanh_toan, hd.loai_hoa_don, hd.dia_chi, hd.ghi_chu,
+                            v.ma_voucher, hd.tong_tien_sau_giam, tdh.trang_thai,
+                            hd.hinh_thuc_thanh_toan, hd.phuong_thuc_nhan_hang
+            FROM hoa_don hd
+            LEFT JOIN voucher v ON hd.id_voucher = v.id_voucher
+            LEFT JOIN (SELECT t.id_hoa_don, t.trang_thai
+                        FROM theo_doi_don_hang t
+                        WHERE t.ngay_chuyen = (SELECT MAX(ngay_chuyen)
+                                                FROM theo_doi_don_hang t2
+                                                WHERE t2.id_hoa_don = t.id_hoa_don
+                                                )
+                        ) tdh ON hd.id_hoa_don = tdh.id_hoa_don
+            WHERE hd.id_khach_hang = :idKhachHang
+            ORDER BY hd.ngay_tao DESC
+            """, nativeQuery = true)
+    List<HoaDonResponse> findHoaDonWithLatestStatusByKhachHangId(@Param("idKhachHang") Integer idKhachHang);
 
+    @Query("SELECT h FROM HoaDon h WHERE h.ma_hoa_don = :maHoaDon AND h.khachHang.idKhachHang = :idKhachHang")
+    Optional<HoaDon> findByMaHoaDonAndIdKhachHang(@Param("maHoaDon") String maHoaDon, @Param("idKhachHang") Integer idKhachHang);
+
+    @Query(value = "SELECT TOP 1 trang_thai FROM theo_doi_don_hang WHERE id_hoa_don = :idHoaDon ORDER BY ngay_chuyen DESC", nativeQuery = true)
+    String findLatestStatusByIdHoaDon(@Param("idHoaDon") Integer idHoaDon);
 
 }

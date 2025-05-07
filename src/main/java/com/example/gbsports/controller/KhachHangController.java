@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +28,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -285,30 +287,19 @@ public class KhachHangController {
         khachHangRequest.setTrangThai("Đang hoạt động");
         khachHangRequest.setGioiTinh(true);
         khachHangRequest.setNgaySinh(new Date());
-        // Kiểm tra số điện thoại
-        String cleanedPhone = khachHangRequest.getSoDienThoai().replaceAll("\\s+", "");
-        if (!cleanedPhone.matches("^(0)(3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])[0-9]{7}$")) {
-            Map<String, String> fieldErrors = new HashMap<>();
-            fieldErrors.put("soDienThoai", "Số điện thoại không hợp lệ (VD: 0912345678)");
-            response.put("fieldErrors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-        khachHangRequest.setSoDienThoai(cleanedPhone);
-
-        // Kiểm tra email đã tồn tại
-        Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
-        if (existingTaiKhoan.isPresent()) {
-            response.put("error", "Email đã được sử dụng!");
-            return ResponseEntity.badRequest().body(response);
-        }
-
         try {
-            // Sinh mã khách hàng tự động nếu không có trong request
+            // Kiểm tra email đã tồn tại
+            Optional<TaiKhoan> existingTaiKhoan = taiKhoanRepo.findByTenDangNhap(khachHangRequest.getEmail());
+            if (existingTaiKhoan.isPresent()) {
+                response.put("error", "Email đã được sử dụng!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Sinh mã khách hàng tự động nếu không có
             String maKhachHang = khachHangRequest.getMaKhachHang();
             if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
                 maKhachHang = generateMaKhachHang();
             } else {
-                // Kiểm tra nếu mã đã tồn tại
                 Optional<KhachHang> existingKhachHang = khachHangRepo.findByMaKhachHang(maKhachHang);
                 if (existingKhachHang.isPresent()) {
                     response.put("error", "Mã khách hàng đã tồn tại!");
@@ -323,8 +314,8 @@ public class KhachHangController {
 
             TaiKhoan taiKhoan = new TaiKhoan();
             taiKhoan.setTen_dang_nhap(khachHangRequest.getEmail());
-            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau)); // Mã hóa mật khẩu
-            taiKhoan.setRoles(rolesRepo.findById(4).get());
+            taiKhoan.setMat_khau(passwordEncoder.encode(matKhau));
+            taiKhoan.setRoles(rolesRepo.findById(4).orElseThrow(() -> new RuntimeException("Role không tồn tại")));
             taiKhoan = taiKhoanRepo.save(taiKhoan);
 
             // Lưu khách hàng
@@ -336,23 +327,15 @@ public class KhachHangController {
 
             // Lưu địa chỉ
             if (khachHangRequest.getDiaChiList() != null && !khachHangRequest.getDiaChiList().isEmpty()) {
-                List<KhachHangRequest.DiaChiRequest> validDiaChiList = khachHangRequest.getDiaChiList().stream()
-                        .filter(this::isValidDiaChi)
-                        .collect(Collectors.toList());
-
-                for (KhachHangRequest.DiaChiRequest diaChiReq : validDiaChiList) {
+                for (KhachHangRequest.DiaChiRequest diaChiReq : khachHangRequest.getDiaChiList()) {
                     DiaChiKhachHang diaChiKhachHang = new DiaChiKhachHang();
                     diaChiKhachHang.setKhachHang(khachHang);
-                    diaChiKhachHang.setSoNha(diaChiReq.getSoNha());
-                    diaChiKhachHang.setXaPhuong(diaChiReq.getXaPhuong());
-                    diaChiKhachHang.setQuanHuyen(diaChiReq.getQuanHuyen());
-                    diaChiKhachHang.setTinhThanhPho(diaChiReq.getTinhThanhPho());
-                    diaChiKhachHang.setDiaChiMacDinh(true);
+                    BeanUtils.copyProperties(diaChiReq, diaChiKhachHang);
                     diaChiKhachHangRepo.save(diaChiKhachHang);
                 }
             }
 
-            // Gửi email (không làm thất bại request nếu lỗi)
+            // Gửi email chào mừng
             String subject = "Chào mừng bạn đến với GB Sports!";
             String body = "<!DOCTYPE html>" +
                     "<html lang='vi'>" +
@@ -1204,4 +1187,182 @@ public class KhachHangController {
                 ? hoaDonRepo.getAllHDByidKH(idKH, pageable)
                 : hoaDonRepo.getAllHDByidKHandTT(idKH, trangThai, pageable);
     }
+
+    // lềnh thêm
+    @PostMapping("/update-order-info")
+    @PreAuthorize("hasRole('ROLE_KH')")
+    public ResponseEntity<Map<String, Object>> updateOrderCustomerInfo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UpdateOrderCustomerInfoDTO request,
+            @RequestParam(value = "phiVanChuyen", required = false, defaultValue = "0") BigDecimal phiVanChuyen) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy email từ UserDetails (giả sử username là email)
+            String email = userDetails.getUsername();
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByEmail(email);
+            if (!khachHangOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin khách hàng!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            Integer idKhachHang = khachHangOpt.get().getIdKhachHang();
+
+            // Kiểm tra mã hóa đơn và đảm bảo thuộc về khách hàng
+            Optional<HoaDon> hoaDonOpt = hoaDonRepo.findByMaHoaDonAndIdKhachHang(request.getMaHoaDon(), idKhachHang);
+            if (!hoaDonOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy hóa đơn hoặc bạn không có quyền cập nhật!");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            HoaDon hoaDon = hoaDonOpt.get();
+
+            // Kiểm tra trạng thái đơn hàng (phải là Chờ xác nhận, Đã xác nhận, hoặc Chờ đóng gói)
+            String currentStatus = hoaDonRepo.findLatestStatusByIdHoaDon(hoaDon.getId_hoa_don());
+            List<String> allowedStatuses = Arrays.asList("Chờ xác nhận", "Đã xác nhận", "Chờ đóng gói");
+            if (!allowedStatuses.contains(currentStatus)) {
+                response.put("success", false);
+                response.put("message", "Không thể cập nhật thông tin khách hàng cho đơn hàng này!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Kiểm tra dữ liệu đầu vào
+            if (request.getHoTen() == null || request.getHoTen().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Họ tên không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            if (request.getSdtNguoiNhan() == null || request.getSdtNguoiNhan().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Số điện thoại không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            if (request.getDiaChi() == null || request.getDiaChi().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Địa chỉ không được để trống!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Cập nhật thông tin
+            hoaDon.setHo_ten(request.getHoTen().trim());
+            hoaDon.setSdt_nguoi_nhan(request.getSdtNguoiNhan().trim());
+            hoaDon.setDia_chi(request.getDiaChi().trim());
+            hoaDon.setNgay_sua(LocalDateTime.now());
+            BigDecimal pvcCu = hoaDon.getPhi_van_chuyen() != null ? hoaDon.getPhi_van_chuyen() : BigDecimal.ZERO;
+            hoaDon.setTong_tien_sau_giam(hoaDon.getTong_tien_sau_giam().subtract(pvcCu).add(phiVanChuyen));
+            System.out.println("Phí vận chuyển: " + phiVanChuyen);
+            System.out.println("Phí vận chuyển: " + hoaDon.getTong_tien_sau_giam());
+            hoaDon.setPhi_van_chuyen(phiVanChuyen);
+            hoaDonRepo.save(hoaDon);
+
+            // Ghi lại lịch sử cập nhật trong theo_doi_don_hang
+            LocalDateTime ngayChuyen = LocalDateTime.now();
+            String noiDungDoi = "Khách hàng tự cập nhật thông tin";
+            hoaDonRepo.insertTrangThaiDonHang(request.getMaHoaDon(), "Đã cập nhật", ngayChuyen, null, noiDungDoi);
+
+            response.put("success", true);
+            response.put("message", "Cập nhật thông tin khách hàng thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    ///
+    @PostMapping("/send-support-request")
+    @PreAuthorize("hasRole('ROLE_KH')") // Chỉ cho phép khách hàng (ROLE_KH) truy cập
+    public ResponseEntity<Map<String, Object>> sendSupportRequest(
+            @AuthenticationPrincipal UserDetails userDetails, // Lấy thông tin người dùng từ token
+            @RequestBody SupportRequestDTO request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Lấy email từ token (username chính là email)
+            String email = userDetails.getUsername();
+
+            // Tìm khách hàng dựa trên email từ token
+            Optional<KhachHang> khachHangOpt = khachHangRepo.findByEmail(email);
+            if (!khachHangOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy thông tin khách hàng!");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            KhachHang khachHang = khachHangOpt.get();
+
+            // Kiểm tra trạng thái tài khoản khách hàng
+            if (!"Đang hoạt động".equals(khachHang.getTrangThai())) {
+                response.put("success", false);
+                response.put("message", "Tài khoản của bạn đã bị ngừng hoạt động!");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Tạo nội dung email
+            String subject = "Yêu cầu hỗ trợ mới từ khách hàng - " + request.getChuDe();
+            String body = "<!DOCTYPE html>" +
+                    "<html lang='vi'>" +
+                    "<head>" +
+                    "<meta charset='UTF-8'>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                    "<style>" +
+                    "body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }" +
+                    ".container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }" +
+                    ".header { background-color: #e53935; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }" +
+                    ".header h1 { margin: 0; font-size: 24px; }" +
+                    ".content { padding: 20px; }" +
+                    ".content h3 { margin: 0 0 10px; font-size: 20px; }" +
+                    ".info-box { background-color: #fff5f5; border-left: 5px solid #e53935; padding: 15px; margin: 20px 0; border-radius: 5px; }" +
+                    ".info-box p { margin: 5px 0; }" +
+                    ".footer { text-align: center; padding: 10px; font-size: 14px; color: #666; }" +
+                    ".footer a { color: #e53935; text-decoration: none; }" +
+                    ".footer a:hover { text-decoration: underline; }" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<div class='header'>" +
+                    "<h1>Yêu cầu hỗ trợ từ khách hàng</h1>" +
+                    "</div>" +
+                    "<div class='content'>" +
+                    "<h3>Thông tin yêu cầu:</h3>" +
+                    "<div class='info-box'>" +
+                    "<p><strong>Họ và tên:</strong> " + request.getHoTen() + "</p>" +
+                    "<p><strong>Số điện thoại:</strong> " + request.getSoDienThoai() + "</p>" +
+                    "<p><strong>Email:</strong> " + request.getEmail() + "</p>" +
+                    "<p><strong>Chủ đề:</strong> " + request.getChuDe() + "</p>" +
+                    "<p><strong>Nội dung:</strong> " + request.getNoiDung() + "</p>" +
+                    "</div>" +
+                    "<p>Vui lòng xem xét và phản hồi yêu cầu của khách hàng trong thời gian sớm nhất.</p>" +
+                    "</div>" +
+                    "<div class='footer'>" +
+                    "<p>Trân trọng,<br>Đội ngũ G&B SPORTS</p>" +
+                    "<p><a href='http://localhost:5173/home'>Ghé thăm website</a></p>" +
+                    "</div>" +
+                    "</div>" +
+                    "</body>" +
+                    "</html>";
+
+            // Gửi email đến lenhphun919@gmail.com
+            emailService.sendEmail("chinhhtph46334@gmail.com", subject, body);
+
+            response.put("success", true);
+            response.put("message", "Yêu cầu hỗ trợ đã được gửi thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (MessagingException e) {
+            response.put("success", false);
+            response.put("message", "Gửi yêu cầu thất bại: Không thể gửi email - " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

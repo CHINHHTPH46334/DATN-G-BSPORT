@@ -7,6 +7,8 @@ import com.example.gbsports.entity.ChiTietGioHangId;
 import com.example.gbsports.entity.GioHang;
 import com.example.gbsports.repository.*;
 import com.example.gbsports.response.GioHangWebResponse;
+import com.example.gbsports.service.ChiTietSanPhamService;
+import com.example.gbsports.service.GioHangService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,8 @@ public class GioHangWebController {
     private ChiTietSanPhamRepo chiTietSanPhamRepo;
     @Autowired
     private ChiTietGioHangRepository chiTietGioHangRepository;
+    @Autowired
+    private GioHangService gioHangService;
 
     @GetMapping("/gioHangByKH")
     public List<GioHangWebResponse> listGHByKH(@RequestParam("idKhachHang") Integer idKhachHang) {
@@ -125,6 +129,7 @@ public class GioHangWebController {
 
         return gioHang;
     }
+
     @PostMapping("/addGHByIdKH")
     public GioHang addGHByIdKH(@RequestParam("idKH") Integer idKH,
                                @RequestParam("idCTSP") Integer idCTSP,
@@ -172,5 +177,9 @@ public class GioHangWebController {
         return gioHang;
     }
 
+    @GetMapping("/maxSoLuong")
+    public Integer getMaxSoLuong(@RequestParam("idCTSP") Integer idCTSP) {
+        return gioHangService.getMaxSoLuong(idCTSP);
+    }
 
 }

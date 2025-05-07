@@ -74,6 +74,8 @@ public interface ChiTietSanPhamView {
 
     String getTen_mau_sac();
 
+    String getMo_ta();
+
     default Integer getSoLuongSafe() {
         return getSo_luong() != null ? getSo_luong() : 0;
     }

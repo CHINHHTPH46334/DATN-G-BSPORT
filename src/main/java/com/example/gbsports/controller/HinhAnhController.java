@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -16,8 +17,9 @@ public class HinhAnhController {
     @Autowired
     HinhAnhService hinhAnhService;
     @GetMapping("/HinhAnhSanPham")
-    public ArrayList<HinhAnhView> listHATheoCTSP(@RequestParam(name = "idCTSP") Integer id,
-                                                 @RequestParam(name = "anhChinh", required = false) Boolean anhChinh){
+    public List<HinhAnhView> listHATheoCTSP(@RequestParam(name = "idCTSP") Integer id,
+                                            @RequestParam(name = "anhChinh", required = false) Boolean anhChinh){
         return hinhAnhService.listAnhTheoCTSP(id,anhChinh);
     }
+
 }

@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.example.gbsports.entity.*;
 
@@ -77,11 +74,15 @@ public class ExcelSaveDB {
                 // Nếu đã tồn tại, cộng dồn số lượng
                 ChiTietSanPham existingCtsp = mapChiTietSanPham.get(key);
                 existingCtsp.setSo_luong(existingCtsp.getSo_luong() + ctspss.getSo_luong()); // Cộng dồn số lượng
+                existingCtsp.setNgay_sua(new Date());
                 System.out.println("Chạy đến kiểm tra map rồi");
                 chiTietSanPhamRepo.save(existingCtsp);
             } else {
                 // Nếu chưa tồn tại, thêm mới vào cơ sở dữ liệu
                 System.out.println("Chạy vào phần else của kiểm tra map");
+                ctspss.setTrang_thai("Hoạt động");
+                ctspss.setNgay_tao(new Date());
+                ctspss.setNgay_sua(new Date());
                 chiTietSanPhamRepo.save(ctspss);
             }
         }

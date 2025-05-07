@@ -41,15 +41,23 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Thêm cấu hình CORS
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
-                        "/admin/quan-ly-nhan-vien/login_admin", "/admin/quan-ly-nhan-vien/details","/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
-                        "/admin/quan-ly-nhan-vien/forgot-password", "/admin/quan-ly-nhan-vien/reset-password", "/banhangweb/**","/admin/quan_ly_san_pham/**","/gioHangWeb/**",
-                        "/send", "/admin/quan_ly_san_pham/validate", "/admin/quan_ly_san_pham/SanPham", "/admin/quan_ly_san_pham/timKiemSanPham",
-                        "/admin/quan_ly_san_pham/getAllCTSPKM", "/admin/quan_ly_san_pham/getSanPhamByTenSanPham","/api/reviews/**", "/order/**", "/payment/**",
-                            "/api/ghtk/**").permitAll()
-                    .requestMatchers("/admin/qlhd/**", "/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
-                    .requestMatchers("/api/khach-hang/change-password", "/api/khach-hang/hd_kh", "/api/khach-hang/hd_kh_tt").hasAnyRole( "ADMIN", "QL", "NV", "KH")
-                    .anyRequest().authenticated()
+                        .requestMatchers("/api/khach-hang/register", "/api/khach-hang/login", "/api/khach-hang/details",
+                                "/admin/quan-ly-nhan-vien/login_admin", "/admin/quan-ly-nhan-vien/details",
+                                "/api/khach-hang/forgot-password", "/api/khach-hang/reset-password",
+                                "/admin/quan-ly-nhan-vien/forgot-password", "/admin/quan-ly-nhan-vien/reset-password",
+                                "/banhangweb/**", "/admin/quan_ly_san_pham/**", "/gioHangWeb/**",
+                                "/send", "/admin/quan_ly_san_pham/validate", "/admin/quan_ly_san_pham/SanPham","/admin/quan_ly_san_pham/getSanPhamByTenSP","/admin/quan_ly_san_pham/getSanPhamByTenDM",
+                                "/admin/quan_ly_san_pham/getSanPhamSieuSale", "/admin/quan_ly_san_pham/timKiemSanPham",
+                                "/admin/quan_ly_san_pham/getAllCTSPKM","/admin/quan_ly_san_pham/CTSPBySanPhamFullWeb",
+                                "/admin/quan_ly_san_pham/getSanPhamByTenSanPham", "/api/reviews/**", "/order/**",
+                                "/payment/**",
+                                "/api/ghtk/**", "/testDeleteImage", "/testImage")
+                        .permitAll()
+                        .requestMatchers("/banhang/**", "/api/khach-hang/addKHMoi").hasAnyRole("ADMIN", "QL", "NV")
+                        .requestMatchers("/api/khach-hang/change-password", "/api/khach-hang/hd_kh",
+                                "/api/khach-hang/hd_kh_tt")
+                        .hasAnyRole("ADMIN", "QL", "NV", "KH")
+                        .anyRequest().authenticated()
                 // .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session
