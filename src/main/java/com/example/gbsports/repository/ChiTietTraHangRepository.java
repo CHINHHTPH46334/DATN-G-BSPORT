@@ -21,7 +21,7 @@ public interface ChiTietTraHangRepository extends JpaRepository<ChiTietTraHang, 
             "ctth.tien_hoan AS tien_hoan, " +
             "(ctth.tien_hoan / NULLIF(ctth.so_luong, 0)) AS don_gia, " +
             "sp.ten_san_pham AS ten_san_pham, " +
-            "ha.hinh_anh AS hinh_anh, " +
+            "sp.hinh_anh AS hinh_anh, " +
             "kt.gia_tri AS kich_thuoc, " +
             "ms.ten_mau_sac AS ten_mau_sac " +
             "FROM chi_tiet_tra_hang ctth " +

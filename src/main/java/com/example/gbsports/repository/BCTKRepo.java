@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface BCTKRepo extends JpaRepository<HoaDon, Integer> {
         @Query(nativeQuery = true, value = "SELECT \n" +
-                "    SUM(hd.tong_tien_sau_giam) - ISNULL(SUM(th.tong_tien_hoan), 0) AS [Doanh thu] " +
+                "    SUM(hd.tong_tien_sau_giam) - ISNULL(SUM(th.tong_tien_hoan) - ISNULL(SUM(hd.phi_van_chuyen), 0) AS [Doanh thu] " +
                 "FROM hoa_don hd\n" +
                 "JOIN theo_doi_don_hang tddh ON hd.id_hoa_don = tddh.id_hoa_don\n" +
                 "LEFT JOIN tra_hang th ON hd.id_hoa_don = th.id_hoa_don\n" +
